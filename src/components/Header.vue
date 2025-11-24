@@ -1,0 +1,226 @@
+<template>
+  <div class="header" :class="{ 'header-3d-view': is3DViewerPage }">
+    <div class="logo" @click="goToHome">
+      <img src="../images/Logo.png" alt="Logo" class="logo-image">
+    </div>
+    
+    <!-- 统一响应式导航 -->
+    <div class="header-controls">
+      <!-- 桌面端显示的导航按钮 -->
+      <div class="nav-buttons">
+        <a-button type="text" @click="goToI18nManager" class="nav-button">
+          <template #icon>
+            <GlobalOutlined />
+          </template>
+          {{ t('header_i18nManager') }}
+        </a-button>
+        
+        <a-button type="text" @click="goToProductManager" class="nav-button">
+          <template #icon>
+            <AppstoreOutlined />
+          </template>
+          {{ t('header_productManager') }}
+        </a-button>
+        
+        <a-button type="text" @click="toggleLanguage" class="lang-button">
+          <template #icon>
+            <TranslationOutlined />
+          </template>
+          {{ currentLanguage === 'zh-CN' ? 'EN' : '中文' }}
+        </a-button>
+      </div>
+      
+      <!-- 移动端菜单按钮 -->
+      <a-button type="text" @click="toggleMenu" class="menu-button">
+        <template #icon>
+          <MenuOutlined />
+        </template>
+      </a-button>
+    </div>
+    
+    <!-- 统一抽屉菜单 -->
+    <Drawer
+      :isOpen="menuVisible"
+      @close="closeMenu"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from '../composables/useI18n.js'
+import { useRouter, useRoute } from 'vue-router'
+import Drawer from './Drawer.vue'
+import {
+  GlobalOutlined,
+  AppstoreOutlined,
+  TranslationOutlined,
+  MenuOutlined
+} from '@ant-design/icons-vue'
+
+const { currentLanguage, toggleLanguage, t } = useI18n()
+const router = useRouter()
+const route = useRoute()
+
+const menuVisible = ref(false)
+
+// 检测是否为3D查看器页面
+const is3DViewerPage = computed(() => {
+  return route.path.startsWith('/product-3d/')
+})
+
+const goToHome = () => {
+  router.push('/')
+}
+
+const goToI18nManager = () => {
+  router.push('/i18n-manager')
+  menuVisible.value = false
+}
+
+const goToProductManager = () => {
+  router.push('/product-management')
+  menuVisible.value = false
+}
+
+// 统一菜单控制
+const toggleMenu = () => {
+  menuVisible.value = !menuVisible.value
+}
+
+// 关闭菜单
+const closeMenu = () => {
+  menuVisible.value = false
+}
+
+// 点击外部关闭菜单
+const handleClickOutside = (event) => {
+  const headerElement = document.querySelector('.header')
+  if (headerElement && !headerElement.contains(event.target)) {
+    menuVisible.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+</script>
+
+<style scoped>
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  height: 64px;
+  background-color: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  position: relative;
+}
+
+.logo {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.logo-image {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* 统一导航控制 */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* 导航按钮组 */
+.nav-buttons {
+  display:none;
+  align-items: center;
+  gap: 0px;
+}
+
+.nav-button,
+.lang-button {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  font-weight: 500;
+  color: #4d4d4d;
+}
+
+.nav-button:hover,
+.lang-button:hover {
+  color: #4d4d4d;
+}
+
+/* 菜单按钮 */
+.menu-button {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+}
+
+.menu-button:hover {
+  background: #f5f5f5;
+}
+
+
+/* 3D查看器页面专用样式 */
+.header-3d-view {
+  border-bottom: none !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 16px;
+  }
+  
+  .logo-image {
+    height: 50px;
+  }
+  
+  /* 在移动端隐藏导航按钮，显示菜单按钮 */
+  .nav-buttons {
+    display: none;
+  }
+  
+  .menu-button {
+    display: flex;
+  }
+}
+
+@media (max-width: 576px) {
+  .header {
+    padding: 0 16px;
+  }
+  
+  .logo-image {
+    height: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0 8px;
+  }
+  
+  .logo-image {
+    height: 50px;
+  }
+}
+</style>

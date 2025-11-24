@@ -1,0 +1,1209 @@
+<template>
+  <div class="image-gallery">
+    <!-- 使用Product3DHeader组件作为页面头部 -->
+    <Product3DHeader />
+    
+    <!-- 主画廊容器 -->
+    <div class="gallery-container">
+      <div class="main-viewer">
+        <!-- 加载提示 -->
+        <div class="loading-container" v-if="isLoading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">{{ loadingText }}</div>
+          <div class="progress-text">{{ progressText }}</div>
+        </div>
+        
+        <!-- 主展示图片 -->
+        <img
+          id="mainImage"
+          :src="currentImageUrl"
+          :alt="currentImageAlt"
+          v-if="currentImageUrl"
+        />
+        
+        <!-- 导航按钮 -->
+        <button
+          class="nav-button prev"
+          :class="{ 'visible': images.length > 1 }"
+          @click="prevImage"
+        >❮</button>
+        <button
+          class="nav-button next"
+          :class="{ 'visible': images.length > 1 }"
+          @click="nextImage"
+        >❯</button>
+      </div>
+      
+      <!-- 缩略图容器 -->
+      <div class="thumbnails-wrapper">
+        <div class="thumbnails" ref="thumbnailContainer">
+          <img
+            v-for="(image, index) in images"
+            :key="index"
+            :src="image.url"
+            :alt="image.alt"
+            class="thumbnail"
+            :class="{
+              'active': currentIndex === index,
+              'loaded': image.loaded
+            }"
+            @click="showImage(index)"
+          />
+        </div>
+      </div>
+    </div>
+    
+    <!-- 抽屉菜单 -->
+    <Drawer
+      :isOpen="drawerVisible"
+      @close="closeDrawer"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from '../composables/useI18n.js'
+import Product3DHeader from './Product3DHeader.vue'
+import Drawer from './Drawer.vue'
+
+const { t, currentLanguage, toggleLanguage } = useI18n()
+const route = useRoute()
+const router = useRouter()
+
+const productName = ref('')
+const imageType = ref('6views') // '6views' 或 'other'
+const images = ref([])
+const currentIndex = ref(0)
+const isLoading = ref(true)
+const loadingText = ref('')
+const progressText = ref('0/0')
+const thumbnailContainer = ref(null)
+const productCatalog = ref(null)
+const drawerVisible = ref(false)
+
+// 配置
+const CONFIG = {
+  imagePrefix: 'image_',
+  imageExtensions: ['.webp', '.jpg', '.png'],
+  preloadCount: 3,
+  maxFrames: 20,
+  catalogUrl: '/data/product-catalog.json'
+}
+
+// 计算属性
+const currentImageUrl = computed(() => {
+  return images.value[currentIndex.value]?.url || ''
+})
+
+const currentImageAlt = computed(() => {
+  return images.value[currentIndex.value]?.alt || '主展示图'
+})
+
+// 处理下载事件
+const handleDownloadAllImages = () => {
+  downloadAllImages()
+}
+
+// 初始化
+onMounted(async () => {
+  try {
+    // 获取路由参数
+    productName.value = route.params.name
+    imageType.value = route.params.type || '6views'
+    
+    console.log('Product_Viewimages 初始化:', {
+      productName: productName.value,
+      imageType: imageType.value
+    })
+    
+    if (!productName.value || productName.value.trim() === '') {
+      console.error('Product_Viewimages: 产品名称为空或无效')
+      router.push('/')
+      return
+    }
+    
+    // 初始化图片展示
+    await initGallery()
+    
+    // 添加事件监听
+    document.addEventListener('keydown', handleKeyboardNavigation)
+    document.addEventListener('download-all-images', handleDownloadAllImages)
+    document.addEventListener('toggle-3d-drawer', handleDrawerToggle)
+    
+  } catch (error) {
+    console.error('初始化失败:', error)
+    loadingText.value = t('loadFailed').replace('{message}', error.message)
+  }
+})
+
+// 清理事件监听
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyboardNavigation)
+  document.removeEventListener('download-all-images', handleDownloadAllImages)
+  document.removeEventListener('toggle-3d-drawer', handleDrawerToggle)
+})
+
+// 加载产品目录数据
+async function loadProductCatalog() {
+  try {
+    const response = await fetch(CONFIG.catalogUrl)
+    if (!response.ok) {
+      throw new Error(`Failed to load catalog: ${response.status}`)
+    }
+    const data = await response.json()
+    console.log('Product catalog loaded:', data)
+    return data
+  } catch (error) {
+    console.error('Failed to load product catalog:', error)
+    return null
+  }
+}
+
+// 从catalog中获取产品信息
+function getProductFromCatalog() {
+  if (!productCatalog.value) return null
+  
+  const product = productCatalog.value.products.find(p => 
+    p.name === productName.value || p.folderName === productName.value
+  )
+  
+  if (product) {
+    console.log('Found product in catalog:', product)
+  } else {
+    console.warn('Product not found in catalog:', productName.value)
+  }
+  
+  return product
+}
+
+// 初始化图片展示
+async function initGallery() {
+  try {
+    loadingText.value = t('loadingCatalog')
+    progressText.value = '0%'
+    
+    // 1. 加载产品目录数据
+    productCatalog.value = await loadProductCatalog()
+    
+    loadingText.value = t('detectingImages')
+    
+    // 2. 检查文件夹并检测可用图片
+    const validImages = await detectAvailableImages()
+    
+    console.log('检测到的图片:', validImages)
+    
+    if (validImages.length === 0) {
+      const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
+      throw new Error(`${folderType}文件夹为空或未找到可用图片`)
+    }
+    
+    loadingText.value = t('loadingImages').replace('{count}', validImages.length)
+    
+    // 3. 设置图片数据
+    images.value = validImages
+    
+    // 4. 创建缩略图
+    await createThumbnails()
+    
+    // 5. 优先加载并显示第一张图片
+    if (images.value.length > 0) {
+      await loadAndShowImage(0)
+    }
+    
+    // 6. 异步加载其他图片
+    loadOtherImages()
+    
+    // 7. 初始化缩略图拖动功能
+    setupThumbnailDrag()
+    
+    // 8. 预加载相邻图片
+    preloadAdjacentImages()
+    
+    // 重要：完成初始化后设置 isLoading = false
+    isLoading.value = false
+    loadingText.value = ''
+    progressText.value = ''
+    
+    console.log('图片展示初始化完成')
+    
+  } catch (error) {
+    console.error('初始化图片展示失败:', error)
+    
+    // 改进错误信息显示
+    let errorMessage = error.message
+    
+    // 如果是文件夹不存在的错误，尝试显示友好提示
+    if (error.message.includes('图片文件夹不存在')) {
+      const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
+      errorMessage = `当前产品暂无${folderType}文件夹`
+    } else if (error.message.includes('noImagesFound')) {
+      errorMessage = '未找到可用的图片文件'
+    }
+    
+    loadingText.value = `加载失败：${errorMessage}`
+    progressText.value = '0%'
+    
+    // 即使失败也要停止加载状态，让用户知道有问题
+    isLoading.value = false
+    
+    // 3秒后自动隐藏错误信息
+    setTimeout(() => {
+      if (loadingText.value.includes('加载失败')) {
+        loadingText.value = ''
+      }
+    }, 5000)
+  }
+}
+
+// 基于catalog和检测的优化图片检测
+async function detectAvailableImages() {
+  const validImages = []
+  const folderPath = getImageFolderPath()
+  const expectedFolderName = imageType.value === 'other' ? 'images_other' : 'images_6Views'
+  
+  console.log(`🔍 正在检测 ${expectedFolderName} 文件夹中的图片:`, folderPath)
+  
+  // 首先检查文件夹是否存在
+  const folderExists = await checkFolderExists(folderPath)
+  
+  if (!folderExists) {
+    console.error(`❌ 指定图片文件夹不存在: ${folderPath}`)
+    const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
+    throw new Error(`${folderType}文件夹不存在，请检查产品文件夹结构`)
+  }
+  
+  console.log(`✅ 指定图片文件夹存在: ${folderPath}`)
+  
+  // 严格按指定的文件夹路径检测图片，不再尝试其他路径
+  const productInfo = getProductFromCatalog()
+  
+  if (productInfo) {
+    // 使用catalog信息快速生成图片列表
+    const targetFolder = imageType.value === 'other'
+      ? productInfo.additionalImages.other
+      : productInfo.additionalImages.sixViews
+    
+    console.log('📂 使用catalog信息:', targetFolder)
+    
+    // 验证catalog路径与实际检测的文件夹是否一致
+    if (!targetFolder.includes(expectedFolderName)) {
+      console.warn(`⚠️ Catalog路径与期望的文件夹不匹配，可能存在配置问题`)
+      console.warn(`期望: ${expectedFolderName}, 实际: ${targetFolder}`)
+    }
+    
+    // 基于catalog的fileCount生成预期的图片URL列表
+    const expectedCount = getExpectedImageCount(productInfo)
+    
+    for (let i = 0; i < expectedCount; i++) {
+      const paddedIndex = i.toString().padStart(2, '0')
+      
+      // 尝试不同的图片格式
+      const formats = ['webp', 'png', 'jpg']
+      let imageFound = false
+      
+      for (const format of formats) {
+        const url = `${targetFolder}${CONFIG.imagePrefix}${paddedIndex}.${format}`
+        
+        // 并行检查图片是否存在
+        try {
+          const exists = await checkImageExists(url)
+          if (exists) {
+            validImages.push({
+              index: i,
+              url: url,
+              format: format,
+              loaded: false,
+              alt: `${t('thumbnailAlt').replace('{index}', i + 1)} (${format.toUpperCase()})`
+            })
+            imageFound = true
+            console.log(`✅ 找到图片: ${url}`)
+            break
+          }
+        } catch (error) {
+          console.warn(`❌ 检查图片失败: ${url}`, error.message)
+        }
+      }
+      
+      // 更新进度
+      const progress = Math.round(((i + 1) / expectedCount) * 100)
+      progressText.value = `${progress}%`
+      
+      // 每10张图片让出一次主线程
+      if (i % 10 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0))
+      }
+    }
+  } else {
+    // Fallback: 如果没有catalog信息，使用原有的检测方法
+    console.log('🔍 使用fallback检测方法，直接检查文件夹:', folderPath)
+    
+    // 首先检测首张图片的格式
+    const firstImageWebp = `${folderPath}/${CONFIG.imagePrefix}00.webp`
+    const firstImagePng = `${folderPath}/${CONFIG.imagePrefix}00.png`
+    
+    const webpExists = await checkImageExists(firstImageWebp)
+    const pngExists = await checkImageExists(firstImagePng)
+    
+    if (!webpExists && !pngExists) {
+      console.error(`❌ 在指定文件夹中未找到任何图片: ${folderPath}`)
+      throw new Error('指定图片文件夹中未找到可用的图片文件')
+    }
+    
+    console.log(`✅ 找到可用图片格式: webp=${webpExists}, png=${pngExists}`)
+    
+    // 检测所有格式的图片
+    const formats = []
+    if (webpExists) formats.push({ format: 'webp', offset: 0 })
+    if (pngExists) formats.push({ format: 'png', offset: 100 })
+    
+    for (const { format, offset } of formats) {
+      console.log(`🔍 检测 ${format.toUpperCase()} 格式图片...`)
+      
+      for (let i = 0; i < CONFIG.maxFrames; i++) {
+        const paddedIndex = i.toString().padStart(2, '0')
+        const url = `${folderPath}/${CONFIG.imagePrefix}${paddedIndex}.${format}`
+        
+        const exists = await checkImageExists(url)
+        if (exists) {
+          validImages.push({
+            index: i + offset,
+            url: url,
+            format: format,
+            loaded: false,
+            alt: `${t('thumbnailAlt').replace('{index}', i + 1)} (${format.toUpperCase()})`
+          })
+          console.log(`✅ 找到图片: ${url}`)
+        }
+        
+        // 进度更新
+        if (i % 10 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 0))
+        }
+      }
+    }
+    
+    // 按索引排序
+    validImages.sort((a, b) => a.index - b.index)
+  }
+  
+  console.log(`🎉 图片检测完成，共找到 ${validImages.length} 张图片`)
+  
+  return validImages
+}
+
+// 从catalog获取预期的图片数量
+function getExpectedImageCount(productInfo) {
+  if (imageType.value === 'other') {
+    // 对于other类型，尝试从folder中读取文件数量
+    const otherSize = productInfo.totalSize || 0
+    return Math.min(Math.floor(otherSize / 100000), CONFIG.maxFrames) // 估算
+  } else {
+    // 对于6views类型，通常有固定数量的图片
+    return Math.min(productInfo.fileCount || CONFIG.maxFrames, CONFIG.maxFrames)
+  }
+}
+
+// 获取图片文件夹路径
+function getImageFolderPath() {
+  const folderName = imageType.value === 'other' ? 'images_other' : 'images_6Views'
+  const path = `/Product/${productName.value}/${folderName}`
+  console.log('构建的图片路径:', path)
+  return path
+}
+
+// 检查文件夹是否存在
+async function checkFolderExists(folderPath) {
+  try {
+    const encodedPath = encodeURIComponent(folderPath)
+    const response = await fetch(`/api/check-folder/${encodedPath}`)
+    if (response.ok) {
+      const result = await response.json()
+      return result.hasFiles || false
+    }
+    return false
+  } catch (error) {
+    console.warn(`检查文件夹 ${folderPath} 失败:`, error)
+    return false
+  }
+}
+
+// 检查图片是否存在（带缓存和重试机制）
+const imageExistsCache = new Map()
+
+async function checkImageExists(url, retryCount = 0) {
+  const maxRetries = 2
+  
+  // 检查缓存
+  if (imageExistsCache.has(url)) {
+    return imageExistsCache.get(url)
+  }
+  
+  try {
+    // 使用更轻量的HEAD请求，但添加超时和错误处理
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
+    
+    const response = await fetch(url, {
+      method: 'HEAD',
+      signal: controller.signal
+    })
+    
+    clearTimeout(timeoutId)
+    const exists = response.ok
+    imageExistsCache.set(url, exists)
+    
+    return exists
+  } catch (error) {
+    console.log(`图片检查失败 (${retryCount + 1}/${maxRetries + 1}):`, url, error.message)
+    imageExistsCache.set(url, false)
+    
+    // 重试机制
+    if (retryCount < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1))) // 递增延迟
+      return checkImageExists(url, retryCount + 1)
+    }
+    
+    return false
+  }
+}
+
+// 创建缩略图
+async function createThumbnails() {
+  // Vue会自动处理DOM更新
+  await nextTick()
+  
+  // 为缩略图添加加载事件
+  const thumbnailElements = document.querySelectorAll('.thumbnail')
+  thumbnailElements.forEach((thumb, index) => {
+    thumb.addEventListener('load', () => {
+      if (images.value[index]) {
+        images.value[index].loaded = true
+      }
+    })
+    
+    thumb.addEventListener('error', () => {
+      console.warn(`Failed to load thumbnail: ${images.value[index]?.url}`)
+    })
+  })
+}
+
+// 智能加载图片（带缓存）
+const imageCache = new Map()
+const loadingPromises = new Map()
+
+function loadImage(index) {
+  if (index < 0 || index >= images.value.length) return Promise.resolve()
+  
+  const imageData = images.value[index]
+  if (!imageData) return Promise.resolve()
+  
+  // 如果已经加载，直接返回
+  if (imageData.loaded) return Promise.resolve()
+  
+  // 如果正在加载，返回现有的Promise
+  if (loadingPromises.has(index)) {
+    return loadingPromises.get(index)
+  }
+  
+  // 检查图片缓存
+  if (imageCache.has(imageData.url)) {
+    imageData.loaded = true
+    return Promise.resolve()
+  }
+  
+  // 创建新的加载Promise
+  const loadPromise = new Promise((resolve) => {
+    const img = new Image()
+    
+    img.onload = () => {
+      imageCache.set(imageData.url, img)
+      imageData.loaded = true
+      loadingPromises.delete(index)
+      resolve()
+    }
+    
+    img.onerror = () => {
+      console.warn(`Failed to load image: ${imageData.url}`)
+      loadingPromises.delete(index)
+      resolve()
+    }
+    
+    // 添加加载超时
+    const timeoutId = setTimeout(() => {
+      img.onload = null
+      img.onerror = null
+      console.warn(`Image load timeout: ${imageData.url}`)
+      loadingPromises.delete(index)
+      resolve()
+    }, 10000) // 10秒超时
+    
+    // 清除超时的函数
+    const originalOnLoad = img.onload
+    img.onload = (event) => {
+      clearTimeout(timeoutId)
+      originalOnLoad.call(img, event)
+    }
+    
+    const originalOnError = img.onerror
+    img.onerror = (event) => {
+      clearTimeout(timeoutId)
+      originalOnError.call(img, event)
+    }
+    
+    img.src = imageData.url
+  })
+  
+  loadingPromises.set(index, loadPromise)
+  return loadPromise
+}
+
+// 加载并显示图片
+async function loadAndShowImage(index) {
+  if (index < 0 || index >= images.value.length) return
+  
+  try {
+    await loadImage(index)
+    showImage(index)
+  } catch (error) {
+    console.error('Failed to load image:', error)
+  }
+}
+
+// 显示图片
+function showImage(index) {
+  if (index < 0 || index >= images.value.length) return
+  
+  currentIndex.value = index
+  
+  // 滚动到当前缩略图
+  scrollToCurrentThumbnail(index)
+  
+  // 预加载相邻图片
+  preloadAdjacentImages()
+}
+
+// 滚动到当前缩略图
+function scrollToCurrentThumbnail(index) {
+  if (!thumbnailContainer.value) return
+  
+  const thumbnails = thumbnailContainer.value
+  const currentThumb = thumbnails.children[index]
+  
+  if (currentThumb) {
+    const thumbLeft = currentThumb.offsetLeft
+    const thumbWidth = currentThumb.offsetWidth
+    const containerWidth = thumbnails.clientWidth
+    const scrollLeft = thumbnails.scrollLeft
+    
+    const thumbLeftInView = thumbLeft - scrollLeft
+    const thumbRightInView = thumbLeftInView + thumbWidth
+    
+    if (thumbLeftInView < 0 || thumbRightInView > containerWidth) {
+      const scrollToPosition = thumbLeft - (containerWidth - thumbWidth) / 2
+      const maxScrollLeft = thumbnails.scrollWidth - thumbnails.clientWidth
+      const finalScrollPosition = Math.max(0, Math.min(scrollToPosition, maxScrollLeft))
+      
+      thumbnails.scrollTo({
+        left: finalScrollPosition,
+        behavior: 'smooth'
+      })
+    }
+  }
+}
+
+// 优化的预加载相邻图片
+function preloadAdjacentImages() {
+  const preloadIndices = []
+  
+  for (let i = 1; i <= CONFIG.preloadCount; i++) {
+    const prevIndex = currentIndex.value - i
+    if (prevIndex >= 0 && !images.value[prevIndex].loaded) {
+      preloadIndices.push(prevIndex)
+    }
+    
+    const nextIndex = currentIndex.value + i
+    if (nextIndex < images.value.length && !images.value[nextIndex].loaded) {
+      preloadIndices.push(nextIndex)
+    }
+  }
+  
+  // 并行加载，但限制并发数量
+  const batchSize = 3
+  for (let i = 0; i < preloadIndices.length; i += batchSize) {
+    const batch = preloadIndices.slice(i, i + batchSize)
+    Promise.all(batch.map(index => loadImage(index)))
+  }
+}
+
+// 加载其他图片（带进度更新）
+function loadOtherImages() {
+  let loadedCount = 1 // 已经加载了一张主图
+  
+  for (let i = 1; i < images.value.length; i++) {
+    loadImage(i).then(() => {
+      loadedCount++
+      const progress = Math.round((loadedCount / images.value.length) * 100)
+      if (progress <= 100) {
+        progressText.value = `${progress}%`
+      }
+    })
+  }
+}
+
+// 上一张图片（循环）
+function prevImage() {
+  if (currentIndex.value > 0) {
+    showImage(currentIndex.value - 1)
+  } else {
+    showImage(images.value.length - 1)
+  }
+}
+
+// 下一张图片（循环）
+function nextImage() {
+  if (currentIndex.value < images.value.length - 1) {
+    showImage(currentIndex.value + 1)
+  } else {
+    showImage(0)
+  }
+}
+
+// 设置缩略图拖动功能
+function setupThumbnailDrag() {
+  if (!thumbnailContainer.value) return
+  
+  let isDragging = false
+  let startPos = 0
+  let scrollLeft = 0
+  let velocity = 0
+  let lastPos = 0
+  let lastTime = 0
+  let animationFrame
+  let isAnimating = false
+  
+  // 鼠标事件
+  thumbnailContainer.value.addEventListener('mousedown', (e) => {
+    isDragging = true
+    startPos = e.pageX - thumbnailContainer.value.offsetLeft
+    scrollLeft = thumbnailContainer.value.scrollLeft
+    velocity = 0
+    lastPos = startPos
+    lastTime = Date.now()
+    thumbnailContainer.value.classList.add('grabbing')
+    
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame)
+      isAnimating = false
+    }
+    
+    e.preventDefault()
+  })
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return
+    
+    const currentTime = Date.now()
+    const currentPos = e.pageX - thumbnailContainer.value.offsetLeft
+    const deltaPos = currentPos - lastPos
+    
+    if (currentTime > lastTime) {
+      velocity = deltaPos / (currentTime - lastTime)
+    }
+    
+    const walk = (currentPos - startPos) * 1.5
+    thumbnailContainer.value.scrollLeft = scrollLeft - walk
+    
+    lastPos = currentPos
+    lastTime = currentTime
+  })
+  
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return
+    
+    isDragging = false
+    thumbnailContainer.value.classList.remove('grabbing')
+    
+    if (Math.abs(velocity) > 0.1) {
+      applyInertia(velocity)
+    }
+  })
+  
+  // 应用惯性动画
+  function applyInertia(initialVelocity) {
+    if (isAnimating) return
+    
+    isAnimating = true
+    const friction = 0.95
+    let currentVelocity = -initialVelocity * 20
+    
+    function animate() {
+      if (!isAnimating) return
+      
+      thumbnailContainer.value.scrollLeft += currentVelocity
+      currentVelocity *= friction
+      
+      const maxScroll = thumbnailContainer.value.scrollWidth - thumbnailContainer.value.clientWidth
+      const currentScroll = thumbnailContainer.value.scrollLeft
+      
+      if (currentScroll <= 0) {
+        thumbnailContainer.value.scrollLeft = 0
+        currentVelocity = 0
+      } else if (currentScroll >= maxScroll) {
+        thumbnailContainer.value.scrollLeft = maxScroll
+        currentVelocity = 0
+      }
+      
+      if (Math.abs(currentVelocity) > 0.5) {
+        animationFrame = requestAnimationFrame(animate)
+      } else {
+        isAnimating = false
+      }
+    }
+    
+    animationFrame = requestAnimationFrame(animate)
+  }
+}
+
+// 键盘导航处理
+function handleKeyboardNavigation(e) {
+  if (isLoading.value) return
+  
+  switch(e.key) {
+    case 'ArrowLeft':
+      prevImage()
+      break
+    case 'ArrowRight':
+      nextImage()
+      break
+    case 'Home':
+      showImage(0)
+      break
+    case 'End':
+      showImage(images.value.length - 1)
+      break
+  }
+}
+
+// 下载所有图片
+async function downloadAllImages() {
+  if (images.value.length === 0) return
+  
+  try {
+    loadingText.value = t('preparingDownload')
+    isLoading.value = true
+    
+    // 动态导入JSZip和FileSaver
+    const JSZip = (await import('jszip')).default
+    const { saveAs } = await import('file-saver')
+    
+    const zip = new JSZip()
+    const downloadFileName = `${productName.value}_${imageType.value === 'other' ? 'other_images' : '6views'}`
+    const folder = zip.folder(downloadFileName)
+    
+    // 添加所有图片到zip
+    for (let i = 0; i < images.value.length; i++) {
+      const response = await fetch(images.value[i].url)
+      const blob = await response.blob()
+      const fileName = `image_${(i + 1).toString().padStart(2, '0')}.webp`
+      folder.file(fileName, blob)
+      
+      // 更新进度
+      progressText.value = `${i + 1}/${images.value.length}`
+    }
+    
+    // 生成zip文件
+    const content = await zip.generateAsync({type: 'blob'})
+    
+    // 下载
+    saveAs(content, `${downloadFileName}.zip`)
+    
+    loadingText.value = t('downloadComplete')
+    setTimeout(() => {
+      isLoading.value = false
+    }, 2000)
+    
+  } catch (error) {
+    console.error('Download failed:', error)
+    loadingText.value = t('downloadError').replace('{message}', error.message)
+  }
+}
+
+// 监听语言变化
+watch(currentLanguage, () => {
+  // 重新生成图片alt文本
+  images.value.forEach((image, index) => {
+    const originalIndex = image.index >= 100 ? image.index - 99 : image.index + 1
+    image.alt = `${t('thumbnailAlt').replace('{index}', originalIndex)} (${image.format.toUpperCase()})`
+  })
+})
+
+// 抽屉控制方法
+const toggleDrawer = () => {
+  drawerVisible.value = !drawerVisible.value
+}
+
+const closeDrawer = () => {
+  drawerVisible.value = false
+}
+
+// 处理抽屉切换事件
+const handleDrawerToggle = () => {
+  toggleDrawer()
+}
+</script>
+
+<style scoped>
+.image-gallery {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #ffffff;
+  font-family: Arial, sans-serif;
+  position: relative;
+  padding-top: 64px;
+}
+
+/* 主画廊容器 */
+.gallery-container {
+  width: 100%;
+  max-width: 1200px;
+  background: white;
+  height: calc(90vh - 80px);
+  display: flex;
+  flex-direction: column;
+}
+
+.main-viewer {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  touch-action: none;
+  background: white;
+}
+
+.main-viewer img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* 加载容器 */
+.loading-container {
+  position: absolute;
+  justify-content: center;
+  padding: 30px;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  color: #333;
+  z-index: 20;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f0f0f0;
+  border-radius: 50%;
+  border-top-color: #007bff;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 15px;
+}
+
+.loading-text {
+  font-size: 16px;
+  margin-top: 10px;
+  color: #333;
+}
+
+.progress-text {
+  width: 100%;
+  word-break: break-word;
+  text-align: center;
+  font-size: 14px;
+  margin-top: 5px;
+  color: #666;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loading {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* 缩略图容器 */
+.thumbnails-wrapper {
+  height: 140px;
+  padding: 15px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  background: white;
+}
+
+.thumbnails {
+  height: 100%;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  cursor: grab;
+  justify-content: center;
+  align-items: center;
+}
+
+.thumbnails.grabbing {
+  cursor: grabbing;
+}
+
+/* 缩略图 */
+.thumbnail {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  flex-shrink: 0;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.thumbnail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: loading 1.5s infinite;
+  z-index: 1;
+}
+
+.thumbnail.loaded::before {
+  display: none;
+}
+
+.thumbnail.active {
+  border-color: #00A0D9;
+}
+
+.thumbnail.loaded {
+  background: white;
+}
+
+/* 导航按钮 */
+.nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.nav-button.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.prev {
+  left: 20px;
+}
+
+.next {
+  right: 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .image-gallery {
+    padding: 10px;
+    padding-top: 70px;
+  }
+  
+  .gallery-container {
+    height: calc(100vh - 100px);
+    max-width: none;
+    margin: 0;
+  }
+  
+  .thumbnails {
+    gap: 8px;
+  }
+  
+  .thumbnails-wrapper {
+    padding: 12px;
+    height: 120px;
+  }
+  
+  .thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: 6px;
+  }
+  
+  .nav-button {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+  }
+  
+  .prev {
+    left: 15px;
+  }
+  
+  .next {
+    right: 15px;
+  }
+  
+  .loading-container {
+    width: 260px;
+    padding: 25px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gallery-container {
+    height: calc(100vh - 90px);
+  }
+  
+  .thumbnails-wrapper {
+    height: 110px;
+    padding: 10px;
+  }
+  
+  .thumbnail {
+    width: 70px;
+    height: 70px;
+    border-radius: 4px;
+  }
+  
+  .nav-button {
+    width: 38px;
+    height: 38px;
+    font-size: 14px;
+  }
+  
+  .prev {
+    left: 12px;
+  }
+  
+  .next {
+    right: 12px;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .gallery-container {
+    border: 1px solid #000;
+  }
+  
+  .thumbnail {
+    border-color: #000;
+  }
+  
+  .thumbnail.active {
+    border-color: #0066cc;
+  }
+  
+  .nav-button {
+    border-color: #000;
+  }
+  
+  .loading-container {
+    border: 1px solid #000;
+  }
+}
+
+/* 深色模式支持 - 保持白色风格 */
+@media (prefers-color-scheme: dark) {
+  .image-gallery {
+    background: white;
+  }
+  
+  .gallery-container {
+    background: white;
+  }
+  
+  .main-viewer {
+    background: white;
+  }
+  
+  .thumbnails-wrapper {
+    background: white;
+  }
+  
+  .thumbnail {
+    background: #f0f0f0;
+  }
+  
+  .nav-button {
+    background: white;
+    color: #666;
+    border-color: #ddd;
+  }
+  
+  .loading-container {
+    background: white;
+    color: #333;
+  }
+  
+  .loading-text {
+    color: #333;
+  }
+  
+  .progress-text {
+    color: #666;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .image-gallery {
+    background: white;
+  }
+  
+  .gallery-container {
+    border: 1px solid #000;
+  }
+  
+  .nav-button {
+    display: none;
+  }
+  
+  .thumbnails-wrapper {
+    display: none;
+  }
+}
+</style>
