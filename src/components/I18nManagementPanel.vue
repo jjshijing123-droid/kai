@@ -538,18 +538,19 @@ const handleLoginSuccess = () => {
   /* 利用App.vue中已经计算好的高度空间，确保减去header后充分利用可用空间 */
   min-height: calc(100vh - 64px); /* 与App.vue的main-content保持一致 */
   box-sizing: border-box;
-  /* 确保内容可以正确滚动 */
-  overflow-y: auto;
+  /* 修复：移除overflow-y: auto，让阴影正常显示 */
+  /* 内容滚动由App.vue的main-content处理即可 */
 }
 
 /* 页面头部 */
 .page-header {
   margin-bottom: 32px;
   padding: 24px;
-  padding-top: 64px;
+  margin-top: 24px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  /* 修复：移除诊断边框，恢复原始设计 */
 }
 
 .header-content {
@@ -634,7 +635,8 @@ const handleLoginSuccess = () => {
   margin-bottom: 24px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
+  /* 修复：移除overflow: hidden，让阴影正常显示 */
+  /* 阴影不会被裁剪了 */
 }
 
 .completeness-section .ant-card,
