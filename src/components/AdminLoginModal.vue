@@ -1,7 +1,7 @@
 <template>
   <a-modal
     v-model:open="isOpen"
-    title="管理员登录"
+    :title="t('common_adminLogin')"
     width="400px"
     @cancel="handleCancel"
     :footer="null"
@@ -19,16 +19,16 @@
         <div class="login-icon">
           <UserOutlined />
         </div>
-        <p class="login-description">请输入管理员凭据以继续</p>
+        <p class="login-description">{{ t('common_enterCredentials') }}</p>
       </div>
 
       <a-form-item
-        label="用户名"
+        :label="t('common_username')"
         name="username"
       >
         <a-input
           v-model:value="loginForm.username"
-          placeholder="请输入管理员用户名"
+          :placeholder="t('common_enterUsername')"
           size="large"
           :prefix="h(UserOutlined)"
           @pressEnter="handleLogin"
@@ -36,12 +36,12 @@
       </a-form-item>
 
       <a-form-item
-        label="密码"
+        :label="t('common_password')"
         name="password"
       >
         <a-input-password
           v-model:value="loginForm.password"
-          placeholder="请输入管理员密码"
+          :placeholder="t('common_enterPassword')"
           size="large"
           :prefix="h(LockOutlined)"
           @pressEnter="handleLogin"
@@ -56,7 +56,7 @@
           :loading="loading"
           block
         >
-          {{ loading ? '登录中...' : '登录' }}
+          {{ loading ? t('common_loggingIn') : t('common_login') }}
         </a-button>
       </a-form-item>
     </a-form>
@@ -69,6 +69,9 @@ import { ref, h, watch, computed } from 'vue'
 import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useAdminAuth } from '../composables/useAdminAuth'
+import { useI18n } from '../composables/useI18n.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   open: {
@@ -97,10 +100,10 @@ const isOpen = computed(() => props.open)
 // 表单验证规则
 const loginRules = {
   username: [
-    { required: true, message: '请输入管理员用户名', trigger: 'blur' }
+    { required: true, message: t('common_enterUsername'), trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入管理员密码', trigger: 'blur' }
+    { required: true, message: t('common_enterPassword'), trigger: 'blur' }
   ]
 }
 
@@ -120,7 +123,7 @@ const handleLogin = async () => {
       emit('login-failed', result.error)
     }
   } catch (error) {
-    console.error('登录验证失败:', error)
+    console.error(`${t('common_loginFailed')}:`, error)
   } finally {
     loading.value = false
   }

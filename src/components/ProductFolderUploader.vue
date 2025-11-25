@@ -17,9 +17,9 @@
           <FolderOpenOutlined />
         </div>
         <div class="upload-text">
-          <div class="upload-title">{{ buttonText }}</div>
+          <div class="upload-title">{{ t('common_uploadProductFolder') }}</div>
           <div class="upload-subtitle">
-            点击或拖拽 ZIP 压缩包到此处上传完整产品文件夹
+            {{ t('common_clickOrDragZip') }}
           </div>
         </div>
         <input
@@ -35,10 +35,10 @@
 
     <!-- 文件夹名称输入 -->
     <div v-if="selectedFile" class="folder-name-section">
-      <a-form-item label="产品文件夹名称" required>
+      <a-form-item :label="t('common_productFolderName')" required>
         <a-input
           v-model:value="folderName"
-          placeholder="请输入产品文件夹名称"
+          :placeholder="t('common_folderNamePlaceholder')"
           :disabled="uploading"
           @input="validateFolderName"
         />
@@ -46,7 +46,7 @@
           {{ folderNameError }}
         </div>
         <div v-if="actualFolderName" class="info-text">
-          检测到文件夹名称冲突，将重命名为: <strong>{{ actualFolderName }}</strong>
+          {{ t('common_detectedFolderNameConflict') }}: <strong>{{ actualFolderName }}</strong>
         </div>
       </a-form-item>
     </div>
@@ -54,7 +54,7 @@
     <!-- 上传进度 -->
     <div v-if="uploading" class="upload-progress-section">
       <div class="progress-header">
-        <span>正在上传产品文件夹...</span>
+        <span>{{ t('common_uploadingProductFolder') }}</span>
         <span class="progress-percent">{{ uploadProgress }}%</span>
       </div>
       <a-progress
@@ -63,15 +63,15 @@
         status="active"
       />
       <div class="progress-details">
-        <div>文件: {{ processedFiles }}/{{ totalFiles }}</div>
-        <div>文件夹: {{ processedFolders }}/{{ totalFolders }}</div>
+        <div>{{ t('common_files') }}: {{ processedFiles }}/{{ totalFiles }}</div>
+        <div>{{ t('common_folders') }}: {{ processedFolders }}/{{ totalFolders }}</div>
       </div>
     </div>
 
     <!-- 上传结果 -->
     <div v-if="uploadResult" class="upload-result">
       <a-alert
-        :message="uploadResult.success ? '上传成功' : '上传失败'"
+        :message="uploadResult.success ? t('common_uploadSuccess') : t('common_uploadFailed')"
         :type="uploadResult.success ? 'success' : 'error'"
         show-icon
         closable
@@ -79,9 +79,9 @@
       >
         <template #description>
           <div v-if="uploadResult.success">
-            <p>产品文件夹: <strong>{{ uploadResult.actualName }}</strong></p>
-            <p>处理了 {{ uploadResult.fileCount }} 个文件</p>
-            <p>创建了 {{ uploadResult.folderCount }} 个文件夹</p>
+            <p>{{ t('common_productFolderName') }}: <strong>{{ uploadResult.actualName }}</strong></p>
+            <p>{{ t('common_processed') }} {{ uploadResult.fileCount }} {{ t('common_files') }}</p>
+            <p>{{ t('common_created') }} {{ uploadResult.folderCount }} {{ t('common_folders') }}</p>
           </div>
           <div v-else>
             <p>{{ uploadResult.error }}</p>
@@ -101,25 +101,25 @@
         <template #icon>
           <UploadOutlined />
         </template>
-        开始上传
+        {{ t('common_startUpload') }}
       </a-button>
       
       <a-button
         @click="resetUpload"
         :disabled="disabled"
       >
-        取消
+        {{ t('common_cancel') }}
       </a-button>
     </div>
 
     <!-- 提示信息 -->
     <div class="upload-hint">
-      <p><strong>使用说明:</strong></p>
+      <p><strong>{{ t('common_usageInstructions') }}</strong></p>
       <ul>
-        <li>上传 ZIP 格式的压缩包，包含完整的产品文件夹结构</li>
-        <li>压缩包必须包含一个根文件夹，其中包含所有子文件夹和文件</li>
-        <li>如果文件夹名称已存在，系统会自动添加后缀（如：文件夹名_副本1）</li>
-        <li>支持最大 100MB 的压缩包</li>
+        <li>{{ t('common_uploadZipInstructions') }}</li>
+        <li>{{ t('common_rootFolderRequirement') }}</li>
+        <li>{{ t('common_folderNameConflict') }}</li>
+        <li>{{ t('common_maxFileSize') }}</li>
       </ul>
     </div>
   </div>
@@ -127,17 +127,15 @@
 
 <script setup>
 import { ref, computed, onUnmounted } from 'vue'
+import { useI18n } from '../composables/useI18n.js'
 import {
   FolderOpenOutlined,
   UploadOutlined
 } from '@ant-design/icons-vue'
 
+const { t } = useI18n()
+
 const props = defineProps({
-  // 上传按钮文本
-  buttonText: {
-    type: String,
-    default: '上传产品文件夹'
-  },
   // 是否禁用
   disabled: {
     type: Boolean,
@@ -215,14 +213,14 @@ const handleDragLeave = (event) => {
 const addFile = (file) => {
   // 验证文件类型
   if (!file.name.toLowerCase().endsWith('.zip')) {
-    alert('只支持 ZIP 格式的压缩包')
+    alert(t('common_zipOnly'))
     return
   }
 
   // 验证文件大小（100MB）
   const maxSize = 100 * 1024 * 1024
   if (file.size > maxSize) {
-    alert('文件大小超过 100MB 限制')
+    alert(t('common_fileSizeExceeded'))
     return
   }
 
@@ -240,14 +238,14 @@ const validateFolderName = () => {
   folderNameError.value = ''
   
   if (!folderName.value.trim()) {
-    folderNameError.value = '文件夹名称不能为空'
+    folderNameError.value = t('common_folderNameEmpty')
     return
   }
   
   // 检查名称有效性
   const invalidChars = /[<>:"/\\|?*\x00-\x1F]/
   if (invalidChars.test(folderName.value)) {
-    folderNameError.value = '文件夹名称包含无效字符'
+    folderNameError.value = t('common_folderNameInvalid')
     return
   }
   
@@ -308,25 +306,25 @@ const startUpload = async () => {
               result: response 
             })
           } else {
-            throw new Error(response.error || '上传失败')
+            throw new Error(response.error || t('common_uploadFailed'))
           }
         } catch (error) {
-          throw new Error('解析响应失败: ' + error.message)
+          throw new Error(`${t('common_parseResponseFailed')}: ` + error.message)
         }
       } else {
         // 尝试解析错误响应
         try {
           const errorResponse = JSON.parse(xhr.responseText)
-          throw new Error(errorResponse.error || `服务器错误: ${xhr.status}`)
+          throw new Error(errorResponse.error || `${t('common_serverError')}: ${xhr.status}`)
         } catch (parseError) {
-          throw new Error(`服务器错误: ${xhr.status} - ${xhr.statusText}`)
+          throw new Error(`${t('common_serverError')}: ${xhr.status} - ${xhr.statusText}`)
         }
       }
     })
     
     // 处理错误
     xhr.addEventListener('error', () => {
-      throw new Error('网络错误，请检查网络连接')
+      throw new Error(t('common_networkError'))
     })
     
     // 发送请求

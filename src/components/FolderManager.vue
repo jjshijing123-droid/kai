@@ -16,13 +16,13 @@
                 <template #icon>
                   <ArrowLeftOutlined />
                 </template>
-                返回
+                {{ t('folderManager_back') }}
               </a-button>
               <a-button @click="refreshFolder" class="refresh-button" :loading="loading">
                 <template #icon>
                   <ReloadOutlined />
                 </template>
-                刷新
+                {{ t('folderManager_refresh') }}
               </a-button>
             </a-space>
           </a-col>
@@ -32,7 +32,7 @@
         <a-breadcrumb>
           <a-breadcrumb-item @click="goToRoot">
             <HomeOutlined />
-            产品文件夹
+            {{ t('folderManager_productFolder') }}
           </a-breadcrumb-item>
           <template v-for="(part, index) in folderPathParts" :key="index">
             <a-breadcrumb-item 
@@ -54,7 +54,7 @@
       <FileUploader
         :folder-path="currentFolder"
         :multiple="true"
-        button-text="上传文件到当前文件夹"
+        :button-text="t('folderManager_uploadFileToCurrent')"
         @upload-complete="handleUploadComplete"
       />
     </div>
@@ -72,12 +72,12 @@
       <a-result
         v-else-if="error"
         status="error"
-        title="加载失败"
+        :title="t('folderManager_loadingFailed')"
         :sub-title="error"
       >
         <template #extra>
           <a-button type="primary" @click="fetchFolderDetails">
-            重试
+            {{ t('folderManager_retry') }}
           </a-button>
         </template>
       </a-result>
@@ -86,7 +86,7 @@
       <div v-else class="folder-content">
         <!-- 子文件夹 -->
         <div v-if="subfolders.length > 0" class="section">
-          <h3 class="section-title">子文件夹</h3>
+          <h3 class="section-title">{{ t('folderManager_subfolders') }}</h3>
           <div class="folder-grid">
             <div
               v-for="folder in subfolders"
@@ -101,7 +101,7 @@
               <div class="folder-info">
                 <div class="folder-name">{{ folder.name }}</div>
                 <div class="folder-stats">
-                  <span>{{ folder.fileCount }} 个文件</span>
+                  <span>{{ t('folderManager_filesCount', { count: folder.fileCount }) }}</span>
                 </div>
               </div>
             </div>
@@ -110,7 +110,7 @@
 
         <!-- 文件列表 -->
         <div v-if="files.length > 0" class="section">
-          <h3 class="section-title">文件</h3>
+          <h3 class="section-title">{{ t('folderManager_files') }}</h3>
           <div class="file-list">
             <div
               v-for="file in files"
@@ -134,7 +134,7 @@
                   type="text"
                   size="small"
                   @click.stop="previewFile(file)"
-                  title="预览"
+                  :title="t('folderManager_preview')"
                 >
                   <EyeOutlined />
                 </a-button>
@@ -142,7 +142,7 @@
                   type="text"
                   size="small"
                   @click.stop="downloadFile(file)"
-                  title="下载"
+                  :title="t('folderManager_download')"
                 >
                   <DownloadOutlined />
                 </a-button>
@@ -150,7 +150,7 @@
                   type="text"
                   size="small"
                   @click.stop="deleteFile(file)"
-                  title="删除"
+                  :title="t('folderManager_delete')"
                   danger
                 >
                   <DeleteOutlined />
@@ -167,7 +167,7 @@
           class="empty-state"
         >
           <template #description>
-            <p>文件夹为空</p>
+            <p>{{ t('folderManager_folderEmpty') }}</p>
           </template>
           <a-upload
             :before-upload="beforeUpload"
@@ -175,7 +175,7 @@
             :multiple="true"
           >
             <a-button type="primary">
-              上传第一个文件
+              {{ t('folderManager_uploadFirstFile') }}
             </a-button>
           </a-upload>
         </a-empty>
@@ -199,10 +199,10 @@
         />
         <div v-else class="preview-other">
           <FileOutlined class="preview-icon" />
-          <p>不支持预览此文件类型</p>
+          <p>{{ t('folderManager_previewNotSupported') }}</p>
           <a-button type="primary" @click="downloadFile(previewFileInfo)">
             <DownloadOutlined />
-            下载文件
+            {{ t('folderManager_downloadFile') }}
           </a-button>
         </div>
       </div>
@@ -218,21 +218,21 @@
       <template v-if="contextMenuType === 'folder'">
         <div class="context-menu-item" @click="openSubfolder(contextMenuItem.name)">
           <FolderOpenOutlined />
-          <span>打开</span>
+          <span>{{ t('folderManager_open') }}</span>
         </div>
       </template>
       <template v-else-if="contextMenuType === 'file'">
         <div class="context-menu-item" @click="previewFile(contextMenuItem)">
           <EyeOutlined />
-          <span>预览</span>
+          <span>{{ t('folderManager_preview') }}</span>
         </div>
         <div class="context-menu-item" @click="downloadFile(contextMenuItem)">
           <DownloadOutlined />
-          <span>下载</span>
+          <span>{{ t('folderManager_download') }}</span>
         </div>
         <div class="context-menu-item" @click="deleteFile(contextMenuItem)">
           <DeleteOutlined />
-          <span>删除</span>
+          <span>{{ t('folderManager_delete') }}</span>
         </div>
       </template>
     </div>
@@ -242,6 +242,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from '../composables/useI18n.js'
 import FileUploader from './FileUploader.vue'
 import {
   ArrowLeftOutlined,
@@ -257,6 +258,7 @@ import {
   HomeOutlined
 } from '@ant-design/icons-vue'
 
+const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 
@@ -323,13 +325,13 @@ const fetchFolderDetails = async () => {
     
     const folderPath = route.params.folderName || currentFolder.value
     if (!folderPath) {
-      throw new Error('文件夹路径不能为空')
+      throw new Error(t('folderManager_folderPathEmpty'))
     }
-    
+
     // 使用新的子文件夹 API
     const response = await fetch(`/api/folder/${encodeURIComponent(folderPath)}/details`)
     if (!response.ok) {
-      throw new Error('获取文件夹详情失败')
+      throw new Error(t('folderManager_getDetailsFailed'))
     }
     
     const data = await response.json()
@@ -338,7 +340,7 @@ const fetchFolderDetails = async () => {
       folderDetails.value = data.folder
       currentFolder.value = folderPath
     } else {
-      throw new Error('文件夹数据格式错误')
+      throw new Error(t('folderManager_dataFormatError'))
     }
   } catch (err) {
     console.error('获取文件夹详情错误:', err)
@@ -362,9 +364,9 @@ const refreshFolder = () => {
 
 const beforeUpload = (file) => {
   // 文件上传前的处理
-  console.log('准备上传文件:', file)
+  console.log(t('folderManager_preparingUpload'), file)
   // 这里可以实现文件上传逻辑
-  alert(`准备上传文件: ${file.name}\n\n这里可以实现文件上传到当前文件夹`)
+  alert(`${t('folderManager_preparingUpload')} ${file.name}\n\n${t('folderManager_uploadToCurrentFolder')}`)
   return false // 阻止默认上传行为
 }
 
@@ -411,7 +413,7 @@ const downloadFile = (file) => {
 }
 
 const deleteFile = async (file) => {
-  if (!confirm(`确定要删除文件 "${file.name}" 吗？`)) {
+  if (!confirm(t('folderManager_confirmDeleteFile', { name: file.name }))) {
     return
   }
 
@@ -437,11 +439,11 @@ const deleteFile = async (file) => {
       fetchFolderDetails()
     } else {
       console.error('文件删除失败:', result.error)
-      alert(`文件删除失败: ${result.error}`)
+      alert(`${t('folderManager_deleteFileFailed')} ${result.error}`)
     }
   } catch (error) {
     console.error('删除文件时出错:', error)
-    alert(`删除文件时出错: ${error.message}`)
+    alert(`${t('folderManager_deleteFileError')} ${error.message}`)
   }
 }
 
@@ -478,13 +480,13 @@ const goToRoot = () => {
 }
 
 const handleUploadComplete = (result) => {
-  console.log('文件上传完成:', result)
+  console.log(t('folderManager_uploadComplete'), result)
   if (result.success) {
     // 上传成功，刷新文件夹内容
     fetchFolderDetails()
   } else {
     // 上传失败，可以显示错误信息
-    console.error('文件上传失败:', result)
+    console.error(t('folderManager_uploadFailed'), result)
   }
 }
 

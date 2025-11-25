@@ -5,7 +5,7 @@
       <a-space direction="vertical" :size="16" style="width: 100%">
         <a-row justify="space-between" align="middle">
           <a-col>
-            <h1 class="page-title">产品详情 - {{ productName }}</h1>
+            <h1 class="page-title">{{ t('productDetailManagement_productDetails', { name: productName }) }}</h1>
           </a-col>
           <a-col>
             <a-space>
@@ -13,13 +13,13 @@
                 <template #icon>
                   <ArrowLeftOutlined />
                 </template>
-                返回产品列表
+                {{ t('productDetailManagement_backToList') }}
               </a-button>
               <a-button type="primary" @click="editProduct" class="rename-button">
                 <template #icon>
                   <EditOutlined />
                 </template>
-                编辑产品
+                {{ t('productDetailManagement_editProduct') }}
               </a-button>
             </a-space>
           </a-col>
@@ -28,14 +28,14 @@
     </div>
 
     <!-- 加载状态 -->
-    <a-spin :spinning="loading" size="large" tip="加载中...">
+    <a-spin :spinning="loading" size="large" tip="{{ t('productDetailManagement_loading') }}">
     <!-- 产品图片管理区域 -->
     <a-tabs type="card" class="image-management">
-      <!-- 主图管理 -->
-      <a-tab-pane key="main" tab="主图">
+      <!-- {{ t('productDetailManagement_mainImage') }}管理 -->
+      <a-tab-pane key="main" tab="{{ t('productDetailManagement_mainImage') }}">
         <a-card>
           <template #title>
-            <span>主图 (image_00.webp)</span>
+            <span>{{ t('productDetailManagement_mainImage') }} (image_00.webp)</span>
           </template>
           <div class="main-image-section">
             <a-row :gutter="[32, 32]" align="middle">
@@ -44,17 +44,17 @@
                   <a-card v-if="mainImage" class="image-preview">
                     <img
                       :src="mainImage"
-                      :alt="'主图'"
+                      :alt="'{{ t('productDetailManagement_mainImage') }}'"
                       class="product-image"
                       @error="handleImageError('main')"
                     />
                   </a-card>
-                  <a-empty v-else description="暂无主图" class="empty-state" />
+                  <a-empty v-else description="暂无{{ t('productDetailManagement_mainImage') }}" class="empty-state" />
                 </div>
               </a-col>
               <a-col :xs="24" :md="12" :lg="14">
                 <div class="upload-section">
-                  <a-card title="上传主图" class="upload-card-main">
+                  <a-card title="上传{{ t('productDetailManagement_mainImage') }}" class="upload-card-main">
                     <div class="upload-content">
                       <FileUploader
                         :productName="productName"
@@ -71,11 +71,11 @@
         </a-card>
       </a-tab-pane>
 
-      <!-- 六视图管理 -->
-      <a-tab-pane key="sixViews" tab="六视图">
+      <!-- {{ t('productDetailManagement_sixViews') }}管理 -->
+      <a-tab-pane key="sixViews" tab="{{ t('productDetailManagement_sixViews') }}">
         <a-card>
           <template #title>
-            <span>六视图 (images_6Views/)</span>
+            <span>{{ t('productDetailManagement_sixViews') }} (images_6Views/)</span>
           </template>
           <div class="grid-image-section">
             <a-row :gutter="[20, 20]">
@@ -91,7 +91,7 @@
                   <div class="image-container">
                     <img
                       :src="image"
-                      :alt="`六视图 ${index + 1}`"
+                      :alt="`{{ t('productDetailManagement_sixViews') }} ${index + 1}`"
                       class="grid-image"
                       @error="handleGridImageError('sixViews', index)"
                       @click="showImagePreview(image)"
@@ -103,7 +103,7 @@
                         type="text"
                         size="small"
                         @click="showImagePreview(image)"
-                        title="预览图片"
+                        title="{{ t('productDetailManagement_previewImage') }}"
                       >
                         <EyeOutlined />
                       </a-button>
@@ -112,7 +112,7 @@
                         danger
                         size="small"
                         @click="deleteImage('sixViews', image)"
-                        title="删除图片"
+                        title="{{ t('productDetailManagement_deleteImage') }}"
                       >
                         <DeleteOutlined />
                       </a-button>
@@ -137,11 +137,11 @@
         </a-card>
       </a-tab-pane>
 
-      <!-- 其他图片管理 -->
-      <a-tab-pane key="other" tab="其他图片">
+      <!-- {{ t('productDetailManagement_otherImages') }}管理 -->
+      <a-tab-pane key="other" tab="{{ t('productDetailManagement_otherImages') }}">
         <a-card>
           <template #title>
-            <span>其他图片 (images_other/)</span>
+            <span>{{ t('productDetailManagement_otherImages') }} (images_other/)</span>
           </template>
           <div class="grid-image-section">
             <a-row :gutter="[20, 20]">
@@ -157,7 +157,7 @@
                   <div class="image-container">
                     <img
                       :src="image"
-                      :alt="`其他图片 ${index + 1}`"
+                      :alt="`{{ t('productDetailManagement_otherImages') }} ${index + 1}`"
                       class="grid-image"
                       @error="handleGridImageError('other', index)"
                       @click="showImagePreview(image)"
@@ -169,7 +169,7 @@
                         type="text"
                         size="small"
                         @click="showImagePreview(image)"
-                        title="预览图片"
+                        title="{{ t('productDetailManagement_previewImage') }}"
                       >
                         <EyeOutlined />
                       </a-button>
@@ -178,7 +178,7 @@
                         danger
                         size="small"
                         @click="deleteImage('other', image)"
-                        title="删除图片"
+                        title="{{ t('productDetailManagement_deleteImage') }}"
                       >
                         <DeleteOutlined />
                       </a-button>
@@ -235,7 +235,7 @@
                         type="text"
                         size="small"
                         @click="showImagePreview(image)"
-                        title="预览图片"
+                        title="{{ t('productDetailManagement_previewImage') }}"
                       >
                         <EyeOutlined />
                       </a-button>
@@ -244,7 +244,7 @@
                         danger
                         size="small"
                         @click="deleteImage('view' + view, image)"
-                        title="删除图片"
+                        title="{{ t('productDetailManagement_deleteImage') }}"
                       >
                         <DeleteOutlined />
                       </a-button>
@@ -271,34 +271,34 @@
       </a-tabs>
     </a-spin>
 
-    <!-- 编辑产品模态框 -->
+    <!-- {{ t('productDetailManagement_editProduct') }}模态框 -->
     <a-modal
       v-model:open="showEditProductModal"
-      title="编辑产品"
+      title="{{ t('productDetailManagement_editProduct') }}"
       @cancel="cancelEdit"
       @ok="updateProduct"
       :confirm-loading="updatingProduct"
     >
       <a-form layout="vertical">
         <a-form-item
-          label="产品名称"
+          label="{{ t('productDetailManagement_productName') }}"
           :validate-status="editNameError ? 'error' : ''"
           :help="editNameError"
         >
           <a-input
             v-model:value="editingProduct.name"
-            placeholder="输入新的产品名称"
+            placeholder="输入新的{{ t('productDetailManagement_productName') }}"
             size="large"
           />
         </a-form-item>
         <a-form-item
-          label="产品文件夹名称"
+          label="{{ t('productDetailManagement_productFolderName') }}"
           :validate-status="editFolderNameError ? 'error' : ''"
           :help="editFolderNameError"
         >
           <a-input
             v-model:value="editingProduct.folderName"
-            placeholder="输入新的产品文件夹名称"
+            placeholder="输入新的{{ t('productDetailManagement_productFolderName') }}"
             size="large"
           />
         </a-form-item>
@@ -316,7 +316,7 @@
       <div style="text-align: center;">
         <img
           :src="previewImage"
-          alt="预览图片"
+          alt="{{ t('productDetailManagement_previewImage') }}"
           style="max-width: 100%; max-height: 70vh; object-fit: contain;"
         />
       </div>
@@ -362,7 +362,7 @@ const editNameError = computed(() => {
   
   const invalidChars = /[<>:"/\\|?*\x00-\x1F]/
   if (invalidChars.test(editingProduct.value.name)) {
-    return '产品名称包含无效字符'
+    return '{{ t('productDetailManagement_productName') }}包含无效字符'
   }
   
   return ''
@@ -373,7 +373,7 @@ const editFolderNameError = computed(() => {
   
   const invalidChars = /[<>:"/\\|?*\x00-\x1F]/
   if (invalidChars.test(editingProduct.value.folderName)) {
-    return '文件夹名称包含无效字符'
+    return '{{ t('productDetailManagement_folderNameContainsInvalidChars') }}'
   }
   
   return ''
@@ -390,7 +390,7 @@ const fetchProductCatalog = async () => {
     const data = await response.json()
     return data
   } catch (error) {
-    console.error('获取产品目录失败:', error)
+    console.error(t('productDetailManagement_getCatalogFailed'), error)
     throw error
   }
 }
@@ -405,7 +405,7 @@ const fetchProductDetails = async () => {
     const data = await response.json()
     return data
   } catch (error) {
-    console.error('获取产品详情失败:', error)
+    console.error(t('productDetailManagement_getDetailsFailed'), error)
     throw error
   }
 }
@@ -417,7 +417,7 @@ const loadProductImages = async () => {
     loading.value = true
     imageErrors.value.clear()
     
-    console.log('开始加载产品图片:', productName.value)
+    console.log(t('productDetailManagement_startLoadingImages'), productName.value)
     
     // 重置所有图片数组
     mainImage.value = ''
@@ -431,7 +431,7 @@ const loadProductImages = async () => {
     
     if (!product) {
       console.warn(`在产品目录中未找到产品: ${productName.value}`)
-      message.error('产品不存在于目录中')
+      message.error(t('productDetailManagement_productNotInCatalog'))
       return
     }
     
@@ -439,8 +439,8 @@ const loadProductImages = async () => {
     productData.value = product
     await loadImagesFromCatalog(product)
   } catch (error) {
-    console.error('加载产品图片失败:', error)
-    message.error('加载产品图片失败')
+    console.error(t('productDetailManagement_loadImagesFailed'), error)
+    message.error(t('productDetailManagement_loadImagesFailed'))
   } finally {
     loading.value = false
   }
@@ -448,35 +448,35 @@ const loadProductImages = async () => {
 
 // 从产品目录数据加载图片
 const loadImagesFromCatalog = async (product) => {
-  console.log('从产品目录加载图片:', product)
+  console.log(t('productDetailManagement_loadImageDetailsFailed'), product)
   
   try {
     // 获取产品详情（包含文件夹扫描结果）
     const productDetailsResponse = await fetchProductDetails()
     const productDetails = productDetailsResponse.product || productDetailsResponse
     
-    // 加载主图
+    // 加载{{ t('productDetailManagement_mainImage') }}
     if (product.mainImage) {
       mainImage.value = product.mainImage
-      console.log('主图路径:', mainImage.value)
+      console.log('{{ t('productDetailManagement_mainImage') }}路径:', mainImage.value)
     }
     
-    // 加载六视图图片
+    // 加载{{ t('productDetailManagement_sixViews') }}图片
     if (product.additionalImages?.sixViews && productDetails.folders) {
       const sixViewsFolder = productDetails.folders.images_6Views || []
       sixViewsImages.value = sixViewsFolder.map(file =>
         `${product.additionalImages.sixViews}${file.name}`
       )
-      console.log('六视图图片数量:', sixViewsImages.value.length)
+      console.log('{{ t('productDetailManagement_sixViews') }}图片数量:', sixViewsImages.value.length)
     }
     
-    // 加载其他图片
+    // 加载{{ t('productDetailManagement_otherImages') }}
     if (product.additionalImages?.other && productDetails.folders) {
       const otherFolder = productDetails.folders.images_other || []
       otherImages.value = otherFolder.map(file =>
         `${product.additionalImages.other}${file.name}`
       )
-      console.log('其他图片数量:', otherImages.value.length)
+      console.log('{{ t('productDetailManagement_otherImages') }}数量:', otherImages.value.length)
     }
     
     // 加载视角图片
@@ -492,7 +492,7 @@ const loadImagesFromCatalog = async (product) => {
     }
   } catch (error) {
     console.error('加载产品图片详情失败:', error)
-    message.error('加载产品图片失败')
+    message.error(t('productDetailManagement_loadImagesFailed'))
   }
 }
 
@@ -526,7 +526,7 @@ const deleteImage = async (folderType, imageUrl) => {
     
     // 从URL中提取文件名
     const fileName = imageUrl.split('/').pop()
-    console.log('删除图片:', folderType, fileName, imageUrl)
+    console.log('{{ t('productDetailManagement_deleteImage') }}:', folderType, fileName, imageUrl)
     
     // 构建文件路径
     let filePath = ''
@@ -561,11 +561,11 @@ const deleteImage = async (folderType, imageUrl) => {
       // 重新加载产品图片
       await loadProductImages()
     } else {
-      throw new Error(result.error || '删除图片失败')
+      throw new Error(result.error || '{{ t('productDetailManagement_deleteImage') }}失败')
     }
   } catch (error) {
-    console.error('删除图片失败:', error)
-    message.error('删除图片失败: ' + error.message)
+    console.error('{{ t('productDetailManagement_deleteImage') }}失败:', error)
+    message.error('{{ t('productDetailManagement_deleteImage') }}失败: ' + error.message)
   }
 }
 
@@ -638,7 +638,7 @@ const updateProduct = async () => {
     if (result.success) {
       message.success('产品信息已更新')
       
-      // 更新当前产品名称
+      // 更新当前{{ t('productDetailManagement_productName') }}
       productName.value = editingProduct.value.name
       
       // 重新加载产品图片
@@ -780,7 +780,7 @@ onMounted(() => {
   padding-top: 16px;
 }
 
-/* 主图管理区域 */
+/* {{ t('productDetailManagement_mainImage') }}管理区域 */
 .main-image-section {
   padding: 16px 0;
 }

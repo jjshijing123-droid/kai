@@ -3,8 +3,8 @@
   <a-result
     v-if="!isAdminLoggedIn"
     status="403"
-    title="需要管理员权限"
-    sub-title="请先登录管理员账号以访问产品管理器"
+    :title="t('common_needAdminTitle')"
+    :sub-title="t('common_needAdminSubtitleProduct')"
   >
     <template #extra>
       <a-space>
@@ -12,10 +12,10 @@
           <template #icon>
             <UserOutlined />
           </template>
-          管理员登录
+          {{ t('common_adminLogin') }}
         </a-button>
         <a-button @click="$router.push('/')">
-          返回首页
+          {{ t('productManagement_backToHome') }}
         </a-button>
       </a-space>
     </template>
@@ -42,25 +42,25 @@
                 <template #icon>
                   <ReloadOutlined />
                 </template>
-                刷新
+                {{ t('productManagement_refresh') }}
               </a-button>
               <a-button type="primary" @click="showCreateFolderModal = true" class="create-folder-button">
                 <template #icon>
                   <FolderAddOutlined />
                 </template>
-                新建文件夹
+                {{ t('productManagement_createFolder') }}
               </a-button>
               <a-button type="primary" @click="showUploadFolderModal = true" class="upload-folder-button">
                 <template #icon>
                   <UploadOutlined />
                 </template>
-                上传文件夹
+                {{ t('productManagement_uploadFolder') }}
               </a-button>
               <a-button type="primary" danger @click="showBatchUploadModal = true" class="batch-upload-button">
                 <template #icon>
                   <CloudUploadOutlined />
                 </template>
-                批量上传替换
+                {{ t('productManagement_batchUploadReplace') }}
               </a-button>
             </a-space>
           </a-col>
@@ -81,7 +81,7 @@
           </a-col>
           <a-col>
             <span class="folder-count">
-              共 {{ filteredProducts.length }} 个产品文件夹
+              {{ t('productManagement_totalProductFolders') }} {{ filteredProducts.length }} {{ t('productManagement_productFolders') }}
             </span>
           </a-col>
         </a-row>
@@ -126,7 +126,7 @@
           <div class="folder-info">
             <div class="folder-name">{{ product.name }}</div>
             <div class="folder-stats">
-              <span>文件夹大小: {{ formatFileSize(product.totalSize || 0) }}</span>
+              <span>{{ t('productManagement_folderSize') }} {{ formatFileSize(product.totalSize || 0) }}</span>
             </div>
           </div>
           <div class="folder-actions">
@@ -134,7 +134,7 @@
               type="text"
               size="small"
               @click.stop="renameFolder(product.name)"
-              title="重命名"
+              :title="t('productManagement_rename')"
             >
               <EditOutlined />
             </a-button>
@@ -142,7 +142,7 @@
               type="text"
               size="small"
               @click.stop="deleteFolder(product.name)"
-              title="删除"
+              :title="t('productManagement_delete')"
               danger
             >
               <DeleteOutlined />
@@ -158,10 +158,10 @@
         class="empty-state"
       >
         <template #description>
-          <p>暂无产品文件夹</p>
+          <p>{{ t('productManagement_noProductFolders') }}</p>
         </template>
         <a-button type="primary" @click="showCreateFolderModal = true">
-          创建第一个产品文件夹
+          {{ t('productManagement_createFirstFolder') }}
         </a-button>
       </a-empty>
     </div>
@@ -169,19 +169,19 @@
     <!-- 创建文件夹模态框 -->
     <a-modal
       v-model:open="showCreateFolderModal"
-      title="创建产品文件夹"
+      :title="t('productManagement_createProductFolder')"
       width="500px"
       @cancel="closeCreateFolderModal"
     >
       <a-form layout="vertical">
         <a-form-item
-          label="文件夹名称"
+          :label="t('productManagement_folderName')"
           :validate-status="folderNameError ? 'error' : ''"
           :help="folderNameError"
         >
           <a-input
             v-model:value="newFolderName"
-            placeholder="输入产品文件夹名称"
+            :placeholder="t('productManagement_inputFolderName')"
             size="large"
             @input="validateFolderName"
           />
@@ -190,8 +190,8 @@
         <a-alert
           type="info"
           show-icon
-          message="文件夹结构"
-          description="创建后将自动生成标准的产品文件夹结构，包含 images_6Views、images_other、view1、view2、view3、view4 等子文件夹。"
+          :message="t('productManagement_folderStructure')"
+          :description="t('productManagement_folderStructureDesc')"
           style="margin-bottom: 16px"
         />
       </a-form>
@@ -199,7 +199,7 @@
       <template #footer>
         <a-space>
           <a-button @click="closeCreateFolderModal">
-            取消
+            {{ t('productManagement_cancel') }}
           </a-button>
           <a-button
             type="primary"
@@ -207,7 +207,7 @@
             :disabled="!newFolderName || !!folderNameError || creatingFolder"
             :loading="creatingFolder"
           >
-            {{ creatingFolder ? '创建中...' : '创建' }}
+            {{ creatingFolder ? t('productManagement_creating') : t('productManagement_create') }}
           </a-button>
         </a-space>
       </template>
@@ -216,19 +216,19 @@
     <!-- 重命名文件夹模态框 -->
     <a-modal
       v-model:open="showRenameFolderModal"
-      title="重命名文件夹"
+      :title="t('productManagement_renameFolder')"
       width="500px"
       @cancel="closeRenameFolderModal"
     >
       <a-form layout="vertical">
         <a-form-item
-          label="新文件夹名称"
+          :label="t('productManagement_newFolderName')"
           :validate-status="renameFolderNameError ? 'error' : ''"
           :help="renameFolderNameError"
         >
           <a-input
             v-model:value="renameFolderName"
-            placeholder="输入新的文件夹名称"
+            :placeholder="t('productManagement_inputNewFolderName')"
             size="large"
             @input="validateRenameFolderName"
           />
@@ -238,7 +238,7 @@
       <template #footer>
         <a-space>
           <a-button @click="closeRenameFolderModal">
-            取消
+            {{ t('productManagement_cancel') }}
           </a-button>
           <a-button
             type="primary"
@@ -246,7 +246,7 @@
             :disabled="!renameFolderName || !!renameFolderNameError || renamingFolder"
             :loading="renamingFolder"
           >
-            {{ renamingFolder ? '重命名中...' : '重命名' }}
+            {{ renamingFolder ? t('productManagement_renaming') : t('productManagement_renameAction') }}
           </a-button>
         </a-space>
       </template>
@@ -255,13 +255,13 @@
     <!-- 上传文件夹模态框 -->
     <a-modal
       v-model:open="showUploadFolderModal"
-      title="上传产品文件夹"
+      :title="t('productManagement_uploadProductFolder')"
       width="800px"
       @cancel="closeUploadFolderModal"
       :footer="null"
     >
       <ProductFolderUploader
-        button-text="选择 ZIP 压缩包"
+        :button-text="t('productManagement_selectZipPackage')"
         @upload-complete="handleUploadComplete"
       />
     </a-modal>
@@ -269,7 +269,7 @@
     <!-- 批量上传替换模态框 -->
     <a-modal
       v-model:open="showBatchUploadModal"
-      title="批量上传替换产品文件夹"
+      :title="t('productManagement_batchUploadReplaceTitle')"
       width="800px"
       @cancel="closeBatchUploadModal"
       :footer="null"
@@ -278,13 +278,13 @@
         <a-alert
           type="warning"
           show-icon
-          message="危险操作"
-          description="此操作将完全替换现有的所有产品文件夹！此操作不可逆，请确保您已备份重要数据。"
+          :message="t('productManagement_dangerousOperation')"
+          :description="t('productManagement_dangerousOperationDesc')"
           style="margin-bottom: 20px"
         />
-        
+         
         <div class="batch-upload-area">
-          <div 
+          <div
             class="upload-zone"
             :class="{ 'upload-zone--dragover': isBatchDragOver }"
             @click="triggerBatchFileInput"
@@ -297,9 +297,9 @@
                 <CloudUploadOutlined />
               </div>
               <div class="upload-zone-text">
-                <div class="upload-zone-title">选择包含所有产品文件夹的 ZIP 压缩包</div>
+                <div class="upload-zone-title">{{ t('productManagement_selectZipTitle') }}</div>
                 <div class="upload-zone-subtitle">
-                  点击或拖拽 ZIP 文件到此处，将完全替换现有的 Product 文件夹
+                  {{ t('productManagement_selectZipSubtitle') }}
                 </div>
               </div>
               <input
@@ -318,8 +318,8 @@
           <a-alert
             type="info"
             show-icon
-            :message="`已选择文件: ${selectedBatchFile.name}`"
-            :description="`文件大小: ${formatFileSize(selectedBatchFile.size)} | 点击开始上传按钮进行批量替换`"
+            :message="`${t('productManagement_selectedFile')} ${selectedBatchFile.name}`"
+            :description="`${t('productManagement_fileSize')} ${formatFileSize(selectedBatchFile.size)} ${t('productManagement_clickUploadButton')}`"
             style="margin-bottom: 16px"
           />
         </div>
@@ -336,14 +336,14 @@
             <template #icon>
               <CloudUploadOutlined />
             </template>
-            开始批量替换
+            {{ t('productManagement_startBatchReplace') }}
           </a-button>
         </div>
 
         <!-- 上传进度 -->
         <div v-if="batchUploading" class="batch-upload-progress">
           <div class="progress-header">
-            <span>正在执行批量替换...</span>
+            <span>{{ t('productManagement_executingBatchReplace') }}</span>
             <span class="progress-percent">{{ batchUploadProgress }}%</span>
           </div>
           <a-progress
@@ -359,7 +359,7 @@
         <!-- 上传结果 -->
         <div v-if="batchUploadResult" class="batch-upload-result">
           <a-alert
-            :message="batchUploadResult.success ? '批量替换成功' : '批量替换失败'"
+            :message="batchUploadResult.success ? t('productManagement_batchReplaceSuccess') : t('productManagement_batchReplaceFailed')"
             :type="batchUploadResult.success ? 'success' : 'error'"
             show-icon
             closable
@@ -368,10 +368,10 @@
             <template #description>
               <div v-if="batchUploadResult.success">
                 <p>{{ batchUploadResult.message }}</p>
-                <p>处理了 {{ batchUploadResult.fileCount }} 个文件</p>
-                <p>创建了 {{ batchUploadResult.folderCount }} 个文件夹</p>
+                <p>{{ t('productManagement_processedFiles') }} {{ batchUploadResult.fileCount }} {{ t('common_files') }}</p>
+                <p>{{ t('productManagement_createdFolders') }} {{ batchUploadResult.folderCount }} {{ t('common_folders') }}</p>
                 <p v-if="batchUploadResult.backupPath">
-                  备份位置: {{ batchUploadResult.backupPath }}
+                  {{ t('productManagement_backupLocation') }} {{ batchUploadResult.backupPath }}
                 </p>
               </div>
               <div v-else>
@@ -383,14 +383,14 @@
 
         <!-- 使用说明 -->
         <div class="batch-upload-hint">
-          <p><strong>使用说明:</strong></p>
+          <p><strong>{{ t('productManagement_usageInstructions') }}</strong></p>
           <ul>
-            <li>上传包含完整产品结构树的 ZIP 压缩包</li>
-            <li>压缩包根目录应包含多个产品文件夹（如 Cobi18+、I20Y_I20YT 等）</li>
-            <li>每个产品文件夹应包含标准的子文件夹结构</li>
-            <li>此操作将完全替换现有的 Product 文件夹，请谨慎操作</li>
-            <li>建议在上传前备份现有的产品数据</li>
-            <li>支持最大 500MB 的压缩包</li>
+            <li>{{ t('productManagement_uploadZipInstructions1') }}</li>
+            <li>{{ t('productManagement_uploadZipInstructions2') }}</li>
+            <li>{{ t('productManagement_uploadZipInstructions3') }}</li>
+            <li>{{ t('productManagement_uploadZipInstructions4') }}</li>
+            <li>{{ t('productManagement_uploadZipInstructions5') }}</li>
+            <li>{{ t('productManagement_uploadZipInstructions6') }}</li>
           </ul>
         </div>
       </div>
@@ -399,14 +399,14 @@
     <!-- 删除确认模态框 -->
     <a-modal
       v-model:open="showDeleteConfirm"
-      title="确认删除"
+      :title="t('productManagement_confirmDelete')"
       @cancel="cancelDelete"
       @ok="confirmDeleteFolder"
-      ok-text="确认删除"
-      cancel-text="取消"
+      :ok-text="t('productManagement_okDelete')"
+      :cancel-text="t('productManagement_cancelDelete')"
       ok-type="danger"
     >
-      <p>确定要删除文件夹 "{{ folderToDelete }}" 吗？此操作将删除该文件夹及其所有内容，且无法恢复。</p>
+      <p>{{ t('productManagement_deleteConfirmContent') }}{{ folderToDelete }}{{ t('productManagement_deleteConfirmContent2') }}</p>
     </a-modal>
 
     <!-- 右键菜单 -->
@@ -418,15 +418,15 @@
     >
       <div class="context-menu-item" @click="openFolder(contextMenuProduct.name)">
         <FolderOpenOutlined />
-        <span>打开</span>
+        <span>{{ t('productManagement_open') }}</span>
       </div>
       <div class="context-menu-item" @click="renameFolder(contextMenuProduct.name)">
         <EditOutlined />
-        <span>重命名</span>
+        <span>{{ t('productManagement_rename') }}</span>
       </div>
       <div class="context-menu-item" @click="deleteFolder(contextMenuProduct.name)">
         <DeleteOutlined />
-        <span>删除</span>
+        <span>{{ t('productManagement_delete') }}</span>
       </div>
     </div>
     
@@ -605,13 +605,13 @@ const validateFolderName = () => {
   
   const invalidChars = /[<>:"/\\|?*\x00-\x1F]/
   if (invalidChars.test(newFolderName.value)) {
-    folderNameError.value = '文件夹名称包含无效字符'
+    folderNameError.value = t('productManagement_folderNameContainsInvalid')
     return
   }
   
   // 检查文件夹名称是否已存在
   if (products.value.some(p => p.name === newFolderName.value)) {
-    folderNameError.value = '文件夹名称已存在'
+    folderNameError.value = t('productManagement_folderNameExists')
     return
   }
   
@@ -626,14 +626,14 @@ const validateRenameFolderName = () => {
   
   const invalidChars = /[<>:"/\\|?*\x00-\x1F]/
   if (invalidChars.test(renameFolderName.value)) {
-    renameFolderNameError.value = '文件夹名称包含无效字符'
+    renameFolderNameError.value = t('productManagement_folderNameContainsInvalid')
     return
   }
   
   // 检查文件夹名称是否已存在（排除当前重命名的文件夹）
   if (renameFolderName.value !== folderToRename.value &&
       products.value.some(p => p.name === renameFolderName.value)) {
-    renameFolderNameError.value = '文件夹名称已存在'
+    renameFolderNameError.value = t('productManagement_folderNameExists')
     return
   }
   
@@ -661,18 +661,18 @@ const createFolder = async () => {
     
     if (response.ok && data.success) {
       console.log(`✅ 产品文件夹创建成功: ${newFolderName.value}`)
-      message.success(`产品文件夹 "${newFolderName.value}" 创建成功`)
+      message.success(`${t('productManagement_productFolderCreated')}${newFolderName.value}${t('productManagement_productFolderCreated2')}`)
       
       // 重新获取产品列表
       await fetchProducts()
       // 关闭模态框
       closeCreateFolderModal()
     } else {
-      throw new Error(data.message || '创建文件夹失败')
+      throw new Error(data.message || t('productManagement_createFolderFailed'))
     }
   } catch (err) {
     console.error('创建文件夹错误:', err)
-    message.error(`创建失败: ${err.message}`)
+    message.error(`${t('productManagement_createFailed')}${err.message}`)
   } finally {
     creatingFolder.value = false
   }
@@ -705,17 +705,17 @@ const confirmRenameFolder = async () => {
     
     if (response.ok && data.success) {
       console.log(`✅ 产品重命名成功: ${folderToRename.value} -> ${renameFolderName.value}`)
-      message.success(`产品重命名成功`)
+      message.success(`${t('productManagement_productRenamed')}`)
       
       // 重新获取产品列表
       await fetchProducts()
       closeRenameFolderModal()
     } else {
-      throw new Error(data.message || '重命名文件夹失败')
+      throw new Error(data.message || t('productManagement_renameFolderFailed'))
     }
   } catch (err) {
     console.error('重命名文件夹错误:', err)
-    message.error(`重命名失败: ${err.message}`)
+    message.error(`${t('productManagement_renameFailed')}${err.message}`)
   } finally {
     renamingFolder.value = false
   }
@@ -740,20 +740,20 @@ const confirmDeleteFolder = async () => {
       console.log(`✅ 产品删除成功: ${folderToDelete.value}`)
       console.log(`🗑️ 删除详情:`, data)
 
-      message.success(`产品 "${folderToDelete.value}" 删除成功`)
+      message.success(`${t('productManagement_productDeleted')}${folderToDelete.value}${t('productManagement_productDeleted2')}`)
 
       // 重新获取产品列表
       await fetchProducts()
       cancelDelete()
 
     } else {
-      const errorMsg = data.message || data.error || `删除失败 (HTTP ${response.status})`
+      const errorMsg = data.message || data.error || `${t('productManagement_deleteFailedText')}${response.status})`
       console.error(`❌ 删除失败:`, errorMsg)
-      message.error(`删除失败: ${errorMsg}`)
+      message.error(`${t('productManagement_deleteFailedMsg')}${errorMsg}`)
     }
   } catch (err) {
     console.error('❌ 删除操作失败:', err)
-    message.error(`删除失败: ${err.message}`)
+    message.error(`${t('productManagement_deleteFailedMsg')}${err.message}`)
   }
 }
 
@@ -808,10 +808,10 @@ const handleUploadComplete = async (result) => {
     await fetchProducts()
     
     // 显示成功消息
-    message.success(`产品文件夹 "${result.result.actualName}" 上传成功`)
+    message.success(`${t('productManagement_productFolderUploaded')}${result.result.actualName}${t('productManagement_productFolderUploaded2')}`)
   } else {
     // 上传失败，显示错误信息
-    message.error(`上传失败: ${result.error}`)
+    message.error(`${t('productManagement_uploadFailed')}${result.error}`)
   }
 }
 
@@ -861,19 +861,19 @@ const handleBatchDragLeave = (event) => {
 const addBatchFile = (file) => {
   // 验证文件类型
   if (!file.name.toLowerCase().endsWith('.zip')) {
-    message.error('只支持 ZIP 格式的压缩包')
+    message.error(t('productManagement_zipOnly'))
     return
   }
 
   // 验证文件大小（500MB）
   const maxSize = 500 * 1024 * 1024
   if (file.size > maxSize) {
-    message.error('文件大小超过 500MB 限制')
+    message.error(t('productManagement_fileSizeExceeded500'))
     return
   }
 
   selectedBatchFile.value = file
-  console.log('选择批量上传文件:', file.name)
+  console.log(`${t('productManagement_selectingBatchFile')}:`, file.name)
 }
 
 const startBatchUpload = async () => {
@@ -986,14 +986,14 @@ onMounted(() => {
 
 // 管理员登录相关函数
 const handleLoginSuccess = () => {
-  message.success('管理员登录成功！')
+  message.success(t('common_adminLoginSuccess'))
   showLoginModal.value = false
   // 重新加载产品列表
   fetchProducts()
 }
 
 const handleLoginFailed = (error) => {
-  console.error('登录失败:', error)
+  console.error(`${t('common_loginFailed')}:`, error)
 }
 </script>
 

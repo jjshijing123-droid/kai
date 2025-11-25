@@ -20,7 +20,7 @@
         <div class="upload-text">
           <div class="upload-title">{{ buttonText }}</div>
           <div class="upload-subtitle">
-            {{ multiple ? '点击或拖拽文件到此处上传' : '点击选择文件上传' }}
+            {{ multiple ? t('fileUploader_dragDropText') : t('fileUploader_clickSelectText') }}
           </div>
         </div>
         <input
@@ -38,14 +38,14 @@
     <!-- 文件列表 -->
     <div v-if="fileList.length > 0" class="file-list">
       <div class="file-list-header">
-        <span class="file-count">已选择 {{ fileList.length }} 个文件</span>
-        <a-button 
-          type="link" 
-          size="small" 
+        <span class="file-count">{{ t('fileUploader_selectedCount', { count: fileList.length }) }}</span>
+        <a-button
+          type="link"
+          size="small"
           @click="clearFileList"
           :disabled="uploading"
         >
-          清空
+          {{ t('fileUploader_clear') }}
         </a-button>
       </div>
       
@@ -85,19 +85,19 @@
             <!-- 上传成功 -->
             <div v-else-if="file.status === 'success'" class="status-success">
               <CheckCircleOutlined />
-              <span>上传成功</span>
+              <span>{{ t('fileUploader_uploadSuccess') }}</span>
             </div>
             
             <!-- 上传失败 -->
             <div v-else-if="file.status === 'error'" class="status-error">
               <CloseCircleOutlined />
-              <span>{{ file.error || '上传失败' }}</span>
+              <span>{{ file.error || t('fileUploader_uploadFailedStatus') }}</span>
             </div>
             
             <!-- 等待上传 -->
             <div v-else class="status-pending">
               <ClockCircleOutlined />
-              <span>等待上传</span>
+              <span>{{ t('fileUploader_waitingUpload') }}</span>
             </div>
           </div>
           
@@ -109,7 +109,7 @@
               size="small"
               danger
               @click="cancelUpload(file.id)"
-              title="取消上传"
+              :title="t('fileUploader_cancelUpload')"
             >
               <CloseOutlined />
             </a-button>
@@ -120,7 +120,7 @@
               type="text"
               size="small"
               @click="retryUpload(file)"
-              title="重新上传"
+              :title="t('fileUploader_retryUpload')"
             >
               <ReloadOutlined />
             </a-button>
@@ -132,7 +132,7 @@
               size="small"
               danger
               @click="removeFile(file.id)"
-              title="移除文件"
+              :title="t('fileUploader_removeFile')"
             >
               <DeleteOutlined />
             </a-button>
@@ -153,7 +153,7 @@
         <template #icon>
           <UploadOutlined />
         </template>
-        {{ uploading ? `上传中 (${uploadedCount}/${fileList.length})` : '开始上传' }}
+        {{ uploading ? t('fileUploader_uploadingCount', { uploaded: uploadedCount, total: fileList.length }) : t('fileUploader_startUpload') }}
       </a-button>
       
       <a-button
@@ -161,7 +161,7 @@
         @click="clearFileList"
         :disabled="disabled"
       >
-        取消
+        {{ t('fileUploader_cancelButton') }}
       </a-button>
     </div>
 
@@ -185,6 +185,7 @@
 
 <script setup>
 import { ref, computed, onUnmounted } from 'vue'
+import { useI18n } from '../composables/useI18n.js'
 import {
   CloudUploadOutlined,
   UploadOutlined,
@@ -197,6 +198,8 @@ import {
   ReloadOutlined,
   DeleteOutlined
 } from '@ant-design/icons-vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   // 当前文件夹路径
@@ -258,7 +261,7 @@ const uploadedCount = computed(() => {
 const hint = computed(() => {
   const maxSizeMB = props.maxSize
   const acceptTypes = props.accept.split(',').map(type => type.trim()).join('、')
-  return `支持 ${acceptTypes} 格式，单个文件不超过 ${maxSizeMB}MB`
+  return `${t('fileUploader_supportFormats')} ${acceptTypes} ${t('fileUploader_formatSizeLimit')} ${maxSizeMB}${t('fileUploader_mb')}`
 })
 
 // 方法
@@ -302,7 +305,7 @@ const addFiles = (files) => {
   
   // 验证文件数量
   if (!props.multiple && files.length > 1) {
-    error.value = '只能选择一个文件'
+    error.value = t('fileUploader_singleFileOnlyMsg')
     return
   }
   
@@ -334,13 +337,13 @@ const validateFile = (file) => {
   // 验证文件大小
   const maxSizeBytes = props.maxSize * 1024 * 1024
   if (file.size > maxSizeBytes) {
-    return `文件 "${file.name}" 超过 ${props.maxSize}MB 大小限制`
+    return t('fileUploader_fileSizeExceeds', { maxSize: props.maxSize })
   }
   
   // 验证文件类型
   const extension = '.' + file.name.split('.').pop().toLowerCase()
   if (!props.accept.includes(extension)) {
-    return `文件 "${file.name}" 类型不支持，支持的类型: ${props.accept}`
+    return t('fileUploader_fileTypeUnsupported', { types: props.accept })
   }
   
   return null
@@ -449,16 +452,16 @@ const uploadFile = async (fileItem) => {
             throw new Error(response.error || '上传失败')
           }
         } catch (error) {
-          throw new Error('解析响应失败')
+          throw new Error(t('fileUploader_parseResponseFailed'))
         }
       } else {
-        throw new Error(`服务器错误: ${xhr.status}`)
+        throw new Error(`${t('fileUploader_serverErrorMsg')} ${xhr.status}`)
       }
     })
     
     // 处理错误
     xhr.addEventListener('error', () => {
-      throw new Error('网络错误，请检查网络连接')
+      throw new Error(t('fileUploader_networkErrorMsg'))
     })
     
     // 发送请求

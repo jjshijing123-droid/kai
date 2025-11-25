@@ -22,7 +22,7 @@
         <template #icon>
           <DownloadOutlined />
         </template>
-        下载所有图片
+        {{ t('product3dHeader_downloadAllImages') }}
       </a-button>
       
       <!-- 抽屉按钮 -->
@@ -42,8 +42,10 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from '../composables/useI18n.js'
 import { LeftOutlined, MenuOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 
+const { t } = useI18n()
 const router = useRouter()
 
 // 下载按钮点击事件

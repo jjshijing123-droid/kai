@@ -41,7 +41,7 @@
         </div>
         <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
         <button v-if="showRetry" class="retry-btn" @click="retryLoading">
-          {{ t('retry') }}
+          {{ t('product3dViewer_retry') }}
         </button>
       </div>
     </div>
@@ -49,7 +49,7 @@
     <!-- 控制按钮容器 - 在沉浸模式下隐藏 -->
     <div v-if="!isImmersiveMode" class="controls-container">
       <button class="auto-rotate-btn" @click="toggleAutoRotation">
-        {{ isAutoRotating ? t('stopRotation') : t('autoRotate') }}
+        {{ isAutoRotating ? t('product3dViewer_stopRotation') : t('product3dViewer_autoRotate') }}
       </button>
     </div>
 
@@ -79,6 +79,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import Product3DHeader from './Product3DHeader.vue'
 import Drawer from './Drawer.vue'
+import { message } from 'ant-design-vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -212,7 +213,7 @@ onMounted(async () => {
   // 验证产品名称
   if (!productName.value || productName.value.trim() === '') {
     console.error('Product3DViewer: 产品名称为空或无效')
-    showError('产品名称无效，请检查URL参数')
+    showError(t('product3dViewer_invalidProductName'))
     return
   }
   
@@ -232,7 +233,7 @@ const initializeViewer = async () => {
     // 验证产品名称
     if (!productName.value || productName.value.trim() === '') {
       console.error('❌ 产品名称为空或无效:', productName.value)
-      showError('产品名称无效，请检查URL参数')
+      showError(t('product3dViewer_invalidProductName'))
       return
     }
     
@@ -261,8 +262,15 @@ const initializeViewer = async () => {
     initializeEvents()
     
   } catch (error) {
-    showError(t('loadFailed', { message: error.message }))
+    showError(t('product3dViewer_loadFailed', { message: error.message }))
     console.error('初始化错误:', error)
+  }
+
+  // 方法：显示错误
+  const showError = (message, showRetryBtn = true) => {
+    console.error('Product3DViewer showError:', message)
+    errorMessage.value = message
+    showRetryButton.value = showRetryBtn
   }
 }
 
@@ -441,13 +449,13 @@ const loadSingleImage = (index, viewIndex) => {
     // 验证输入参数
     if (!productName.value || productName.value.trim() === '') {
       console.error('❌ Product3DViewer: loadSingleImage - productName 为空')
-      reject(new Error('产品名称为空'))
+      reject(new Error(t('product3dViewer_productNameEmpty')))
       return
     }
     
     if (!enabledViews.value[viewIndex]) {
       console.error('❌ Product3DViewer: loadSingleImage - 视图未定义:', viewIndex)
-      reject(new Error('视图未定义'))
+      reject(new Error(t('product3dViewer_viewUndefined')))
       return
     }
     
@@ -458,7 +466,7 @@ const loadSingleImage = (index, viewIndex) => {
     // 验证路径格式
     if (!path || path === '' || path.includes('/product-3d/')) {
       console.error('❌ Product3DViewer: loadSingleImage - 无效的视图路径:', path)
-      reject(new Error('无效的视图路径'))
+      reject(new Error(t('product3dViewer_invalidViewPath')))
       return
     }
     
@@ -481,7 +489,7 @@ const loadSingleImage = (index, viewIndex) => {
     
     img.onerror = () => {
       cleanup()
-      console.error(`WebP图片加载失败: ${path}image_${frame}${CONFIG.imageExtension}`)
+      console.error(t('product3dViewer_webpLoadFailed'))
       
       // 尝试加载PNG格式
       const pngImg = new Image()
@@ -496,8 +504,8 @@ const loadSingleImage = (index, viewIndex) => {
       }
       
       pngImg.onerror = () => {
-        console.error(`PNG图片加载失败: ${pngUrl}`)
-        reject(new Error(t('frameLoadFailed', { frame })))
+        console.error(t('product3dViewer_pngLoadFailed'))
+        reject(new Error(t('product3dViewer_frameLoadFailed', { frame })))
       }
       
       pngImg.src = pngUrl
@@ -505,7 +513,7 @@ const loadSingleImage = (index, viewIndex) => {
     
     timer = setTimeout(() => {
       img.src = ''
-      reject(new Error(t('frameLoadTimeout', { frame })))
+      reject(new Error(t('product3dViewer_frameLoadTimeout', { frame })))
     }, CONFIG.loadTimeout)
     
     const imageUrl = `${path}image_${frame}${CONFIG.imageExtension}`
@@ -518,7 +526,7 @@ const updateProgress = () => {
   const totalImages = CONFIG.totalFrames * enabledViews.value.length
   const percent = Math.round((loadedCount.value / totalImages) * 100)
   loadingProgress.value = percent
-  loadingText.value = t('loading', { loaded: loadedCount.value, total: totalImages })
+  loadingText.value = t('product3dViewer_loading', { loaded: loadedCount.value, total: totalImages })
 }
 
 const updateFrame = (frameInput) => {
@@ -749,7 +757,7 @@ const stopAutoRotation = () => {
 // 下载全部图片功能
 const downloadAllImages = async () => {
   if (isLoading.value) {
-    alert('请等待图片加载完成后再下载')
+    message.warning(t('product3dViewer_waitForLoading'))
     return
   }
 
@@ -757,7 +765,7 @@ const downloadAllImages = async () => {
     isDownloading.value = true
     showDownloadProgress.value = true
     downloadProgress.value = 0
-    downloadProgressText.value = t('preparingDownload')
+    downloadProgressText.value = t('product3dViewer_preparingDownload')
 
     // 创建JSZip实例
     const JSZip = await import('jszip')
@@ -791,7 +799,7 @@ const downloadAllImages = async () => {
               viewFolder.file(originalFileName, blob)
               processedImages++
               downloadProgress.value = Math.round((processedImages / totalImages) * 100)
-              downloadProgressText.value = t('downloadingImages', { 
+              downloadProgressText.value = t('product3dViewer_downloadingImages', {
                 processed: processedImages, 
                 total: totalImages 
               })
@@ -830,17 +838,17 @@ const downloadAllImages = async () => {
         
         isDownloading.value = false
         showDownloadProgress.value = false
-        downloadProgressText.value = t('downloadComplete')
+        downloadProgressText.value = t('product3dViewer_downloadComplete')
       }).catch(error => {
         console.error('生成ZIP文件失败:', error)
-        alert('生成ZIP文件失败，请重试')
+        message.error(t('product3dViewer_zipGenerateFailed'))
         isDownloading.value = false
         showDownloadProgress.value = false
       })
     }
   } catch (error) {
     console.error('下载失败:', error)
-    alert('下载失败，请重试')
+    message.error(t('product3dViewer_downloadFailed'))
     isDownloading.value = false
     showDownloadProgress.value = false
   }
@@ -858,7 +866,7 @@ const retryLoading = () => {
   loadedCount.value = 0
   failedLoads.value = 0
   loadingProgress.value = 0
-  loadingText.value = t('detectingImages')
+  loadingText.value = t('product3dViewer_detectingImages')
   initializeViewer()
 }
 

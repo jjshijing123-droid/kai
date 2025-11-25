@@ -26,7 +26,7 @@
           <template #icon>
             <TranslationOutlined />
           </template>
-          {{ currentLanguage === 'zh-CN' ? 'EN' : '中文' }}
+          {{ currentLanguage === 'zh-CN' ? t('common_english') : t('common_chinese') }}
         </a-button>
       </div>
       

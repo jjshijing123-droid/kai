@@ -21,20 +21,20 @@
     <div class="drawer-content">
       <!-- 管理员认证部分 -->
       <div class="admin-section">
-        <h3 class="section-title">管理员</h3>
+        <h3 class="section-title">{{ t('common_admin') }}</h3>
         <div class="admin-content">
           <div v-if="!isAdminLoggedIn" class="admin-login-item" @click="openLoginModal">
             <div class="menu-icon">
               <LoginOutlined />
             </div>
-            <span class="menu-text">管理员登录</span>
+            <span class="menu-text">{{ t('common_adminLogin') }}</span>
           </div>
           <div v-else class="admin-logged-in">
             <div class="admin-info">
               <div class="menu-icon">
                 <UserOutlined />
               </div>
-              <span class="menu-text">已登录</span>
+              <span class="menu-text">{{ t('common_loggedIn') }}</span>
             </div>
             <a-button
               type="text"
@@ -45,7 +45,7 @@
               <template #icon>
                 <LogoutOutlined />
               </template>
-              登出
+              {{ t('common_logout') }}
             </a-button>
           </div>
         </div>
@@ -66,7 +66,7 @@
             class="menu-item"
             @click="goToI18nManager"
             :class="{ 'disabled': !isAdminLoggedIn }"
-            :title="!isAdminLoggedIn ? '需要管理员权限' : ''"
+            :title="!isAdminLoggedIn ? t('common_needAdminPermission') : ''"
           >
             <div class="menu-icon">
               <GlobalOutlined />
@@ -78,7 +78,7 @@
             class="menu-item"
             @click="goToProductManager"
             :class="{ 'disabled': !isAdminLoggedIn }"
-            :title="!isAdminLoggedIn ? '需要管理员权限' : ''"
+            :title="!isAdminLoggedIn ? t('common_needAdminPermission') : ''"
           >
             <div class="menu-icon">
               <AppstoreOutlined />
@@ -98,7 +98,7 @@
             @click="switchLanguage('zh-CN')"
           >
             <span class="language-flag">🇨🇳</span>
-            <span class="language-text">中文</span>
+            <span class="language-text">{{ t('common_chinese') }}</span>
             <div class="language-check" v-if="currentLanguage === 'zh-CN'">
               <CheckOutlined />
             </div>
@@ -110,7 +110,7 @@
             @click="switchLanguage('en')"
           >
             <span class="language-flag">🇺🇸</span>
-            <span class="language-text">English</span>
+            <span class="language-text">{{ t('common_english') }}</span>
             <div class="language-check" v-if="currentLanguage === 'en'">
               <CheckOutlined />
             </div>
@@ -172,7 +172,7 @@ const goToHome = () => {
 
 const goToI18nManager = () => {
   if (!isAdminLoggedIn) {
-    message.warning('需要管理员权限才能访问翻译管理器')
+    message.warning(t('common_adminPermissionI18n'))
     showLoginModal.value = true
     return
   }
@@ -182,7 +182,7 @@ const goToI18nManager = () => {
 
 const goToProductManager = () => {
   if (!isAdminLoggedIn) {
-    message.warning('需要管理员权限才能访问产品管理')
+    message.warning(t('common_adminPermissionProduct'))
     showLoginModal.value = true
     return
   }
@@ -196,12 +196,12 @@ const openLoginModal = () => {
 }
 
 const handleLoginSuccess = () => {
-  message.success('管理员登录成功！')
+  message.success(t('common_adminLoginSuccess'))
   showLoginModal.value = false
 }
 
 const handleLoginFailed = (error) => {
-  console.error('登录失败:', error)
+  console.error(`${t('common_loginFailed')}:`, error)
 }
 
 const handleLogout = () => {

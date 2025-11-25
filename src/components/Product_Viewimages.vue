@@ -134,7 +134,7 @@ onMounted(async () => {
     
   } catch (error) {
     console.error('初始化失败:', error)
-    loadingText.value = t('loadFailed').replace('{message}', error.message)
+    loadingText.value = t('productViewimages_loadFailed').replace('{message}', error.message)
   }
 })
 
@@ -181,13 +181,13 @@ function getProductFromCatalog() {
 // 初始化图片展示
 async function initGallery() {
   try {
-    loadingText.value = t('loadingCatalog')
+    loadingText.value = t('productViewimages_loadingCatalog')
     progressText.value = '0%'
     
     // 1. 加载产品目录数据
     productCatalog.value = await loadProductCatalog()
     
-    loadingText.value = t('detectingImages')
+    loadingText.value = t('productViewimages_detectingImages')
     
     // 2. 检查文件夹并检测可用图片
     const validImages = await detectAvailableImages()
@@ -199,7 +199,7 @@ async function initGallery() {
       throw new Error(`${folderType}文件夹为空或未找到可用图片`)
     }
     
-    loadingText.value = t('loadingImages').replace('{count}', validImages.length)
+    loadingText.value = t('productViewimages_loadingImages').replace('{count}', validImages.length)
     
     // 3. 设置图片数据
     images.value = validImages
@@ -315,7 +315,7 @@ async function detectAvailableImages() {
               url: url,
               format: format,
               loaded: false,
-              alt: `${t('thumbnailAlt').replace('{index}', i + 1)} (${format.toUpperCase()})`
+              alt: `${t('productViewimages_thumbnailAlt').replace('{index}', i + 1)} (${format.toUpperCase()})`
             })
             imageFound = true
             console.log(`✅ 找到图片: ${url}`)
@@ -372,7 +372,7 @@ async function detectAvailableImages() {
             url: url,
             format: format,
             loaded: false,
-            alt: `${t('thumbnailAlt').replace('{index}', i + 1)} (${format.toUpperCase()})`
+            alt: `${t('productViewimages_thumbnailAlt').replace('{index}', i + 1)} (${format.toUpperCase()})`
           })
           console.log(`✅ 找到图片: ${url}`)
         }
@@ -791,7 +791,7 @@ async function downloadAllImages() {
   if (images.value.length === 0) return
   
   try {
-    loadingText.value = t('preparingDownload')
+    loadingText.value = t('product3dViewer_preparingDownload')
     isLoading.value = true
     
     // 动态导入JSZip和FileSaver
@@ -819,14 +819,14 @@ async function downloadAllImages() {
     // 下载
     saveAs(content, `${downloadFileName}.zip`)
     
-    loadingText.value = t('downloadComplete')
+    loadingText.value = t('product3dViewer_downloadComplete')
     setTimeout(() => {
       isLoading.value = false
     }, 2000)
     
   } catch (error) {
     console.error('Download failed:', error)
-    loadingText.value = t('downloadError').replace('{message}', error.message)
+    loadingText.value = t('product3dViewer_downloadError').replace('{message}', error.message)
   }
 }
 
@@ -835,7 +835,7 @@ watch(currentLanguage, () => {
   // 重新生成图片alt文本
   images.value.forEach((image, index) => {
     const originalIndex = image.index >= 100 ? image.index - 99 : image.index + 1
-    image.alt = `${t('thumbnailAlt').replace('{index}', originalIndex)} (${image.format.toUpperCase()})`
+    image.alt = `${t('productViewimages_thumbnailAlt').replace('{index}', originalIndex)} (${image.format.toUpperCase()})`
   })
 })
 

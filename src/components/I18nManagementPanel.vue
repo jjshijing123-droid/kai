@@ -5,8 +5,8 @@
     <a-result
       v-if="!isAdminLoggedIn"
       status="403"
-      title="需要管理员权限"
-      sub-title="请先登录管理员账号以访问翻译管理器"
+      :title="t('common_needAdminTitle')"
+      :sub-title="t('common_needAdminSubtitleI18n')"
     >
       <template #extra>
         <a-space>
@@ -14,7 +14,7 @@
             <template #icon>
               <UserOutlined />
             </template>
-            管理员登录
+            {{ t('common_adminLogin') }}
           </a-button>
           <a-button @click="$router.push('/')">
             返回首页
@@ -59,7 +59,7 @@
                 <div class="lang-header">
                   <span class="flag">{{ lang.flag }}</span>
                   <span class="lang-name">{{ lang.name }}</span>
-                  <a-tag v-if="lang.code === currentLanguage" color="blue">当前</a-tag>
+                  <a-tag v-if="lang.code === currentLanguage" color="blue">{{ currentLanguage === 'zh-CN' ? '当前' : 'Current' }}</a-tag>
                 </div>
               </template>
               
@@ -75,11 +75,11 @@
               </div>
               
               <div class="quality-info" v-if="translationCompleteness[lang.code]?.quality">
-                <a-tag color="green">质量: {{ translationCompleteness[lang.code]?.quality }}%</a-tag>
+                <a-tag color="green">{{ currentLanguage === 'zh-CN' ? '质量' : 'Quality' }}: {{ translationCompleteness[lang.code]?.quality }}%</a-tag>
               </div>
               
               <div class="review-info" v-if="translationCompleteness[lang.code]?.needsReview?.length">
-                <a-tag color="red">需要审核: {{ translationCompleteness[lang.code]?.needsReview?.length }} 项</a-tag>
+                <a-tag color="red">{{ currentLanguage === 'zh-CN' ? '需要审核' : 'Needs Review' }}: {{ translationCompleteness[lang.code]?.needsReview?.length }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }}</a-tag>
               </div>
             </a-card>
           </a-col>
@@ -89,7 +89,7 @@
       <!-- 需要审核的翻译 -->
       <a-card
         v-if="hasTranslationsNeedingReview"
-        title="需要审核的翻译"
+        :title="currentLanguage === 'zh-CN' ? '需要审核的翻译' : 'Translations Needing Review'"
         class="review-section"
         :head-style="{ borderBottom: '2px solid #ff4d4f' }"
       >
@@ -112,7 +112,7 @@
               <a-list
                 :data-source="translationCompleteness[lang.code]?.needsReview?.slice(0, 3)"
                 size="small"
-                :locale="{ emptyText: '暂无需要审核的翻译' }"
+                :locale="{ emptyText: currentLanguage === 'zh-CN' ? '暂无需要审核的翻译' : 'No translations need review' }"
               >
                 <template #renderItem="{ item }">
                   <a-list-item class="review-item">
@@ -131,7 +131,7 @@
               
               <div v-if="translationCompleteness[lang.code]?.needsReview?.length > 3" class="review-more">
                 <a-typography-text type="secondary">
-                  还有 {{ translationCompleteness[lang.code]?.needsReview?.length - 3 }} 项需要审核...
+                  {{ currentLanguage === 'zh-CN' ? '还有' : 'More' }} {{ translationCompleteness[lang.code]?.needsReview?.length - 3 }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }} {{ currentLanguage === 'zh-CN' ? '需要审核...' : 'need review...' }}
                 </a-typography-text>
               </div>
             </a-card>
@@ -190,11 +190,11 @@
         </a-table>
         
         <!-- 添加新翻译 -->
-        <a-card title="添加新翻译" class="add-translation-section" size="small">
+        <a-card :title="currentLanguage === 'zh-CN' ? '添加新翻译' : 'Add New Translation'" class="add-translation-section" size="small">
           <a-form layout="vertical">
             <a-row :gutter="16">
               <a-col :span="24">
-                <a-form-item label="翻译键">
+                <a-form-item :label="currentLanguage === 'zh-CN' ? '翻译键' : 'Translation Key'">
                   <a-input
                     v-model:value="newKey"
                     :placeholder="t('i18nManager_newKey')"
@@ -444,7 +444,7 @@ const addTranslation = async () => {
     }, 100)
   } catch (error) {
     console.error('Error adding translation:', error)
-    alert('添加翻译时发生错误，请检查控制台')
+    alert(currentLanguage === 'zh-CN' ? '添加翻译时发生错误，请检查控制台' : 'Error occurred while adding translation, please check console')
   }
 }
 

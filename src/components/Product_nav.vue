@@ -1,6 +1,6 @@
 <template>
   <div class="product-detail">
-    <button class="lang-switch" @click="toggleLanguage">{{ currentLanguage === 'zh-CN' ? 'EN' : '中文' }}</button>
+    <button class="lang-switch" @click="toggleLanguage">{{ currentLanguage === 'zh-CN' ? t('common_english') : t('common_chinese') }}</button>
     
     <div class="container">
       <div class="header-container">
@@ -15,7 +15,7 @@
             @error="handleImageError"
           />
           <div v-else class="placeholder-image">
-            正在加载产品图片...
+            {{ t('common_placeholderImage') }}
           </div>
         </div>
         <h1 id="folderName">{{ productName }}</h1>

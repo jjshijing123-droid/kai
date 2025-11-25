@@ -104,33 +104,33 @@ const checkImageExists = async (imageUrl) => {
 const validateCatalogProductData = (product) => {
   const errors = []
   
-  console.log('验证产品目录数据:', product)
+  console.log(t('productList_validateCatalogData'), product)
   
   // 检查产品ID
   if (product.id === undefined || product.id === null) {
-    console.log('产品ID验证失败:', product.id)
+    console.log(t('productList_productIdValidationFailed'), product.id)
     errors.push('缺少产品ID')
   } else {
-    console.log('产品ID验证通过:', product.id)
+    console.log(t('productList_productIdValidated'), product.id)
   }
   
   // 检查产品文件夹名称
   if (!product.folderName || product.folderName.trim() === '') {
-    console.log('产品文件夹名称验证失败:', product.folderName)
+    console.log(t('productList_folderNameMissing'), product.folderName)
     errors.push('缺少产品文件夹名称')
   } else {
-    console.log('产品文件夹名称验证通过:', product.folderName)
+    console.log(t('productList_folderNameValidated'), product.folderName)
   }
   
   // 检查产品文件夹路径
   if (!product.folder || product.folder.trim() === '') {
-    console.log('产品文件夹路径验证失败:', product.folder)
+    console.log(t('productList_folderPathMissing'), product.folder)
     errors.push('缺少产品文件夹路径')
   } else {
     console.log('产品文件夹路径验证通过:', product.folder)
   }
   
-  console.log('产品目录数据验证结果:', { isValid: errors.length === 0, errors })
+  console.log(t('productList_catalogDataValidationResult'), { isValid: errors.length === 0, errors })
   
   return {
     isValid: errors.length === 0,
@@ -142,8 +142,8 @@ const validateCatalogProductData = (product) => {
  * 从产品目录JSON文件获取产品数据
  */
 const fetchProductDataFromCatalog = async () => {
-  console.log('🔍 开始从产品目录JSON文件获取产品数据...')
-  console.log('📁 文件路径:', API_CONFIG.PRODUCT_CATALOG_URL)
+  console.log(t('productList_startFetchingFromCatalog'))
+  console.log(t('productList_filePath'), API_CONFIG.PRODUCT_CATALOG_URL)
   
   try {
     const response = await fetch(API_CONFIG.PRODUCT_CATALOG_URL)
@@ -153,12 +153,12 @@ const fetchProductDataFromCatalog = async () => {
     }
     
     const data = await response.json()
-    console.log('✅ 产品目录文件成功返回的数据:', data)
+    console.log(t('productList_catalogDataSuccess'), data)
     
     return data
     
   } catch (error) {
-    console.error('🚨 从产品目录文件获取数据失败:', error)
+    console.error(t('productList_catalogDataFailed'), error)
     throw error
   }
 }
@@ -167,9 +167,9 @@ const fetchProductDataFromCatalog = async () => {
  * 从数据库API获取产品数据
  */
 const fetchProductDataFromDatabase = async () => {
-  console.log('🔍 开始从数据库API获取产品数据...')
+  console.log(t('productList_startDatabaseFetch'))
   console.log('🌐 API端点:', API_CONFIG.DATABASE_API_URL)
-  console.log('📍 当前页面URL:', window.location.href)
+  console.log(t('productList_currentPageUrl'), window.location.href)
   console.log('🔗 请求发起时间:', new Date().toISOString())
   
   try {
@@ -229,15 +229,15 @@ const fetchProductDataFromDatabase = async () => {
 const processCatalogData = async (rawData) => {
   const processedProducts = []
   
-  console.log('处理产品目录数据:', rawData)
+  console.log(t('productList_processingCatalogData'), rawData)
   
   // 处理产品目录API返回的数据结构
   const products = rawData.products || rawData
   
-  console.log('产品数组:', products)
+  console.log(t('productList_processingProducts'), products)
   
   for (const product of products) {
-    console.log('处理产品:', product)
+    console.log(t('productList_processingProduct'), product)
     
     // 验证数据完整性
     const validation = validateCatalogProductData(product)
@@ -282,15 +282,15 @@ const processCatalogData = async (rawData) => {
 const processProductData = async (rawData) => {
   const processedProducts = []
   
-  console.log('原始数据:', rawData)
+  console.log(t('productList_rawData'), rawData)
   
   // 处理数据库API返回的数据结构
   const products = rawData.products || rawData
   
-  console.log('产品数组:', products)
+  console.log(t('productList_processingProducts'), products)
   
   for (const product of products) {
-    console.log('处理产品:', product)
+    console.log(t('productList_processingProduct'), product)
     
     // 验证数据完整性 - 优先使用folderName，如果没有则回退到name
     const displayName = product.folderName || product.name
@@ -345,14 +345,14 @@ const loadProducts = async () => {
   const startTime = performance.now()
   
   try {
-    console.log('开始加载产品列表...')
+    console.log(t('productList_startLoadingProductList'))
     loading.value = true
     error.value = null
     loadingProgress.value = 30
     
     // 优先尝试从产品目录JSON文件获取数据
     try {
-      console.log('优先尝试从产品目录JSON文件获取数据...')
+      console.log(t('productList_catalogDataPriority'))
       const catalogData = await fetchProductDataFromCatalog()
       loadingProgress.value = 60
       
@@ -376,7 +376,7 @@ const loadProducts = async () => {
       return
       
     } catch (catalogError) {
-      console.warn('⚠️ 产品目录文件读取失败，尝试数据库API:', catalogError.message)
+      console.warn(t('productList_catalogReadFailed'), catalogError.message)
       
       // 如果产品目录文件读取失败，尝试数据库API
       loadingProgress.value = 40
@@ -404,7 +404,7 @@ const loadProducts = async () => {
     }
     
   } catch (err) {
-    console.error('加载产品列表失败:', err)
+    console.error(t('productList_loadProductListFailed'), err)
     error.value = err.message
     loading.value = false
   }
@@ -483,7 +483,7 @@ const handleImageError = (product, event) => {
  * 性能监控
  */
 const logPerformance = () => {
-  console.log('性能指标:', {
+  console.log(t('productList_performanceMetrics'), {
     dataFetchTime: `${performanceMetrics.value.dataFetchTime.toFixed(2)}ms`,
     totalProducts: products.value.length,
     validImages: products.value.filter(p => p.hasValidImage).length
@@ -494,12 +494,12 @@ const logPerformance = () => {
  * 生命周期
  */
 onMounted(() => {
-  console.log('产品列表组件已挂载')
+  console.log(t('productList_productListComponentMounted'))
   loadProducts()
   
   // 监听语言变化
   const unsubscribe = useI18n().addListener(() => {
-    console.log('语言变化，重新加载产品列表')
+    console.log(t('productList_languageChanged'))
     loadProducts()
   })
   
