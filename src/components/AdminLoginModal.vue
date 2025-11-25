@@ -1,11 +1,12 @@
 <template>
   <a-modal
-    v-model:open="isOpen"
+    v-model:open="modalOpen"
     :title="t('common_adminLogin')"
     width="400px"
     @cancel="handleCancel"
     :footer="null"
     :maskClosable="false"
+    :destroyOnClose="true"
     class="admin-login-modal"
   >
     <a-form
@@ -94,8 +95,13 @@ const loginForm = ref({
 const loginFormRef = ref()
 const loading = ref(false)
 
-// 计算属性
-const isOpen = computed(() => props.open)
+// 响应式数据
+const modalOpen = ref(props.open)
+
+// 监听props变化并更新本地状态
+watch(() => props.open, (newVal) => {
+  modalOpen.value = newVal
+})
 
 // 表单验证规则
 const loginRules = {
@@ -145,7 +151,7 @@ const resetForm = () => {
 }
 
 // 监听模态框关闭，重置表单
-watch(isOpen, (newVal) => {
+watch(modalOpen, (newVal) => {
   if (!newVal) {
     resetForm()
   }

@@ -1,27 +1,14 @@
 
 <template>
   <a-layout class="i18n-manager">
-    <!-- 未登录提示 -->
-    <a-result
+    <!-- 未登录提示 - 使用统一组件 -->
+    <AdminAccessDenied
       v-if="!isAdminLoggedIn"
-      status="403"
-      :title="t('common_needAdminTitle')"
-      :sub-title="t('common_needAdminSubtitleI18n')"
-    >
-      <template #extra>
-        <a-space>
-          <a-button type="primary" @click="showLoginModal = true">
-            <template #icon>
-              <UserOutlined />
-            </template>
-            {{ t('common_adminLogin') }}
-          </a-button>
-          <a-button @click="$router.push('/')">
-            {{ t('common_backToHome') }}
-          </a-button>
-        </a-space>
-      </template>
-    </a-result>
+      subtitle-key="common_needAdminSubtitleI18n"
+      :redirect-path="'/'"
+      :back-button-text="t('common_backToHome')"
+      :on-login-success="handleLoginSuccess"
+    />
 
     <!-- 管理员内容 -->
     <div v-else class="admin-content">
@@ -239,12 +226,6 @@
     </a-layout-content>
     </div>
     
-    <!-- 登录模态框 -->
-    <AdminLoginModal
-      v-model:open="showLoginModal"
-      @login-success="handleLoginSuccess"
-      @login-failed="handleLoginFailed"
-    />
   </a-layout>
 </template>
 
@@ -253,13 +234,12 @@ import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
 import i18n from '../i18n/index.js'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
-import AdminLoginModal from './AdminLoginModal.vue'
+import AdminAccessDenied from './AdminAccessDenied.vue'
 import {
   SaveOutlined,
   ExportOutlined,
   DeleteOutlined,
-  PlusOutlined,
-  UserOutlined
+  PlusOutlined
 } from '@ant-design/icons-vue'
 
 // 使用实际的 i18n 数据
@@ -269,8 +249,6 @@ const { currentLanguage, availableLanguages, translationCompleteness, t, getTran
 const { isAdminLoggedIn } = useAdminAuth()
 
 // 响应式数据
-const showLoginModal = ref(false)
-
 const searchTerm = ref('')
 const newKey = ref('')
 const newTranslations = reactive({})
@@ -543,6 +521,12 @@ onMounted(() => {
     newTranslations[lang.code] = ''
   })
 })
+
+// 管理员登录成功回调
+const handleLoginSuccess = () => {
+  // 登录成功后重新加载翻译数据
+  loadTranslations()
+}
 </script>
 
 <style scoped>

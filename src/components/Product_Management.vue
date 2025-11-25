@@ -1,25 +1,12 @@
 <template>
-  <!-- 未登录提示 -->
-  <a-result
+  <!-- 未登录提示 - 使用统一组件 -->
+  <AdminAccessDenied
     v-if="!isAdminLoggedIn"
-    status="403"
-    :title="t('common_needAdminTitle')"
-    :sub-title="t('common_needAdminSubtitleProduct')"
-  >
-    <template #extra>
-      <a-space>
-        <a-button type="primary" @click="showLoginModal = true">
-          <template #icon>
-            <UserOutlined />
-          </template>
-          {{ t('common_adminLogin') }}
-        </a-button>
-        <a-button @click="$router.push('/')">
-          {{ t('productManagement_backToHome') }}
-        </a-button>
-      </a-space>
-    </template>
-  </a-result>
+    subtitle-key="common_needAdminSubtitleProduct"
+    :redirect-path="'/'"
+    :back-button-text="t('productManagement_backToHome')"
+    :on-login-success="handleLoginSuccess"
+  />
 
   <!-- 管理员内容 -->
   <div v-else class="file-manager">
@@ -430,12 +417,6 @@
       </div>
     </div>
     
-    <!-- 登录模态框 -->
-    <AdminLoginModal
-      v-model:open="showLoginModal"
-      @login-success="handleLoginSuccess"
-      @login-failed="handleLoginFailed"
-    />
   </div>
 </template>
 
@@ -444,7 +425,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
-import AdminLoginModal from './AdminLoginModal.vue'
+import AdminAccessDenied from './AdminAccessDenied.vue'
 import { message } from 'ant-design-vue'
 import {
   ArrowLeftOutlined,
@@ -456,17 +437,13 @@ import {
   DeleteOutlined,
   SearchOutlined,
   UploadOutlined,
-  CloudUploadOutlined,
-  UserOutlined
+  CloudUploadOutlined
 } from '@ant-design/icons-vue'
 import ProductFolderUploader from './ProductFolderUploader.vue'
 
 const { t } = useI18n()
 const router = useRouter()
 const { isAdminLoggedIn } = useAdminAuth()
-
-// 响应式数据
-const showLoginModal = ref(false)
 
 // 简单的空状态图片
 const simpleImage = undefined
@@ -984,16 +961,10 @@ onMounted(() => {
   document.addEventListener('click', hideContextMenu)
 })
 
-// 管理员登录相关函数
+// 管理员登录成功回调
 const handleLoginSuccess = () => {
-  // 登录成功消息已在 useAdminAuth.js 中显示，此处不再重复显示
-  showLoginModal.value = false
   // 重新加载产品列表
   fetchProducts()
-}
-
-const handleLoginFailed = (error) => {
-  console.error(`${t('common_loginFailed')}:`, error)
 }
 </script>
 
