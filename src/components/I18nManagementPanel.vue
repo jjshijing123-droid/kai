@@ -17,7 +17,7 @@
             {{ t('common_adminLogin') }}
           </a-button>
           <a-button @click="$router.push('/')">
-            返回首页
+            {{ t('common_backToHome') }}
           </a-button>
         </a-space>
       </template>
@@ -547,16 +547,22 @@ onMounted(() => {
 
 <style scoped>
 .i18n-manager {
-  padding: 24px;
+  padding: 0px;
   max-width: 1400px;
   margin: 0 auto;
   background-color: white;
+  /* 利用App.vue中已经计算好的高度空间，确保减去header后充分利用可用空间 */
+  min-height: calc(100vh - 64px); /* 与App.vue的main-content保持一致 */
+  box-sizing: border-box;
+  /* 确保内容可以正确滚动 */
+  overflow-y: auto;
 }
 
 /* 页面头部 */
 .page-header {
   margin-bottom: 32px;
   padding: 24px;
+  padding-top: 64px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -816,6 +822,8 @@ onMounted(() => {
 @media (max-width: 768px) {
   .i18n-manager {
     padding: 16px;
+    /* 在移动端也保持正确的高度计算 */
+    min-height: calc(100vh - 64px);
   }
   
   .page-header {

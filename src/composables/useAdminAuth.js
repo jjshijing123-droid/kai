@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { message } from 'ant-design-vue'
+import i18n from '../i18n/index.js'
 
 // 管理员账号配置
 const ADMIN_CREDENTIALS = {
@@ -33,16 +34,16 @@ const login = async (username, password) => {
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       isAdminLoggedIn.value = true
       localStorage.setItem(ADMIN_SESSION_KEY, 'true')
-      message.success('管理员登录成功！')
+      message.success(i18n.t('common_adminLoginSuccess'))
       return { success: true }
     } else {
-      message.error('用户名或密码错误')
-      return { success: false, error: '用户名或密码错误' }
+      message.error(i18n.t('common_invalidCredentials'))
+      return { success: false, error: i18n.t('common_invalidCredentials') }
     }
   } catch (error) {
     console.error('登录错误:', error)
-    message.error('登录失败，请重试')
-    return { success: false, error: '登录失败' }
+    message.error(i18n.t('common_loginRetry'))
+    return { success: false, error: i18n.t('common_loginRetry') }
   }
 }
 
@@ -50,7 +51,7 @@ const login = async (username, password) => {
 const logout = () => {
   isAdminLoggedIn.value = false
   localStorage.removeItem(ADMIN_SESSION_KEY)
-  message.success('已成功登出')
+  message.success(i18n.t('common_logoutSuccess'))
 }
 
 // 检查是否有权限访问特定功能

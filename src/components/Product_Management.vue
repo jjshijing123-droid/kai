@@ -986,7 +986,7 @@ onMounted(() => {
 
 // 管理员登录相关函数
 const handleLoginSuccess = () => {
-  message.success(t('common_adminLoginSuccess'))
+  // 登录成功消息已在 useAdminAuth.js 中显示，此处不再重复显示
   showLoginModal.value = false
   // 重新加载产品列表
   fetchProducts()
