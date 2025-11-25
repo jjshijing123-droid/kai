@@ -28,11 +28,11 @@
     </div>
 
     <!-- 加载状态 -->
-    <a-spin :spinning="loading" size="large" tip="{{ t('productDetailManagement_loading') }}">
+    <a-spin :spinning="loading" size="large" :tip="t('productDetailManagement_loading')">
     <!-- 产品图片管理区域 -->
     <a-tabs type="card" class="image-management">
       <!-- {{ t('productDetailManagement_mainImage') }}管理 -->
-      <a-tab-pane key="main" tab="{{ t('productDetailManagement_mainImage') }}">
+      <a-tab-pane key="main" :tab="t('productDetailManagement_mainImage')">
         <a-card>
           <template #title>
             <span>{{ t('productDetailManagement_mainImage') }} (image_00.webp)</span>
@@ -44,7 +44,7 @@
                   <a-card v-if="mainImage" class="image-preview">
                     <img
                       :src="mainImage"
-                      :alt="'{{ t('productDetailManagement_mainImage') }}'"
+                      :alt="t('productDetailManagement_mainImage')"
                       class="product-image"
                       @error="handleImageError('main')"
                     />
@@ -72,7 +72,7 @@
       </a-tab-pane>
 
       <!-- {{ t('productDetailManagement_sixViews') }}管理 -->
-      <a-tab-pane key="sixViews" tab="{{ t('productDetailManagement_sixViews') }}">
+      <a-tab-pane key="sixViews" :tab="t('productDetailManagement_sixViews')">
         <a-card>
           <template #title>
             <span>{{ t('productDetailManagement_sixViews') }} (images_6Views/)</span>
@@ -91,7 +91,7 @@
                   <div class="image-container">
                     <img
                       :src="image"
-                      :alt="`{{ t('productDetailManagement_sixViews') }} ${index + 1}`"
+                      :alt="`${t('productDetailManagement_sixViews')} ${index + 1}`"
                       class="grid-image"
                       @error="handleGridImageError('sixViews', index)"
                       @click="showImagePreview(image)"
@@ -103,7 +103,7 @@
                         type="text"
                         size="small"
                         @click="showImagePreview(image)"
-                        title="{{ t('productDetailManagement_previewImage') }}"
+                        :title="t('productDetailManagement_previewImage')"
                       >
                         <EyeOutlined />
                       </a-button>
@@ -112,7 +112,7 @@
                         danger
                         size="small"
                         @click="deleteImage('sixViews', image)"
-                        title="{{ t('productDetailManagement_deleteImage') }}"
+                        :title="t('productDetailManagement_deleteImage')"
                       >
                         <DeleteOutlined />
                       </a-button>
@@ -138,7 +138,7 @@
       </a-tab-pane>
 
       <!-- {{ t('productDetailManagement_otherImages') }}管理 -->
-      <a-tab-pane key="other" tab="{{ t('productDetailManagement_otherImages') }}">
+      <a-tab-pane key="other" :tab="t('productDetailManagement_otherImages')">
         <a-card>
           <template #title>
             <span>{{ t('productDetailManagement_otherImages') }} (images_other/)</span>
@@ -157,7 +157,7 @@
                   <div class="image-container">
                     <img
                       :src="image"
-                      :alt="`{{ t('productDetailManagement_otherImages') }} ${index + 1}`"
+                      :alt="`${t('productDetailManagement_otherImages')} ${index + 1}`"
                       class="grid-image"
                       @error="handleGridImageError('other', index)"
                       @click="showImagePreview(image)"
@@ -169,7 +169,7 @@
                         type="text"
                         size="small"
                         @click="showImagePreview(image)"
-                        title="{{ t('productDetailManagement_previewImage') }}"
+                        :title="t('productDetailManagement_previewImage')"
                       >
                         <EyeOutlined />
                       </a-button>
@@ -178,7 +178,7 @@
                         danger
                         size="small"
                         @click="deleteImage('other', image)"
-                        title="{{ t('productDetailManagement_deleteImage') }}"
+                        :title="t('productDetailManagement_deleteImage')"
                       >
                         <DeleteOutlined />
                       </a-button>
@@ -235,7 +235,7 @@
                         type="text"
                         size="small"
                         @click="showImagePreview(image)"
-                        title="{{ t('productDetailManagement_previewImage') }}"
+                        :title="t('productDetailManagement_previewImage')"
                       >
                         <EyeOutlined />
                       </a-button>
@@ -244,7 +244,7 @@
                         danger
                         size="small"
                         @click="deleteImage('view' + view, image)"
-                        title="{{ t('productDetailManagement_deleteImage') }}"
+                        :title="t('productDetailManagement_deleteImage')"
                       >
                         <DeleteOutlined />
                       </a-button>
@@ -274,31 +274,31 @@
     <!-- {{ t('productDetailManagement_editProduct') }}模态框 -->
     <a-modal
       v-model:open="showEditProductModal"
-      title="{{ t('productDetailManagement_editProduct') }}"
+      :title="t('productDetailManagement_editProduct')"
       @cancel="cancelEdit"
       @ok="updateProduct"
       :confirm-loading="updatingProduct"
     >
       <a-form layout="vertical">
         <a-form-item
-          label="{{ t('productDetailManagement_productName') }}"
+          :label="t('productDetailManagement_productName')"
           :validate-status="editNameError ? 'error' : ''"
           :help="editNameError"
         >
           <a-input
             v-model:value="editingProduct.name"
-            placeholder="输入新的{{ t('productDetailManagement_productName') }}"
+            :placeholder="`输入新的${t('productDetailManagement_productName')}`"
             size="large"
           />
         </a-form-item>
         <a-form-item
-          label="{{ t('productDetailManagement_productFolderName') }}"
+          :label="t('productDetailManagement_productFolderName')"
           :validate-status="editFolderNameError ? 'error' : ''"
           :help="editFolderNameError"
         >
           <a-input
             v-model:value="editingProduct.folderName"
-            placeholder="输入新的{{ t('productDetailManagement_productFolderName') }}"
+            :placeholder="`输入新的${t('productDetailManagement_productFolderName')}`"
             size="large"
           />
         </a-form-item>
@@ -316,7 +316,7 @@
       <div style="text-align: center;">
         <img
           :src="previewImage"
-          alt="{{ t('productDetailManagement_previewImage') }}"
+          :alt="t('productDetailManagement_previewImage')"
           style="max-width: 100%; max-height: 70vh; object-fit: contain;"
         />
       </div>
@@ -362,7 +362,7 @@ const editNameError = computed(() => {
   
   const invalidChars = /[<>:"/\\|?*\x00-\x1F]/
   if (invalidChars.test(editingProduct.value.name)) {
-    return '{{ t('productDetailManagement_productName') }}包含无效字符'
+    return `${t('productDetailManagement_productName')}包含无效字符`
   }
   
   return ''
@@ -373,7 +373,7 @@ const editFolderNameError = computed(() => {
   
   const invalidChars = /[<>:"/\\|?*\x00-\x1F]/
   if (invalidChars.test(editingProduct.value.folderName)) {
-    return '{{ t('productDetailManagement_folderNameContainsInvalidChars') }}'
+    return `${t('productDetailManagement_folderNameContainsInvalidChars')}`
   }
   
   return ''
@@ -458,7 +458,7 @@ const loadImagesFromCatalog = async (product) => {
     // 加载{{ t('productDetailManagement_mainImage') }}
     if (product.mainImage) {
       mainImage.value = product.mainImage
-      console.log('{{ t('productDetailManagement_mainImage') }}路径:', mainImage.value)
+      console.log(`${t('productDetailManagement_mainImage')}路径:`, mainImage.value)
     }
     
     // 加载{{ t('productDetailManagement_sixViews') }}图片
@@ -467,7 +467,7 @@ const loadImagesFromCatalog = async (product) => {
       sixViewsImages.value = sixViewsFolder.map(file =>
         `${product.additionalImages.sixViews}${file.name}`
       )
-      console.log('{{ t('productDetailManagement_sixViews') }}图片数量:', sixViewsImages.value.length)
+      console.log(`${t('productDetailManagement_sixViews')}图片数量:`, sixViewsImages.value.length)
     }
     
     // 加载{{ t('productDetailManagement_otherImages') }}
@@ -476,7 +476,7 @@ const loadImagesFromCatalog = async (product) => {
       otherImages.value = otherFolder.map(file =>
         `${product.additionalImages.other}${file.name}`
       )
-      console.log('{{ t('productDetailManagement_otherImages') }}数量:', otherImages.value.length)
+      console.log(`${t('productDetailManagement_otherImages')}数量:`, otherImages.value.length)
     }
     
     // 加载视角图片
@@ -526,7 +526,7 @@ const deleteImage = async (folderType, imageUrl) => {
     
     // 从URL中提取文件名
     const fileName = imageUrl.split('/').pop()
-    console.log('{{ t('productDetailManagement_deleteImage') }}:', folderType, fileName, imageUrl)
+    console.log(`${t('productDetailManagement_deleteImage')}:`, folderType, fileName, imageUrl)
     
     // 构建文件路径
     let filePath = ''
@@ -561,11 +561,11 @@ const deleteImage = async (folderType, imageUrl) => {
       // 重新加载产品图片
       await loadProductImages()
     } else {
-      throw new Error(result.error || '{{ t('productDetailManagement_deleteImage') }}失败')
+      throw new Error(result.error || `${t('productDetailManagement_deleteImage')}失败`)
     }
   } catch (error) {
-    console.error('{{ t('productDetailManagement_deleteImage') }}失败:', error)
-    message.error('{{ t('productDetailManagement_deleteImage') }}失败: ' + error.message)
+    console.error(`${t('productDetailManagement_deleteImage')}失败:`, error)
+    message.error(`${t('productDetailManagement_deleteImage')}失败: ` + error.message)
   }
 }
 
