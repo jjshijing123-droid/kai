@@ -719,9 +719,10 @@ const confirmDeleteFolder = async () => {
 
       message.success(`${t('productManagement_productDeleted')}${folderToDelete.value}${t('productManagement_productDeleted2')}`)
 
+      // 先关闭确认对话框，再刷新产品列表
+      cancelDelete()
       // 重新获取产品列表
       await fetchProducts()
-      cancelDelete()
 
     } else {
       const errorMsg = data.message || data.error || `${t('productManagement_deleteFailedText')}${response.status})`

@@ -1,11 +1,31 @@
 const express = require('express');
 const FolderService = require('../services/folderService');
+const { ProductCatalogUtils, productCatalogUtils } = require('../utils/productCatalogUtils');
 const router = express.Router();
 const folderService = new FolderService();
 
 /**
  * 文件夹管理路由
  */
+
+/**
+ * 检查是否为产品文件夹（位于Product目录下）
+ */
+function isProductFolder(parentPath, folderName) {
+  return parentPath.includes('Product/') && folderName;
+}
+
+/**
+ * 获取完整的产品文件夹名称
+ */
+function getFullProductFolderName(parentPath, folderName) {
+  // 从Product/路径中提取产品名称
+  const productMatch = parentPath.match(/Product\/(.+)/);
+  if (productMatch) {
+    return productMatch[1]; // 返回产品名称
+  }
+  return null;
+}
 
 // 获取文件夹详情
 router.get('/:folderPath/details', async (req, res) => {
@@ -67,6 +87,15 @@ router.delete('/:parentPath/subfolder/:folderName', async (req, res) => {
     
     const result = await folderService.deleteSubfolder(parentPath, folderName);
     
+    // 检查是否需要同步产品目录
+    if (isProductFolder(parentPath, folderName)) {
+      const productFolderName = getFullProductFolderName(parentPath, folderName);
+      if (productFolderName) {
+        console.log(`🔄 检测到删除产品文件夹，同步更新产品目录: ${productFolderName}`);
+        productCatalogUtils.updateProductCatalog(productFolderName, 'delete');
+      }
+    }
+    
     res.json({
       success: true,
       message: '子文件夹删除成功',
@@ -97,6 +126,15 @@ router.put('/:parentPath/subfolder/:folderName', async (req, res) => {
     }
     
     const result = await folderService.renameSubfolder(parentPath, folderName, newFolderName);
+    
+    // 检查是否需要同步产品目录
+    if (isProductFolder(parentPath, folderName)) {
+      const productFolderName = getFullProductFolderName(parentPath, folderName);
+      if (productFolderName) {
+        console.log(`🔄 检测到重命名产品文件夹，同步更新产品目录: ${productFolderName} -> ${newFolderName}`);
+        productCatalogUtils.updateProductCatalog(productFolderName, 'rename', newFolderName);
+      }
+    }
     
     res.json({
       success: true,

@@ -379,6 +379,8 @@ const baseTranslations = {
 
     // FolderManager组件
     "folderManager_productFolder": "Product Folders",
+    "folderManager_back": "Back",
+    "folderManager_refresh": "Refresh",
     "folderManager_uploadFileToCurrent": "Upload files to current folder",
     "folderManager_loadingFailed": "Loading failed",
     "folderManager_retry": "Retry",
@@ -388,6 +390,7 @@ const baseTranslations = {
     "folderManager_preview": "Preview",
     "folderManager_download": "Download",
     "folderManager_delete": "Delete",
+    "folderManager_rename": "Rename",
     "folderManager_folderEmpty": "Folder is empty",
     "folderManager_uploadFirstFile": "Upload first file",
     "folderManager_previewNotSupported": "Preview not supported for this file type",
@@ -404,6 +407,15 @@ const baseTranslations = {
     "folderManager_deleteFileError": "Error deleting file:",
     "folderManager_uploadComplete": "File upload completed:",
     "folderManager_uploadFailed": "File upload failed:",
+    "folderManager_enterNewName": "Enter new folder name:",
+    "folderManager_nameCannotBeEmpty": "Folder name cannot be empty",
+    "folderManager_invalidCharacters": "Folder name contains invalid characters",
+    "folderManager_renameFailed": "Folder rename failed:",
+    "folderManager_renameError": "Error renaming folder:",
+    "folderManager_confirmDeleteFolder": "Are you sure you want to delete folder \"{name}\"?",
+    "folderManager_cannotDeleteNonEmptyFolder": "Cannot delete non-empty folder (contains {count} files)",
+    "folderManager_deleteFolderFailed": "Folder deletion failed:",
+    "folderManager_deleteFolderError": "Error deleting folder:",
 
     // 通用键保留（如test_verification等）
     "test_verification": "Verification Test",
@@ -786,6 +798,8 @@ const baseTranslations = {
 
     // FolderManager组件
     "folderManager_productFolder": "产品文件夹",
+    "folderManager_back": "返回",
+    "folderManager_refresh": "刷新",
     "folderManager_uploadFileToCurrent": "上传文件到当前文件夹",
     "folderManager_loadingFailed": "加载失败",
     "folderManager_retry": "重试",
@@ -795,6 +809,7 @@ const baseTranslations = {
     "folderManager_preview": "预览",
     "folderManager_download": "下载",
     "folderManager_delete": "删除",
+    "folderManager_rename": "重命名",
     "folderManager_folderEmpty": "文件夹为空",
     "folderManager_uploadFirstFile": "上传第一个文件",
     "folderManager_previewNotSupported": "不支持预览此文件类型",
@@ -811,6 +826,15 @@ const baseTranslations = {
     "folderManager_deleteFileError": "删除文件时出错:",
     "folderManager_uploadComplete": "文件上传完成:",
     "folderManager_uploadFailed": "文件上传失败:",
+    "folderManager_enterNewName": "请输入新的文件夹名称：",
+    "folderManager_nameCannotBeEmpty": "文件夹名称不能为空",
+    "folderManager_invalidCharacters": "文件夹名称包含无效字符",
+    "folderManager_renameFailed": "文件夹重命名失败：",
+    "folderManager_renameError": "重命名文件夹时出错：",
+    "folderManager_confirmDeleteFolder": "确定要删除文件夹 \"{name}\" 吗？",
+    "folderManager_cannotDeleteNonEmptyFolder": "无法删除非空文件夹（包含 {count} 个文件）",
+    "folderManager_deleteFolderFailed": "文件夹删除失败：",
+    "folderManager_deleteFolderError": "删除文件夹时出错：",
 
     // 通用键保留
     "test_verification": "验证测试",

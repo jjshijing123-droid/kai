@@ -21,7 +21,14 @@ class ProductCatalogUtils {
         return;
       }
       
-      const catalogData = require(catalogPath);
+      let catalogData;
+      try {
+        const fileContent = fs.readFileSync(catalogPath, 'utf8');
+        catalogData = JSON.parse(fileContent);
+      } catch (parseError) {
+        console.error('解析 product-catalog.json 文件失败:', parseError.message);
+        return;
+      }
       
       if (action === 'delete') {
         // 从产品目录中删除对应记录
@@ -36,8 +43,13 @@ class ProductCatalogUtils {
         
         if (catalogData.products.length < originalLength) {
           // 写回文件
-          fs.writeFileSync(catalogPath, JSON.stringify(catalogData, null, 2), 'utf8');
-          console.log(`✅ 已从 product-catalog.json 中删除产品: ${oldName}`);
+          try {
+            fs.writeFileSync(catalogPath, JSON.stringify(catalogData, null, 2), 'utf8');
+            console.log(`✅ 已从 product-catalog.json 中删除产品: ${oldName}`);
+          } catch (writeError) {
+            console.error('写入 product-catalog.json 文件失败:', writeError.message);
+            throw new Error('更新产品目录文件失败');
+          }
         } else {
           console.warn(`在 product-catalog.json 中未找到产品: ${oldName}`);
         }
@@ -131,8 +143,13 @@ class ProductCatalogUtils {
           catalogData.lastUpdated = new Date().toISOString();
           
           // 写回文件
-          fs.writeFileSync(catalogPath, JSON.stringify(catalogData, null, 2), 'utf8');
-          console.log(`✅ 已在 product-catalog.json 中重命名产品: ${oldName} -> ${newName}`);
+          try {
+            fs.writeFileSync(catalogPath, JSON.stringify(catalogData, null, 2), 'utf8');
+            console.log(`✅ 已在 product-catalog.json 中重命名产品: ${oldName} -> ${newName}`);
+          } catch (writeError) {
+            console.error('写入 product-catalog.json 文件失败:', writeError.message);
+            throw new Error('更新产品目录文件失败');
+          }
         } else {
           console.warn(`❌ 在 product-catalog.json 中未找到要重命名的产品: ${oldName}`);
           console.warn(`尝试查找可能的匹配项...`);
@@ -164,7 +181,18 @@ class ProductCatalogUtils {
         };
       }
       
-      return require(catalogPath);
+      try {
+        const fileContent = fs.readFileSync(catalogPath, 'utf8');
+        return JSON.parse(fileContent);
+      } catch (parseError) {
+        console.error('解析 product-catalog.json 文件失败:', parseError.message);
+        return {
+          products: [],
+          totalProducts: 0,
+          lastUpdated: new Date().toISOString(),
+          version: '2.0'
+        };
+      }
     } catch (error) {
       console.error('获取产品目录失败:', error);
       return {
@@ -263,4 +291,11 @@ class ProductCatalogUtils {
   }
 }
 
-module.exports = ProductCatalogUtils;
+// 创建一个实例并导出实例方法，方便直接调用
+const productCatalogUtilsInstance = new ProductCatalogUtils();
+
+module.exports = {
+  ProductCatalogUtils,
+  productCatalogUtils: productCatalogUtilsInstance,
+  updateProductCatalog: productCatalogUtilsInstance.updateProductCatalog.bind(productCatalogUtilsInstance)
+};

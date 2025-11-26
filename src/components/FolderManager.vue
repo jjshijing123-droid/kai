@@ -220,6 +220,14 @@
           <FolderOpenOutlined />
           <span>{{ t('folderManager_open') }}</span>
         </div>
+        <div class="context-menu-item" @click="renameFolder(contextMenuItem)">
+          <EditOutlined />
+          <span>{{ t('folderManager_rename') }}</span>
+        </div>
+        <div class="context-menu-item danger" @click="deleteFolder(contextMenuItem)">
+          <DeleteOutlined />
+          <span>{{ t('folderManager_delete') }}</span>
+        </div>
       </template>
       <template v-else-if="contextMenuType === 'file'">
         <div class="context-menu-item" @click="previewFile(contextMenuItem)">
@@ -255,7 +263,8 @@ import {
   EyeOutlined,
   DownloadOutlined,
   DeleteOutlined,
-  HomeOutlined
+  HomeOutlined,
+  EditOutlined
 } from '@ant-design/icons-vue'
 
 const { t } = useI18n()
@@ -477,6 +486,89 @@ const goToFolderPath = (folderPath) => {
 
 const goToRoot = () => {
   router.push('/product-management')
+}
+
+// 重命名文件夹
+const renameFolder = async (folder) => {
+  const newName = prompt(t('folderManager_enterNewName'), folder.name)
+  
+  if (!newName || newName === folder.name) {
+    return
+  }
+
+  try {
+    // 验证文件夹名称
+    if (newName.trim() === '') {
+      alert(t('folderManager_nameCannotBeEmpty'))
+      return
+    }
+
+    // 检查是否包含非法字符
+    const invalidChars = /[<>:"/\\|?*]/
+    if (invalidChars.test(newName)) {
+      alert(t('folderManager_invalidCharacters'))
+      return
+    }
+
+    // 调用重命名API
+    const response = await fetch(`/api/folder/${encodeURIComponent(currentFolder.value)}/subfolder/${encodeURIComponent(folder.name)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        newFolderName: newName.trim()
+      })
+    })
+
+    const result = await response.json()
+
+    if (result.success) {
+      console.log('文件夹重命名成功:', folder.name, '->', newName)
+      // 刷新文件夹内容
+      fetchFolderDetails()
+    } else {
+      console.error('文件夹重命名失败:', result.error)
+      alert(`${t('folderManager_renameFailed')} ${result.error}`)
+    }
+  } catch (error) {
+    console.error('重命名文件夹时出错:', error)
+    alert(`${t('folderManager_renameError')} ${error.message}`)
+  }
+}
+
+// 删除文件夹
+const deleteFolder = async (folder) => {
+  if (!confirm(t('folderManager_confirmDeleteFolder', { name: folder.name }))) {
+    return
+  }
+
+  try {
+    // 检查文件夹是否为空
+    if (folder.fileCount > 0) {
+      alert(t('folderManager_cannotDeleteNonEmptyFolder', { count: folder.fileCount }))
+      return
+    }
+
+    // 调用删除API
+    const response = await fetch(`/api/folder/${encodeURIComponent(currentFolder.value)}/subfolder/${encodeURIComponent(folder.name)}`, {
+      method: 'DELETE'
+    })
+
+    const result = await response.json()
+
+    if (result.success) {
+      console.log('文件夹删除成功:', folder.name)
+      // 刷新文件夹内容
+      fetchFolderDetails()
+    } else {
+      console.error('文件夹删除失败:', result.error)
+      alert(`${t('folderManager_deleteFolderFailed')} ${result.error}`)
+    }
+  } catch (error) {
+    console.error('删除文件夹时出错:', error)
+    alert(`${t('folderManager_deleteFolderError')} ${error.message}`)
+  }
 }
 
 const handleUploadComplete = (result) => {
@@ -801,6 +893,14 @@ watch(() => route.params.folderName, (newFolderName) => {
 
 .context-menu-item:hover {
   background: #f0f2f5;
+}
+
+.context-menu-item.danger {
+  color: #ff4d4f;
+}
+
+.context-menu-item.danger:hover {
+  background: #fff1f0;
 }
 
 /* 加载状态 */

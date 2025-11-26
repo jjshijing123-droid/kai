@@ -14,7 +14,7 @@ const filesRouter = require('./server/routes/files');
 const uploadsRouter = require('./server/routes/uploads');
 
 // 导入工具
-const ProductCatalogUtils = require('./server/utils/productCatalogUtils');
+const { ProductCatalogUtils, productCatalogUtils } = require('./server/utils/productCatalogUtils');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,7 +24,6 @@ const productService = new ProductService();
 const fileService = new FileService();
 const folderService = new FolderService();
 const uploadService = new UploadService();
-const productCatalogUtils = new ProductCatalogUtils();
 
 // 中间件配置
 app.use(cors());
