@@ -43,7 +43,60 @@ router.post('/', async (req, res) => {
       });
     }
     
+    console.log(`创建新产品: ${productName}`);
+    
     const result = await productService.createProduct(productName, folderName);
+    
+    // 同步更新 product-catalog.json 文件
+    console.log('🔄 同步更新产品目录文件...');
+    const { updateProductCatalog } = require('../utils/productCatalogUtils');
+    
+    // 先读取产品目录，获取新创建的产品的详细信息
+    const products = await productService.getProducts();
+    const newProduct = products.find(p => p.folderName === folderName);
+    
+    if (newProduct) {
+      // 添加新产品到目录文件
+      const { productCatalogUtils } = require('../utils/productCatalogUtils');
+      const catalogData = productCatalogUtils.getProductCatalog();
+      
+      catalogData.products.push({
+        id: newProduct.id || catalogData.products.length + 1,
+        name: newProduct.name,
+        folderName: newProduct.folderName,
+        model: newProduct.model || newProduct.name,
+        category: newProduct.category || 'general',
+        description: newProduct.description || `Product model: ${newProduct.name}`,
+        path: newProduct.path,
+        folder: newProduct.path + '/',
+        totalSize: newProduct.totalSize || 0,
+        fileCount: newProduct.fileCount || 0,
+        mainImage: `/Product/${newProduct.name}/image_00.webp`,
+        views: {
+          view1: `/Product/${newProduct.name}/view1/`,
+          view2: `/Product/${newProduct.name}/view2/`,
+          view3: `/Product/${newProduct.name}/view3/`,
+          view4: `/Product/${newProduct.name}/view4/`
+        },
+        additionalImages: {
+          sixViews: `/Product/${newProduct.name}/images_6Views/`,
+          other: `/Product/${newProduct.name}/images_other/`
+        }
+      });
+      
+      // 更新总数和时间戳
+      catalogData.totalProducts = catalogData.products.length;
+      catalogData.lastUpdated = new Date().toISOString();
+      
+      // 保存更新的目录文件
+      const saved = productCatalogUtils.saveProductCatalog(catalogData);
+      
+      if (saved) {
+        console.log(`✅ 已同步更新产品目录文件，新增产品: ${productName}`);
+      } else {
+        console.warn('⚠️ 同步更新产品目录文件失败');
+      }
+    }
     
     res.json({
       success: true,

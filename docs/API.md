@@ -1,15 +1,16 @@
-# 产品管理系统 API 文档
+# 产品展示系统 API 文档
 
 ## 概述
 
-本文档描述了产品管理系统的 REST API 接口。API 基于 Node.js + Express 构建，提供产品、文件、文件夹等资源的完整管理功能。
+本文档描述了产品展示系统的 REST API 接口。API 基于 Node.js + Express 构建，提供产品管理、文件操作、文件夹管理等功能的完整API接口。系统采用文件系统存储，无需传统数据库。
 
 ## 基础信息
 
 - **基础URL**: `http://localhost:3000/api`
-- **认证方式**: JWT Bearer Token
 - **数据格式**: JSON
 - **编码**: UTF-8
+- **认证**: 管理员权限验证（部分接口需要）
+- **跨域**: 已配置CORS支持
 
 ## 通用响应格式
 
@@ -18,8 +19,7 @@
 {
   "success": true,
   "data": {},
-  "message": "操作成功",
-  "timestamp": "2023-12-07T10:30:00.000Z"
+  "message": "操作成功"
 }
 ```
 
@@ -27,46 +27,35 @@
 ```json
 {
   "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "输入验证失败",
-    "details": {}
-  },
-  "timestamp": "2023-12-07T10:30:00.000Z"
+  "message": "错误描述",
+  "error": "具体错误信息"
 }
 ```
 
-### 分页响应
+### 产品列表响应
 ```json
-{
-  "success": true,
-  "data": [],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 100,
-    "pages": 10
+[
+  {
+    "name": "产品名称",
+    "folderName": "文件夹名称",
+    "id": 1,
+    "category": "general",
+    "description": "产品描述",
+    "path": "Product/文件夹名称",
+    "totalSize": 1234567,
+    "fileCount": 135,
+    "modified": "2025-11-26T03:10:30.899Z"
   }
-}
+]
 ```
 
 ## 认证
 
-### 获取访问令牌
-```http
-POST /api/auth/login
-Content-Type: application/json
+系统采用简单的权限验证机制，主要通过localStorage管理管理员会话状态。
 
-{
-  "username": "admin",
-  "password": "password123"
-}
-```
-
-### 使用访问令牌
-```http
-Authorization: Bearer <your-jwt-token>
-```
+### 管理员登录状态
+- 前端通过localStorage存储管理员登录状态
+- 受保护的接口包括产品管理、文件操作等
 
 ## 产品管理 API
 
@@ -76,420 +65,556 @@ Authorization: Bearer <your-jwt-token>
 GET /api/products
 ```
 
-**查询参数**:
-- `page` (number): 页码，默认 1
-- `limit` (number): 每页数量，默认 10
-- `search` (string): 搜索关键词
-- `category` (string): 分类筛选
-- `status` (string): 状态筛选 (active, inactive)
-- `sort` (string): 排序字段 (name, price, createdAt)
-- `order` (string): 排序方向 (asc, desc)
+**描述**: 获取所有产品列表，基于文件系统扫描Product目录
 
 **响应示例**:
 ```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "name": "iPhone 15",
-      "description": "最新款iPhone",
-      "price": 5999,
-      "category": "电子产品",
-      "status": "active",
-      "createdAt": "2023-12-07T10:30:00.000Z",
-      "updatedAt": "2023-12-07T10:30:00.000Z",
-      "images": ["iphone15-1.jpg"],
-      "tags": ["手机", "苹果"],
-      "stock": 100,
-      "rating": 4.5
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 100,
-    "pages": 10
-  }
-}
-```
-
-### 获取单个产品
-
-```http
-GET /api/products/{id}
-```
-
-**响应示例**:
-```json
-{
-  "success": true,
-  "data": {
+[
+  {
+    "name": "Cobi18+",
+    "folderName": "Cobi18+",
     "id": 1,
-    "name": "iPhone 15",
-    "description": "最新款iPhone",
-    "price": 5999,
-    "category": "电子产品",
-    "status": "active",
-    "specifications": {
-      "screen": "6.1英寸",
-      "storage": "128GB",
-      "camera": "4800万像素"
-    },
-    "images": ["iphone15-1.jpg", "iphone15-2.jpg"],
-    "tags": ["手机", "苹果"],
-    "stock": 100,
-    "rating": 4.5,
-    "reviews": [
-      {
-        "id": 1,
-        "user": "张三",
-        "rating": 5,
-        "comment": "非常好用",
-        "createdAt": "2023-12-06T15:20:00.000Z"
-      }
-    ],
-    "createdAt": "2023-12-07T10:30:00.000Z",
-    "updatedAt": "2023-12-07T10:30:00.000Z"
+    "category": "general",
+    "description": "Product model: Cobi18+",
+    "path": "Product/Cobi18+",
+    "totalSize": 9167402,
+    "fileCount": 135,
+    "modified": "2025-11-26T03:10:30.899Z"
   }
-}
+]
 ```
 
 ### 创建产品
 
 ```http
 POST /api/products
-Authorization: Bearer <token>
+Authorization: Bearer <token> (管理员权限)
 Content-Type: application/json
 
 {
-  "name": "iPhone 15",
-  "description": "最新款iPhone",
-  "price": 5999,
-  "category": "电子产品",
-  "status": "active",
-  "specifications": {
-    "screen": "6.1英寸",
-    "storage": "128GB"
-  },
-  "images": ["iphone15-1.jpg"],
-  "tags": ["手机", "苹果"],
-  "stock": 100,
-  "sku": "IP15-128-BLK"
+  "productName": "新产品名称",
+  "folderName": "新产品文件夹"
 }
 ```
+
+**描述**: 创建新的产品文件夹，自动生成标准子文件夹结构
 
 **响应示例**:
 ```json
 {
   "success": true,
+  "message": "产品文件夹 \"新产品名称\" 创建成功",
   "data": {
-    "id": 101,
-    "name": "iPhone 15",
-    "price": 5999,
-    "createdAt": "2023-12-07T10:30:00.000Z"
+    "productName": "新产品名称",
+    "folderName": "新产品文件夹",
+    "path": "Product/新产品文件夹"
   }
 }
 ```
 
-### 更新产品
+### 重命名产品
 
 ```http
-PUT /api/products/{id}
-Authorization: Bearer <token>
+PUT /api/products/{productName}
+Authorization: Bearer <token> (管理员权限)
 Content-Type: application/json
 
 {
-  "name": "iPhone 15 Pro",
-  "price": 6999,
-  "stock": 50
+  "newProductName": "新产品名称",
+  "newFolderName": "新文件夹名称"
+}
+```
+
+**描述**: 重命名产品文件夹，同时更新product-catalog.json配置文件
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "产品重命名成功",
+  "data": {
+    "oldName": "旧产品名称",
+    "newName": "新文件夹名称",
+    "oldPath": "Product/旧产品名称",
+    "newPath": "Product/新文件夹名称"
+  }
 }
 ```
 
 ### 删除产品
 
 ```http
-DELETE /api/products/{id}
-Authorization: Bearer <token>
+DELETE /api/products/{productName}
+Authorization: Bearer <token> (管理员权限)
 ```
+
+**描述**: 删除产品文件夹及其所有内容
 
 **响应示例**:
 ```json
 {
   "success": true,
-  "message": "产品已删除",
-  "data": {
-    "id": 1,
-    "deletedAt": "2023-12-07T10:30:00.000Z"
+  "message": "产品 \"产品名称\" 删除成功",
+  "physicalFolderDeleted": true,
+  "deletedProduct": {
+    "name": "产品名称",
+    "path": "Product/产品名称"
   }
 }
 ```
 
-### 批量操作
+### 获取产品详情（通过ID）
 
 ```http
-POST /api/products/batch
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "action": "updateStatus",
-  "ids": [1, 2, 3],
-  "data": {
-    "status": "inactive"
-  }
-}
+GET /api/products/{id}
 ```
 
-## 文件管理 API
-
-### 获取文件列表
-
-```http
-GET /api/files
-```
-
-**查询参数**:
-- `folderId` (number): 文件夹ID
-- `type` (string): 文件类型筛选
-- `page` (number): 页码
-- `limit` (number): 每页数量
+**描述**: 根据产品ID获取产品详细信息
 
 **响应示例**:
 ```json
 {
   "success": true,
-  "data": [
+  "product": {
+    "id": null,
+    "name": "Cobi18+",
+    "folderName": "Cobi18+",
+    "category": "general",
+    "description": "Product model: Cobi18+",
+    "path": "Product/Cobi18+",
+    "totalSize": 9167402,
+    "fileCount": 135,
+    "mainImage": "/Product/Cobi18+/image_00.webp",
+    "folder": "Product/Cobi18+/",
+    "views": {
+      "view1": "/Product/Cobi18+/view1/",
+      "view2": "/Product/Cobi18+/view2/",
+      "view3": "/Product/Cobi18+/view3/",
+      "view4": "/Product/Cobi18+/view4/"
+    },
+    "additionalImages": {
+      "sixViews": "/Product/Cobi18+/images_6Views/",
+      "other": "/Product/Cobi18+/images_other/"
+    }
+  }
+}
+```
+
+### 根据产品名称获取产品详情
+
+```http
+GET /api/products/name/{productName}
+```
+
+**描述**: 根据产品名称获取产品详细信息
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "product": {
+    "name": "Cobi18+",
+    "folderName": "Cobi18+",
+    "path": "Product/Cobi18+",
+    "totalSize": 9167402,
+    "fileCount": 135,
+    "mainImage": "/Product/Cobi18+/image_00.webp"
+  }
+}
+```
+
+## 数据库兼容性 API
+
+### 从数据库获取产品列表
+
+```http
+GET /api/db/products
+```
+
+**描述**: 从product-catalog.json文件获取产品目录数据
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "products": [
     {
       "id": 1,
-      "name": "product-image.jpg",
-      "originalName": "IMG_001.jpg",
-      "size": 1024000,
-      "mimeType": "image/jpeg",
-      "url": "/uploads/files/product-image.jpg",
-      "folderId": 1,
-      "folderName": "产品图片",
-      "uploadedBy": "admin",
-      "createdAt": "2023-12-07T10:30:00.000Z"
+      "name": "Cobi18+",
+      "folderName": "Cobi18+",
+      "category": "general",
+      "description": "Product model: Cobi18+",
+      "path": "Product/Cobi18+/",
+      "mainImage": "/Product/Cobi18+/image_00.webp",
+      "totalSize": 9167402,
+      "fileCount": 135,
+      "views": {
+        "view1": "/Product/Cobi18+/view1/",
+        "view2": "/Product/Cobi18+/view2/",
+        "view3": "/Product/Cobi18+/view3/",
+        "view4": "/Product/Cobi18+/view4/"
+      },
+      "additionalImages": {
+        "sixViews": "/Product/Cobi18+/images_6Views/",
+        "other": "/Product/Cobi18+/images_other/"
+      }
     }
   ]
 }
 ```
 
-### 上传文件
+### 根据产品名称获取产品详情（数据库兼容）
 
 ```http
-POST /api/files/upload
-Authorization: Bearer <token>
-Content-Type: multipart/form-data
-
-file: <binary data>
-folderId: 1
-description: "产品主图"
+GET /api/db/products/name/{productName}
 ```
+
+**描述**: 从product-catalog.json文件获取指定产品的详细信息
+
+## 文件夹管理 API
+
+### 获取文件夹详情
+
+```http
+GET /api/folder/{folderPath}/details
+```
+
+**描述**: 获取指定路径下文件夹的详细信息，包括子文件夹和文件列表
 
 **响应示例**:
 ```json
 {
   "success": true,
-  "data": {
-    "id": 101,
-    "name": "new-image.jpg",
-    "url": "/uploads/files/new-image.jpg",
-    "size": 512000,
-    "createdAt": "2023-12-07T10:30:00.000Z"
+  "folder": {
+    "path": "Product/Cobi18+",
+    "name": "Cobi18+",
+    "type": "directory",
+    "size": 9167402,
+    "modified": "2025-11-26T03:10:30.899Z",
+    "subfolders": [
+      {
+        "name": "view1",
+        "path": "Product/Cobi18+/view1",
+        "type": "directory",
+        "fileCount": 36
+      }
+    ],
+    "files": [
+      {
+        "name": "image_00.webp",
+        "path": "Product/Cobi18+/image_00.webp",
+        "type": "file",
+        "size": 123456,
+        "modified": "2025-11-26T03:10:30.899Z"
+      }
+    ]
   }
 }
 ```
+
+### 创建子文件夹
+
+```http
+POST /api/folder/{parentPath}/create-subfolder
+Authorization: Bearer <token> (管理员权限)
+Content-Type: application/json
+
+{
+  "folderName": "新子文件夹名称"
+}
+```
+
+**描述**: 在指定路径下创建新的子文件夹
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "子文件夹创建成功",
+  "data": {
+    "parentPath": "Product/Cobi18+",
+    "folderName": "新子文件夹名称",
+    "fullPath": "Product/Cobi18+/新子文件夹名称"
+  }
+}
+```
+
+### 删除子文件夹
+
+```http
+DELETE /api/folder/{parentPath}/subfolder/{folderName}
+Authorization: Bearer <token> (管理员权限)
+```
+
+**描述**: 删除指定路径下的子文件夹，如果删除的是产品文件夹，会同步更新product-catalog.json
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "子文件夹删除成功",
+  "data": {
+    "parentPath": "Product/Cobi18+",
+    "folderName": "要删除的文件夹",
+    "fullPath": "Product/Cobi18+/要删除的文件夹"
+  }
+}
+```
+
+### 重命名子文件夹
+
+```http
+PUT /api/folder/{parentPath}/subfolder/{folderName}
+Authorization: Bearer <token> (管理员权限)
+Content-Type: application/json
+
+{
+  "newFolderName": "新文件夹名称"
+}
+```
+
+**描述**: 重命名指定路径下的子文件夹，如果是产品文件夹会同步更新配置文件
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "子文件夹重命名成功",
+  "data": {
+    "parentPath": "Product/Cobi18+",
+    "oldName": "旧文件夹名称",
+    "newName": "新文件夹名称",
+    "fullPath": "Product/Cobi18+/新文件夹名称"
+  }
+}
+```
+
+### 获取文件夹树结构
+
+```http
+GET /api/folder/{folderPath}/tree?maxDepth=3
+```
+
+**描述**: 获取指定路径下文件夹的树形结构
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "tree": {
+    "name": "Cobi18+",
+    "path": "Product/Cobi18+",
+    "type": "directory",
+    "children": [
+      {
+        "name": "view1",
+        "path": "Product/Cobi18+/view1",
+        "type": "directory",
+        "children": [
+          {
+            "name": "image_01.webp",
+            "path": "Product/Cobi18+/view1/image_01.webp",
+            "type": "file",
+            "size": 12345
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 搜索文件
+
+```http
+GET /api/folder/{folderPath}/search?searchTerm=关键字&fileTypes=webp,jpg
+```
+
+**描述**: 在指定路径下搜索文件
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "results": [
+    {
+      "name": "image_01.webp",
+      "path": "Product/Cobi18+/view1/image_01.webp",
+      "type": "file",
+      "size": 12345,
+      "parentPath": "Product/Cobi18+/view1"
+    }
+  ],
+  "searchTerm": "关键字",
+  "count": 1
+}
+```
+
+## 文件操作 API
 
 ### 删除文件
 
 ```http
-DELETE /api/files/{id}
-Authorization: Bearer <token>
+POST /api/delete-file
+Authorization: Bearer <token> (管理员权限)
+Content-Type: application/json
+
+{
+  "filePath": "Product/Cobi18+/view1/image_01.webp"
+}
 ```
 
-### 预览文件
-
-```http
-GET /api/files/{id}/preview
-```
-
-返回文件的预览内容（图片、PDF等）
-
-### 下载文件
-
-```http
-GET /api/files/{id}/download
-Authorization: Bearer <token>
-```
-
-返回文件的下载流
-
-## 文件夹管理 API
-
-### 获取文件夹列表
-
-```http
-GET /api/folders
-```
+**描述**: 删除指定的文件
 
 **响应示例**:
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "id": 1,
-      "name": "产品图片",
-      "description": "存储所有产品图片",
-      "parentId": null,
-      "path": "/产品图片",
-      "fileCount": 25,
-      "createdAt": "2023-12-07T10:30:00.000Z"
-    }
-  ]
+  "message": "文件删除成功"
 }
 ```
 
-### 创建文件夹
+### 检查文件夹中是否有文件
 
 ```http
-POST /api/folders
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "name": "新文件夹",
-  "parentId": 1,
-  "description": "文件夹描述"
-}
+GET /api/check-folder/{folderPath}
 ```
 
-### 更新文件夹
-
-```http
-PUT /api/folders/{id}
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "name": "重命名文件夹",
-  "description": "更新后的描述"
-}
-```
-
-### 删除文件夹
-
-```http
-DELETE /api/folders/{id}
-Authorization: Bearer <token>
-```
-
-**注意**: 只有空文件夹才能被删除
-
-### 获取文件夹内容
-
-```http
-GET /api/folders/{id}/content
-```
-
-返回指定文件夹下的所有文件和子文件夹
-
-## 系统 API
-
-### 健康检查
-
-```http
-GET /api/health
-```
+**描述**: 检查指定文件夹中是否包含文件
 
 **响应示例**:
 ```json
 {
-  "status": "ok",
-  "timestamp": "2023-12-07T10:30:00.000Z",
-  "version": "1.0.0",
-  "services": {
-    "database": "connected",
-    "storage": "available",
-    "cache": "healthy"
-  },
-  "uptime": 3600,
-  "memory": {
-    "used": "45MB",
-    "total": "128MB",
-    "usage": "35.2%"
+  "hasFiles": true,
+  "fileCount": 36,
+  "folderPath": "Product/Cobi18+/view1",
+  "message": "文件夹中存在文件"
+}
+```
+
+### 获取文件信息
+
+```http
+GET /api/file-info/{filePath}
+```
+
+**描述**: 获取指定文件的详细信息
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "fileInfo": {
+    "name": "image_01.webp",
+    "size": 12345,
+    "modified": "2025-11-26T03:10:30.899Z",
+    "isFile": true,
+    "isDirectory": false
   }
 }
 ```
 
-### 错误报告
+### 获取文件下载链接
 
 ```http
-POST /api/error-report
-Content-Type: application/json
+GET /api/download/{filePath}/{fileName}
+```
 
+**描述**: 获取文件的下载链接
+
+**响应示例**:
+```json
 {
-  "type": "CLIENT_ERROR",
-  "message": "产品加载失败",
-  "severity": "medium",
-  "context": {
-    "url": "/products/1",
-    "userAgent": "Mozilla/5.0...",
-    "userId": 123
-  },
-  "stack": "Error: 产品加载失败..."
+  "success": true,
+  "downloadUrl": "/Product/Cobi18+/view1/image_01.webp",
+  "fileName": "image_01.webp"
 }
 ```
 
-### 批量日志
+## 上传管理 API
+
+### 批量替换产品
 
 ```http
-POST /api/logs/batch
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "logger": "frontend",
-  "logs": [
-    {
-      "level": "error",
-      "message": "加载失败",
-      "timestamp": "2023-12-07T10:30:00.000Z"
-    }
-  ]
-}
-```
-
-## 上传 API
-
-### 产品文件夹上传
-
-```http
-POST /api/uploads/product-folder
-Authorization: Bearer <token>
+POST /api/batch-replace-products
+Authorization: Bearer <token> (管理员权限)
 Content-Type: multipart/form-data
 
-productId: 1
-folder: <zip文件>
+zipFile: <binary data>
 ```
+
+**描述**: 通过ZIP包批量替换所有产品文件夹，会自动创建备份
 
 **响应示例**:
 ```json
 {
   "success": true,
-  "data": {
-    "productId": 1,
-    "uploadedFiles": [
-      {
-        "name": "image1.jpg",
-        "url": "/uploads/products/1/image1.jpg",
-        "size": 512000
-      }
-    ],
-    "failedFiles": []
+  "message": "批量替换成功",
+  "fileCount": 135,
+  "folderCount": 11,
+  "backupPath": "Product_backup_20251126_032341.zip"
+}
+```
+
+### 上传单个产品文件夹
+
+```http
+POST /api/upload-product-folder
+Authorization: Bearer <token> (管理员权限)
+Content-Type: multipart/form-data
+
+file: <zip file>
+folderName: "新产品文件夹名称"
+```
+
+**描述**: 上传单个产品文件夹的ZIP包
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "产品文件夹上传成功",
+  "result": {
+    "actualName": "新产品文件夹名称",
+    "path": "Product/新产品文件夹名称",
+    "size": 1234567,
+    "fileCount": 135
   }
+}
+```
+
+### 重新生成产品目录
+
+```http
+POST /api/regenerate-catalog
+Authorization: Bearer <token> (管理员权限)
+```
+
+**描述**: 手动重新生成product-catalog.json配置文件
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "产品目录重新生成成功",
+  "data": {}
+}
+```
+
+### 获取上传进度
+
+```http
+GET /api/upload-progress/{uploadId}
+```
+
+**描述**: 获取大文件上传的进度信息
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "progress": 100,
+  "message": "上传完成"
 }
 ```
 
@@ -498,7 +623,7 @@ folder: <zip文件>
 | 错误码 | HTTP状态 | 说明 |
 |--------|----------|------|
 | `VALIDATION_ERROR` | 400 | 输入验证失败 |
-| `UNAUTHORIZED` | 401 | 未授权或token无效 |
+| `UNAUTHORIZED` | 401 | 未授权或权限不足 |
 | `FORBIDDEN` | 403 | 权限不足 |
 | `NOT_FOUND` | 404 | 资源不存在 |
 | `CONFLICT` | 409 | 资源冲突 |
@@ -510,104 +635,100 @@ folder: <zip文件>
 ## 限制和约束
 
 ### 文件上传限制
-- **最大文件大小**: 50MB
-- **支持的文件类型**: 
-  - 图片: jpg, jpeg, png, gif, webp
-  - 文档: pdf, doc, docx, xls, xlsx
-  - 压缩文件: zip, rar, 7z
-- **单次上传文件数**: 最多20个
+- **最大文件大小**: 500MB (批量上传)
+- **支持的文件类型**: ZIP格式压缩包
+- **单次上传文件数**: 1个ZIP文件
 
 ### 请求限制
-- **API调用频率**: 每分钟最多100次
-- **分页最大限制**: 最多100条记录
-- **搜索关键词长度**: 最多100个字符
+- **API调用频率**: 未限制（开发环境）
+- **文件路径长度**: 限制在系统文件系统范围内
+- **文件夹深度**: 建议不超过10层
 
 ### 安全限制
-- **JWT Token有效期**: 24小时
-- **密码最小长度**: 8位字符
-- **文件扫描**: 所有上传文件都会进行病毒扫描
+- **管理员权限**: 部分敏感操作需要管理员权限
+- **路径遍历**: 防止路径遍历攻击
+- **文件类型**: 只允许上传ZIP格式文件
 
-## WebSocket 连接
-
-### 实时通知
-
-```javascript
-const socket = io('http://localhost:3000', {
-  auth: {
-    token: 'your-jwt-token'
-  }
-});
-
-// 监听产品更新
-socket.on('product:updated', (data) => {
-  console.log('产品已更新:', data);
-});
-
-// 监听文件上传进度
-socket.on('upload:progress', (data) => {
-  console.log(`上传进度: ${data.progress}%`);
-});
-```
-
-## SDK 和代码示例
+## 使用示例
 
 ### JavaScript/Node.js 客户端
 
 ```javascript
-const apiClient = {
-  baseURL: 'http://localhost:3000/api',
-  token: null,
+class ProductAPIClient {
+  constructor(baseURL = 'http://localhost:3000/api') {
+    this.baseURL = baseURL;
+    this.adminToken = null;
+  }
 
-  setToken(token) {
-    this.token = token;
-  },
+  setAdminToken(token) {
+    this.adminToken = token;
+  }
 
-  async request(method, endpoint, data = null) {
+  async request(endpoint, options = {}) {
+    const url = `${this.baseURL}${endpoint}`;
     const config = {
-      method,
       headers: {
         'Content-Type': 'application/json',
-        ...(this.token && { Authorization: `Bearer ${this.token}` })
-      }
+        ...(this.adminToken && { Authorization: `Bearer ${this.adminToken}` })
+      },
+      ...options
     };
 
-    if (data && method !== 'GET') {
-      config.body = JSON.stringify(data);
-    }
-
-    const response = await fetch(`${this.baseURL}${endpoint}`, config);
+    const response = await fetch(url, config);
     return response.json();
-  },
+  }
 
   // 产品相关
-  async getProducts(params = {}) {
-    const query = new URLSearchParams(params).toString();
-    return this.request('GET', `/products?${query}`);
-  },
+  async getProducts() {
+    return this.request('/products');
+  }
 
-  async getProduct(id) {
-    return this.request('GET', `/products/${id}`);
-  },
+  async createProduct(productName, folderName) {
+    return this.request('/products', {
+      method: 'POST',
+      body: JSON.stringify({ productName, folderName })
+    });
+  }
 
-  async createProduct(data) {
-    return this.request('POST', '/products', data);
-  },
+  async renameProduct(oldName, newName, newFolderName) {
+    return this.request(`/products/${encodeURIComponent(oldName)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ newProductName: newName, newFolderName })
+    });
+  }
 
-  // 文件相关
-  async uploadFile(file, folderId = null) {
+  async deleteProduct(productName) {
+    return this.request(`/products/${encodeURIComponent(productName)}`, {
+      method: 'DELETE'
+    });
+  }
+
+  // 文件夹相关
+  async getFolderDetails(folderPath) {
+    return this.request(`/folder/${encodeURIComponent(folderPath)}/details`);
+  }
+
+  async createSubfolder(parentPath, folderName) {
+    return this.request(`/folder/${encodeURIComponent(parentPath)}/create-subfolder`, {
+      method: 'POST',
+      body: JSON.stringify({ folderName })
+    });
+  }
+
+  // 文件上传相关
+  async batchReplaceProducts(zipFile) {
     const formData = new FormData();
-    formData.append('file', file);
-    if (folderId) formData.append('folderId', folderId);
+    formData.append('zipFile', zipFile);
 
-    return fetch(`${this.baseURL}/files/upload`, {
+    return fetch(`${this.baseURL}/batch-replace-products`, {
       method: 'POST',
       headers: {
-        ...(this.token && { Authorization: `Bearer ${this.token}` })
+        ...(this.adminToken && { Authorization: `Bearer ${this.adminToken}` })
       },
       body: formData
     }).then(res => res.json());
   }
-};
+}
 ```
 
 ### Python 客户端示例
@@ -617,51 +738,74 @@ import requests
 import json
 
 class ProductAPIClient:
-    def __init__(self, base_url, token=None):
+    def __init__(self, base_url='http://localhost:3000/api'):
         self.base_url = base_url
-        self.token = token
-        self.session = requests.Session()
-        
-        if token:
-            self.session.headers.update({
-                'Authorization': f'Bearer {token}',
-                'Content-Type': 'application/json'
-            })
+        self.admin_token = None
     
-    def get_products(self, **params):
-        response = self.session.get(f'{self.base_url}/products', params=params)
+    def set_admin_token(self, token):
+        self.admin_token = token
+    
+    def _get_headers(self):
+        headers = {'Content-Type': 'application/json'}
+        if self.admin_token:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+        return headers
+    
+    def get_products(self):
+        response = requests.get(f'{self.base_url}/products')
         return response.json()
     
-    def create_product(self, product_data):
-        response = self.session.post(f'{self.base_url}/products', json=product_data)
+    def create_product(self, product_name, folder_name):
+        data = {'productName': product_name, 'folderName': folder_name}
+        response = requests.post(
+            f'{self.base_url}/products',
+            json=data,
+            headers=self._get_headers()
+        )
         return response.json()
     
-    def upload_file(self, file_path, folder_id=None):
-        with open(file_path, 'rb') as f:
-            files = {'file': f}
-            if folder_id:
-                data = {'folderId': folder_id}
-                return self.session.post(
-                    f'{self.base_url}/files/upload', 
-                    files=files, 
-                    data=data
-                ).json()
-            return self.session.post(
-                f'{self.base_url}/files/upload', 
-                files=files
-            ).json()
+    def delete_product(self, product_name):
+        response = requests.delete(
+            f'{self.base_url}/products/{product_name}',
+            headers=self._get_headers()
+        )
+        return response.json()
+    
+    def get_folder_details(self, folder_path):
+        response = requests.get(
+            f'{self.base_url}/folder/{folder_path}/details'
+        )
+        return response.json()
+    
+    def batch_replace_products(self, zip_file_path):
+        with open(zip_file_path, 'rb') as f:
+            files = {'zipFile': f}
+            headers = {}
+            if self.admin_token:
+                headers['Authorization'] = f'Bearer {self.admin_token}'
+            
+            response = requests.post(
+                f'{self.base_url}/batch-replace-products',
+                files=files,
+                headers=headers
+            )
+            return response.json()
 ```
 
 ## 更新日志
 
-### v1.0.0 (2023-12-07)
-- 初始版本发布
-- 产品管理功能
-- 文件和文件夹管理
-- 用户认证和授权
-- 错误处理和日志记录
-- 健康检查和监控
-- WebSocket 实时通知
+### v2.0 (2025-11-26)
+- 完善产品管理功能
+- 添加文件夹树结构API
+- 增强批量操作功能
+- 完善错误处理机制
+- 添加文件搜索功能
+
+### v1.0 (初始版本)
+- 基础产品管理功能
+- 简单的文件操作
+- 产品目录配置管理
+- 基础认证机制
 
 ---
 
