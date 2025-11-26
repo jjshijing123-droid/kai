@@ -1,0 +1,69 @@
+<template>
+  <div class="empty-container">
+    <div class="empty-icon">{{ icon }}</div>
+    <p class="empty-message">{{ message }}</p>
+    <a-button 
+      v-if="showAction" 
+      type="primary" 
+      @click="handleAction"
+      class="empty-action-button"
+    >
+      {{ actionText }}
+    </a-button>
+  </div>
+</template>
+
+<script setup>
+const props = defineProps({
+  message: {
+    type: String,
+    required: true
+  },
+  icon: {
+    type: String,
+    default: '📦'
+  },
+  showAction: {
+    type: Boolean,
+    default: false
+  },
+  actionText: {
+    type: String,
+    default: '创建'
+  }
+})
+
+const emit = defineEmits(['action'])
+
+const handleAction = () => {
+  emit('action')
+}
+</script>
+
+<style scoped>
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+.empty-message {
+  color: #666;
+  font-size: 16px;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.empty-action-button {
+  margin-top: 16px;
+}
+</style>
