@@ -9,7 +9,7 @@
 ### 前端技术栈
 - **框架**: Vue 3 + Composition API
 - **构建工具**: Vite
-- **UI库**: Ant Design Vue
+- **UI库**: Radix UI (已从Ant Design Vue迁移)
 - **路由**: Vue Router
 - **国际化**: 自定义国际化系统
 - **样式**: CSS3 + 响应式设计
@@ -36,12 +36,14 @@
 product-management-system/
 ├── src/                        # 前端源码
 │   ├── components/            # Vue组件
+│   │   ├── modals/           # 模态框组件
+│   │   │   ├── BatchUploadModal.vue
+│   │   │   ├── CreateFileModal.vue
+│   │   │   ├── CreateFolderModal.vue
+│   │   │   └── UploadFolderModal.vue
 │   │   ├── ui/               # 通用UI组件
-│   │   │   ├── ErrorState.vue
-│   │   │   ├── LoadingState.vue
-│   │   │   ├── NotificationContainer.vue
-│   │   │   ├── ShortcutHelp.vue
-│   │   │   └── VirtualList.vue
+│   │   │   └── Message.vue
+│   │   ├── reka/             # 特定功能组件
 │   │   ├── AdminAccessDenied.vue
 │   │   ├── AdminLoginModal.vue
 │   │   ├── Drawer.vue
@@ -63,6 +65,7 @@ product-management-system/
 │   │   ├── useErrorMonitoring.js
 │   │   ├── useI18n.js
 │   │   ├── useKeyboardShortcuts.js
+│   │   ├── useMessage.js
 │   │   ├── useNotifications.js
 │   │   └── useTooltip.js
 │   ├── i18n/                 # 国际化系统

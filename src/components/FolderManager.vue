@@ -2,51 +2,40 @@
   <div class="folder-manager">
     <!-- 页面头部 -->
     <div class="page-header">
-      <a-space direction="vertical" :size="16" style="width: 100%">
-        <a-row justify="space-between" align="middle">
-          <a-col>
-            <h1 class="page-title">
-              <FolderOpenOutlined />
-              {{ currentFolder }}
-            </h1>
-          </a-col>
-          <a-col>
-            <a-space>
-              <a-button @click="goBack" class="back-button">
-                <template #icon>
-                  <ArrowLeftOutlined />
-                </template>
-                {{ t('folderManager_back') }}
-              </a-button>
-              <a-button @click="refreshFolder" class="refresh-button" :loading="loading">
-                <template #icon>
-                  <ReloadOutlined />
-                </template>
-                {{ t('folderManager_refresh') }}
-              </a-button>
-            </a-space>
-          </a-col>
-        </a-row>
+      <div class="header-content">
+        <div class="header-title-section">
+          <h1 class="page-title">
+            📁 {{ currentFolder }}
+          </h1>
+        </div>
+        <div class="header-actions">
+          <button @click="goBack" class="back-button">
+            ← {{ t('folderManager_back') }}
+          </button>
+          <button @click="refreshFolder" class="refresh-button" :class="{ loading: loading }">
+            🔄 {{ t('folderManager_refresh') }}
+          </button>
+        </div>
+      </div>
 
-        <!-- 文件夹路径 -->
-        <a-breadcrumb>
-          <a-breadcrumb-item @click="goToRoot">
-            <HomeOutlined />
-            {{ t('folderManager_productFolder') }}
-          </a-breadcrumb-item>
-          <template v-for="(part, index) in folderPathParts" :key="index">
-            <a-breadcrumb-item 
-              v-if="index < folderPathParts.length - 1"
-              @click="goToFolderPath(part.path)"
-            >
-              {{ part.name }}
-            </a-breadcrumb-item>
-            <a-breadcrumb-item v-else>
-              {{ part.name }}
-            </a-breadcrumb-item>
-          </template>
-        </a-breadcrumb>
-      </a-space>
+      <!-- 文件夹路径 -->
+      <div class="breadcrumb">
+        <span class="breadcrumb-item" @click="goToRoot">
+          🏠 {{ t('folderManager_productFolder') }}
+        </span>
+        <span v-for="(part, index) in folderPathParts" :key="index" class="breadcrumb-separator">
+          /
+        </span>
+        <span 
+          v-for="(part, index) in folderPathParts" 
+          :key="index"
+          class="breadcrumb-item"
+          :class="{ 'breadcrumb-item-active': index === folderPathParts.length - 1 }"
+          @click="index < folderPathParts.length - 1 ? goToFolderPath(part.path) : null"
+        >
+          {{ part.name }}
+        </span>
+      </div>
     </div>
 
     <!-- 上传区域 -->
@@ -62,25 +51,20 @@
     <!-- 内容区域 -->
     <div class="content-area">
       <!-- 加载状态 -->
-      <a-spin v-if="loading" :spinning="loading" size="large" class="loading-spin">
-        <template #indicator>
-          <a-spin size="large" />
-        </template>
-      </a-spin>
+      <div v-if="loading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">{{ t('folderManager_loading') }}</div>
+      </div>
 
       <!-- 错误状态 -->
-      <a-result
-        v-else-if="error"
-        status="error"
-        :title="t('folderManager_loadingFailed')"
-        :sub-title="error"
-      >
-        <template #extra>
-          <a-button type="primary" @click="fetchFolderDetails">
-            {{ t('folderManager_retry') }}
-          </a-button>
-        </template>
-      </a-result>
+      <div v-else-if="error" class="error-state">
+        <div class="error-icon">❌</div>
+        <h3 class="error-title">{{ t('folderManager_loadingFailed') }}</h3>
+        <p class="error-message">{{ error }}</p>
+        <button class="retry-button" @click="fetchFolderDetails">
+          {{ t('folderManager_retry') }}
+        </button>
+      </div>
 
       <!-- 文件夹内容 -->
       <div v-else class="folder-content">
@@ -96,7 +80,7 @@
               @contextmenu.prevent="showFolderContextMenu($event, folder)"
             >
               <div class="folder-icon">
-                <FolderOutlined />
+                📁
               </div>
               <div class="folder-info">
                 <div class="folder-name">{{ folder.name }}</div>
@@ -119,8 +103,8 @@
               @contextmenu.prevent="showFileContextMenu($event, file)"
             >
               <div class="file-icon">
-                <FileImageOutlined v-if="isImageFile(file.name)" />
-                <FileOutlined v-else />
+                <span v-if="isImageFile(file.name)">🖼️</span>
+                <span v-else>📄</span>
               </div>
               <div class="file-info">
                 <div class="file-name">{{ file.name }}</div>
@@ -130,83 +114,67 @@
                 </div>
               </div>
               <div class="file-actions">
-                <a-button
-                  type="text"
-                  size="small"
+                <button
+                  class="action-btn preview-btn"
                   @click.stop="previewFile(file)"
-                  :title="t('folderManager_preview')"
+                  title="{{ t('folderManager_preview') }}"
                 >
-                  <EyeOutlined />
-                </a-button>
-                <a-button
-                  type="text"
-                  size="small"
+                  👁️
+                </button>
+                <button
+                  class="action-btn download-btn"
                   @click.stop="downloadFile(file)"
-                  :title="t('folderManager_download')"
+                  title="{{ t('folderManager_download') }}"
                 >
-                  <DownloadOutlined />
-                </a-button>
-                <a-button
-                  type="text"
-                  size="small"
+                  💾
+                </button>
+                <button
+                  class="action-btn delete-btn"
                   @click.stop="deleteFile(file)"
-                  :title="t('folderManager_delete')"
-                  danger
+                  title="{{ t('folderManager_delete') }}"
                 >
-                  <DeleteOutlined />
-                </a-button>
+                  🗑️
+                </button>
               </div>
             </div>
           </div>
         </div>
 
         <!-- 空状态 -->
-        <a-empty
-          v-if="!loading && !error && subfolders.length === 0 && files.length === 0"
-          :image="simpleImage"
-          class="empty-state"
-        >
-          <template #description>
-            <p>{{ t('folderManager_folderEmpty') }}</p>
-          </template>
-          <a-upload
-            :before-upload="beforeUpload"
-            :show-upload-list="false"
-            :multiple="true"
-          >
-            <a-button type="primary">
-              {{ t('folderManager_uploadFirstFile') }}
-            </a-button>
-          </a-upload>
-        </a-empty>
+        <div v-if="!loading && !error && subfolders.length === 0 && files.length === 0" class="empty-state">
+          <div class="empty-icon">📁</div>
+          <p class="empty-text">{{ t('folderManager_folderEmpty') }}</p>
+          <button class="upload-first-btn" @click="triggerUpload">
+            {{ t('folderManager_uploadFirstFile') }}
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- 文件预览模态框 -->
-    <a-modal
-      v-model:open="showPreviewModal"
-      :title="previewFileInfo?.name"
-      width="80%"
-      :footer="null"
-      @cancel="closePreview"
-    >
-      <div v-if="previewFileInfo" class="preview-content">
-        <img
-          v-if="isImageFile(previewFileInfo.name)"
-          :src="getFileUrl(previewFileInfo)"
-          :alt="previewFileInfo.name"
-          class="preview-image"
-        />
-        <div v-else class="preview-other">
-          <FileOutlined class="preview-icon" />
-          <p>{{ t('folderManager_previewNotSupported') }}</p>
-          <a-button type="primary" @click="downloadFile(previewFileInfo)">
-            <DownloadOutlined />
-            {{ t('folderManager_downloadFile') }}
-          </a-button>
+    <div v-if="showPreviewModal" class="modal-overlay" @click="closePreview">
+      <div class="modal-content preview-modal" @click.stop>
+        <div class="modal-header">
+          <h3>{{ previewFileInfo?.name }}</h3>
+          <button class="modal-close" @click="closePreview">×</button>
+        </div>
+        <div v-if="previewFileInfo" class="preview-content">
+          <img
+            v-if="isImageFile(previewFileInfo.name)"
+            :src="getFileUrl(previewFileInfo)"
+            :alt="previewFileInfo.name"
+            class="preview-image"
+          />
+          <div v-else class="preview-other">
+            <div class="preview-icon">📄</div>
+            <p>{{ t('folderManager_previewNotSupported') }}</p>
+            <button class="download-btn" @click="downloadFile(previewFileInfo)">
+              💾 {{ t('folderManager_downloadFile') }}
+            </button>
+          </div>
         </div>
       </div>
-    </a-modal>
+    </div>
 
     <!-- 右键菜单 -->
     <div
@@ -217,30 +185,24 @@
     >
       <template v-if="contextMenuType === 'folder'">
         <div class="context-menu-item" @click="openSubfolder(contextMenuItem.name)">
-          <FolderOpenOutlined />
-          <span>{{ t('folderManager_open') }}</span>
+          📁 {{ t('folderManager_open') }}
         </div>
         <div class="context-menu-item" @click="renameFolder(contextMenuItem)">
-          <EditOutlined />
-          <span>{{ t('folderManager_rename') }}</span>
+          ✏️ {{ t('folderManager_rename') }}
         </div>
         <div class="context-menu-item danger" @click="deleteFolder(contextMenuItem)">
-          <DeleteOutlined />
-          <span>{{ t('folderManager_delete') }}</span>
+          🗑️ {{ t('folderManager_delete') }}
         </div>
       </template>
       <template v-else-if="contextMenuType === 'file'">
         <div class="context-menu-item" @click="previewFile(contextMenuItem)">
-          <EyeOutlined />
-          <span>{{ t('folderManager_preview') }}</span>
+          👁️ {{ t('folderManager_preview') }}
         </div>
         <div class="context-menu-item" @click="downloadFile(contextMenuItem)">
-          <DownloadOutlined />
-          <span>{{ t('folderManager_download') }}</span>
+          💾 {{ t('folderManager_download') }}
         </div>
         <div class="context-menu-item" @click="deleteFile(contextMenuItem)">
-          <DeleteOutlined />
-          <span>{{ t('folderManager_delete') }}</span>
+          🗑️ {{ t('folderManager_delete') }}
         </div>
       </template>
     </div>
@@ -252,20 +214,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import FileUploader from './FileUploader.vue'
-import {
-  ArrowLeftOutlined,
-  ReloadOutlined,
-  UploadOutlined,
-  FolderOpenOutlined,
-  FolderOutlined,
-  FileOutlined,
-  FileImageOutlined,
-  EyeOutlined,
-  DownloadOutlined,
-  DeleteOutlined,
-  HomeOutlined,
-  EditOutlined
-} from '@ant-design/icons-vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -488,6 +436,12 @@ const goToRoot = () => {
   router.push('/product-management')
 }
 
+// 触发上传
+const triggerUpload = () => {
+  // 这里可以实现文件上传逻辑
+  alert(`${t('folderManager_preparingUpload')}\n\n${t('folderManager_uploadToCurrentFolder')}`)
+}
+
 // 重命名文件夹
 const renameFolder = async (folder) => {
   const newName = prompt(t('folderManager_enterNewName'), folder.name)
@@ -615,6 +569,26 @@ watch(() => route.params.folderName, (newFolderName) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.header-title-section {
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .page-title {
   font-size: 28px;
   font-weight: 600;
@@ -670,26 +644,45 @@ watch(() => route.params.folderName, (newFolderName) => {
   box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
 }
 
-.upload-button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, #1890ff, #36cfc9);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+.refresh-button.loading {
+  opacity: 0.7;
+  cursor: wait;
 }
 
-.upload-button:hover {
-  background: linear-gradient(135deg, #40a9ff, #5cdbd3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+/* 面包屑样式 */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+
+.breadcrumb-item {
+  color: #1890ff;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.breadcrumb-item:hover {
+  color: #40a9ff;
+  background: #f0f8ff;
+}
+
+.breadcrumb-item-active {
+  color: #666;
+  cursor: default;
+}
+
+.breadcrumb-item-active:hover {
+  color: #666;
+  background: transparent;
+}
+
+.breadcrumb-separator {
+  color: #999;
 }
 
 /* 上传区域 */
@@ -702,18 +695,130 @@ watch(() => route.params.folderName, (newFolderName) => {
   border: 1px solid #f0f0f0;
 }
 
-/* 面包屑 */
-:deep(.ant-breadcrumb) {
+/* 内容区域 */
+.content-area {
+  margin-bottom: 32px;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f0f0f0;
+  border-top: 4px solid #1890ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 16px;
+  color: #666;
+}
+
+/* 错误状态 */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 16px;
+  text-align: center;
+  padding: 24px;
+}
+
+.error-icon {
+  font-size: 48px;
+  color: #ff4d4f;
+}
+
+.error-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.error-message {
   font-size: 14px;
+  color: #8c8c8c;
+  margin: 0;
+  max-width: 500px;
 }
 
-:deep(.ant-breadcrumb a) {
-  color: #1890ff;
+.retry-button {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #1890ff, #36cfc9);
+  color: white;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
 }
 
-:deep(.ant-breadcrumb a:hover) {
-  color: #40a9ff;
+.retry-button:hover {
+  background: linear-gradient(135deg, #40a9ff, #5cdbd3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 16px;
+  text-align: center;
+  padding: 24px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: #d9d9d9;
+}
+
+.empty-text {
+  font-size: 16px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+.upload-first-btn {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #1890ff, #36cfc9);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+}
+
+.upload-first-btn:hover {
+  background: linear-gradient(135deg, #40a9ff, #5cdbd3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
 }
 
 /* 内容区域 */
@@ -844,6 +949,32 @@ watch(() => route.params.folderName, (newFolderName) => {
   opacity: 1;
 }
 
+.action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: #f0f0f0;
+}
+
+.preview-btn {
+  color: #1890ff;
+}
+
+.download-btn {
+  color: #52c41a;
+}
+
+.delete-btn {
+  color: #ff4d4f;
+}
+
 /* 文件预览 */
 .preview-content {
   display: flex;
@@ -861,12 +992,121 @@ watch(() => route.params.folderName, (newFolderName) => {
 .preview-other {
   text-align: center;
   padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 .preview-icon {
   font-size: 64px;
   color: #8c8c8c;
   margin-bottom: 16px;
+}
+
+.preview-other .download-btn {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #1890ff, #36cfc9);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preview-other .download-btn:hover {
+  background: linear-gradient(135deg, #40a9ff, #5cdbd3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+/* 模态框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease;
+}
+
+.preview-modal {
+  max-width: 90%;
+  max-height: 90vh;
+  width: auto;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 24px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #8c8c8c;
+  transition: color 0.2s ease;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.modal-close:hover {
+  color: #1a1a1a;
+  background: #f0f0f0;
+}
+
+.modal-body {
+  padding: 24px;
 }
 
 /* 右键菜单 */
@@ -903,20 +1143,6 @@ watch(() => route.params.folderName, (newFolderName) => {
   background: #fff1f0;
 }
 
-/* 加载状态 */
-.loading-spin {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-}
-
-/* 空状态 */
-.empty-state {
-  padding: 80px 20px;
-  text-align: center;
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
   .folder-manager {
@@ -925,6 +1151,16 @@ watch(() => route.params.folderName, (newFolderName) => {
   
   .page-header {
     padding: 20px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  
+  .header-actions {
+    justify-content: flex-start;
   }
   
   .page-title {
@@ -942,6 +1178,14 @@ watch(() => route.params.folderName, (newFolderName) => {
   .file-actions {
     opacity: 1;
   }
+  
+  .breadcrumb {
+    flex-wrap: wrap;
+  }
+  
+  .breadcrumb-item {
+    margin-bottom: 4px;
+  }
 }
 
 @media (max-width: 576px) {
@@ -949,7 +1193,7 @@ watch(() => route.params.folderName, (newFolderName) => {
     font-size: 20px;
   }
   
-  .back-button, .upload-button {
+  .back-button, .refresh-button {
     padding: 6px 12px;
     font-size: 13px;
   }
@@ -957,6 +1201,19 @@ watch(() => route.params.folderName, (newFolderName) => {
   .file-details {
     flex-direction: column;
     gap: 4px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .modal-header {
+    padding: 16px;
   }
 }
 </style>

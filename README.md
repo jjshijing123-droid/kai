@@ -30,8 +30,8 @@
 ### 前端
 - **Vue 3** + Composition API
 - **Vite** 构建工具
-- **Ant Design Vue** UI组件库
-- **Vue Router** 路由管理（配置但未完全使用）
+- **Radix UI** 组件库（已从Ant Design Vue迁移）
+- **Vue Router** 路由管理
 
 ### 后端
 - **Node.js** + Express.js
@@ -77,14 +77,20 @@ npm run server
 product-management-system/
 ├── src/                        # 前端源码
 │   ├── components/            # Vue组件
-│   │   ├── ui/               # 通用UI组件
-│   │   ├── forms/            # 表单组件
-│   │   └── layout/           # 布局组件
+│   │   ├── modals/           # 模态框组件
+│   │   ├── reka/             # 特定功能组件
+│   │   └── ui/               # 通用UI组件
 │   ├── composables/          # 组合式函数
 │   ├── i18n/                 # 国际化系统
-│   ├── services/             # API服务
+│   ├── images/               # 图片资源
+│   ├── performance/          # 性能相关
 │   ├── router/               # 路由配置
-│   └── styles/               # 样式文件
+│   ├── services/             # API服务
+│   ├── stores/               # 状态管理
+│   ├── styles/               # 样式文件
+│   ├── tests/                # 测试文件
+│   ├── theme/                # 主题相关
+│   └── utils/                # 工具函数
 ├── server/                    # 后端源码
 │   ├── routes/               # 路由定义
 │   ├── services/             # 业务逻辑

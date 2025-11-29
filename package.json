@@ -8,8 +8,6 @@
     "server": "node server.js"
   },
   "dependencies": {
-    "@ant-design/icons-vue": "^7.0.1",
-    "ant-design-vue": "^4.2.6",
     "archiver": "^7.0.1",
     "axios": "^1.13.2",
     "cors": "^2.8.5",
@@ -18,6 +16,7 @@
     "jszip": "^3.10.1",
     "multer": "^2.0.2",
     "node-fetch": "^2.7.0",
+    "radix-vue": "^1.9.0",
     "unzipper": "^0.12.3",
     "vue": "^3.5.24",
     "vue-router": "^4.6.3"

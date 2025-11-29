@@ -1,6 +1,17 @@
-import { ref, computed } from 'vue'
-import { message } from 'ant-design-vue'
+import { ref, computed, inject } from 'vue'
 import i18n from '../i18n/index.js'
+
+// 创建一个简单的事件总线来处理消息提示
+const emitMessage = (content, type = 'success', duration = 3000) => {
+  // 尝试从Vue实例中获取消息发射器
+  const app = document.querySelector('#app')?._vnode?.appContext
+  if (app?.config?.globalProperties?.$emit) {
+    app.config.globalProperties.$emit('show-message', { content, type, duration })
+  } else {
+    // 如果无法获取Vue实例，直接使用alert
+    console.log(`${type.toUpperCase()}: ${content}`)
+  }
+}
 
 // 管理员账号配置
 const ADMIN_CREDENTIALS = {
@@ -34,15 +45,15 @@ const login = async (username, password) => {
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       isAdminLoggedIn.value = true
       localStorage.setItem(ADMIN_SESSION_KEY, 'true')
-      message.success(i18n.t('common_adminLoginSuccess'))
+      emitMessage(i18n.t('common_adminLoginSuccess'), 'success')
       return { success: true }
     } else {
-      message.error(i18n.t('common_invalidCredentials'))
+      emitMessage(i18n.t('common_invalidCredentials'), 'error')
       return { success: false, error: i18n.t('common_invalidCredentials') }
     }
   } catch (error) {
     console.error('登录错误:', error)
-    message.error(i18n.t('common_loginRetry'))
+    emitMessage(i18n.t('common_loginRetry'), 'error')
     return { success: false, error: i18n.t('common_loginRetry') }
   }
 }
@@ -51,7 +62,7 @@ const login = async (username, password) => {
 const logout = () => {
   isAdminLoggedIn.value = false
   localStorage.removeItem(ADMIN_SESSION_KEY)
-  message.success(i18n.t('common_logoutSuccess'))
+  emitMessage(i18n.t('common_logoutSuccess'), 'success')
 }
 
 // 检查是否有权限访问特定功能

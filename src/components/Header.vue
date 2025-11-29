@@ -8,40 +8,45 @@
     <div class="header-controls">
       <!-- 桌面端显示的导航按钮 -->
       <div class="nav-buttons">
-        <a-button type="text" @click="goToI18nManager" class="nav-button">
-          <template #icon>
-            <GlobalOutlined />
-          </template>
+        <button @click="goToI18nManager" class="nav-button">
+          <span class="button-icon">🌐</span>
           {{ t('header_i18nManager') }}
-        </a-button>
+        </button>
         
-        <a-button type="text" @click="goToProductManager" class="nav-button">
-          <template #icon>
-            <AppstoreOutlined />
-          </template>
+        <button @click="goToProductManager" class="nav-button">
+          <span class="button-icon">📦</span>
           {{ t('header_productManager') }}
-        </a-button>
+        </button>
         
-        <a-button type="text" @click="toggleLanguage" class="lang-button">
-          <template #icon>
-            <TranslationOutlined />
-          </template>
+        <button @click="toggleLanguage" class="lang-button">
+          <span class="button-icon">🌍</span>
           {{ currentLanguage === 'zh-CN' ? t('common_english') : t('common_chinese') }}
-        </a-button>
+        </button>
+        
+        <!-- 抽屉按钮 -->
+        <button @click="toggleMenu" class="drawer-button">
+          <span class="button-icon">📋</span>
+        </button>
       </div>
       
       <!-- 移动端菜单按钮 -->
-      <a-button type="text" @click="toggleMenu" class="menu-button">
-        <template #icon>
-          <MenuOutlined />
-        </template>
-      </a-button>
+      <button @click="toggleMenu" class="menu-button">
+        <span class="button-icon">☰</span>
+      </button>
     </div>
     
     <!-- 统一抽屉菜单 -->
     <Drawer
       :isOpen="menuVisible"
       @close="closeMenu"
+    />
+    
+    <!-- 登录模态框 -->
+    <AdminLoginModal
+      :open="showLoginModal"
+      @open-change="handleLoginModalChange"
+      @login-success="handleLoginSuccess"
+      @login-failed="handleLoginFailed"
     />
   </div>
 </template>
@@ -50,19 +55,17 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter, useRoute } from 'vue-router'
+import { useAdminAuth } from '../composables/useAdminAuth.js'
 import Drawer from './Drawer.vue'
-import {
-  GlobalOutlined,
-  AppstoreOutlined,
-  TranslationOutlined,
-  MenuOutlined
-} from '@ant-design/icons-vue'
+import AdminLoginModal from './AdminLoginModal.vue'
 
 const { currentLanguage, toggleLanguage, t } = useI18n()
 const router = useRouter()
 const route = useRoute()
+const { isAdminLoggedIn } = useAdminAuth()
 
 const menuVisible = ref(false)
+const showLoginModal = ref(false)
 
 // 检测是否为3D查看器页面
 const is3DViewerPage = computed(() => {
@@ -74,13 +77,37 @@ const goToHome = () => {
 }
 
 const goToI18nManager = () => {
-  router.push('/i18n-manager')
-  menuVisible.value = false
+  if (!isAdminLoggedIn.value) {
+    showLoginModal.value = true
+  } else {
+    router.push('/i18n-manager')
+    menuVisible.value = false
+  }
 }
 
 const goToProductManager = () => {
-  router.push('/product-management')
-  menuVisible.value = false
+  if (!isAdminLoggedIn.value) {
+    showLoginModal.value = true
+  } else {
+    router.push('/product-management')
+    menuVisible.value = false
+  }
+}
+
+// 处理登录模态框打开/关闭事件
+const handleLoginModalChange = (open) => {
+  showLoginModal.value = open
+}
+
+// 处理登录成功
+const handleLoginSuccess = () => {
+  showLoginModal.value = false
+  // 登录成功后可以选择跳转到之前请求的页面
+}
+
+// 处理登录失败
+const handleLoginFailed = (error) => {
+  console.error(`${t('common_loginFailed')}:`, error)
 }
 
 // 统一菜单控制
@@ -145,7 +172,7 @@ onUnmounted(() => {
 
 /* 导航按钮组 */
 .nav-buttons {
-  display:none;
+  display: flex;
   align-items: center;
   gap: 0px;
 }
@@ -157,6 +184,17 @@ onUnmounted(() => {
   gap: 0px;
   font-weight: 500;
   color: #4d4d4d;
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.button-icon {
+  margin-right: 8px;
+  font-size: 16px;
 }
 
 .nav-button:hover,
@@ -165,17 +203,30 @@ onUnmounted(() => {
 }
 
 /* 菜单按钮 */
-.menu-button {
+.menu-button,
+.drawer-button {
   display: none;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
   border-radius: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: #4d4d4d;
 }
 
-.menu-button:hover {
+.menu-button:hover,
+.drawer-button:hover {
   background: #f5f5f5;
+}
+
+/* 抽屉按钮 - 桌面端显示 */
+.drawer-button {
+  display: flex;
+  margin-left: 8px;
 }
 
 
@@ -196,11 +247,23 @@ onUnmounted(() => {
   
   /* 在移动端隐藏导航按钮，显示菜单按钮 */
   .nav-buttons {
-    display: none;
+    display: none !important;
   }
   
   .menu-button {
-    display: flex;
+    display: flex !important;
+  }
+  
+  /* 在移动端隐藏抽屉按钮 */
+  .drawer-button {
+    display: none !important;
+  }
+}
+
+/* 桌面端样式 */
+@media (min-width: 769px) {
+  .menu-button {
+    display: none !important;
   }
 }
 

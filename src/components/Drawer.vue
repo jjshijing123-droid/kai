@@ -1,154 +1,139 @@
 <template>
-  <a-drawer
-    :open="isOpen"
-    placement="right"
-    :closable="false"
-    @close="closeDrawer"
-    width="320"
-    class="custom-drawer"
-    :bodyStyle="{
-    padding: '0px 24px'
-  }" 
-  >
-    <template #title>
-      <div class="custom-drawer-header">
-        <div class="drawer-title"></div>
-        <div class="drawer-close" @click="closeDrawer">
-          <CloseOutlined />
-        </div>
+  <div v-if="isOpen" class="drawer-overlay" @click="closeDrawer"></div>
+  <div :class="['drawer-content-wrapper', { 'drawer-open': isOpen }]" style="width: 320px; padding: 0;">
+    <div class="custom-drawer-header">
+      <div class="drawer-title"></div>
+      <div class="drawer-close" @click="closeDrawer">
+        ✕
       </div>
-    </template>
-    <div class="drawer-content">
+    </div>
+    <div class="drawer-content" style="padding: 0px 24px;">
       <!-- 管理员认证部分 -->
       <div class="admin-section">
-        <h3 class="section-title">{{ t('common_admin') }}</h3>
-        <div class="admin-content">
-          <div v-if="!isAdminLoggedIn" class="admin-login-item" @click="openLoginModal">
-            <div class="menu-icon">
-              <LoginOutlined />
+          <h3 class="section-title">{{ t('common_admin') }}</h3>
+          <div class="admin-content">
+            <div v-if="!isAdminLoggedIn.value" class="admin-login-item" @click="openLoginModal">
+              <div class="menu-icon">🔐</div>
+              <span class="menu-text">{{ t('common_adminLogin') }}</span>
             </div>
-            <span class="menu-text">{{ t('common_adminLogin') }}</span>
-          </div>
-          <div v-else class="admin-logged-in">
-            <div class="admin-info">
-              <div class="menu-icon">
-                <UserOutlined />
+            <div v-else class="admin-logged-in">
+              <div class="admin-info">
+                <div class="menu-icon">👤</div>
+                <span class="menu-text">{{ t('common_loggedIn') }}</span>
               </div>
-              <span class="menu-text">{{ t('common_loggedIn') }}</span>
+              <button
+                @click="handleLogout"
+                class="logout-button"
+              >
+                <span class="button-icon">🚪</span>
+                {{ t('common_logout') }}
+              </button>
             </div>
-            <a-button
-              type="text"
-              size="small"
-              @click="handleLogout"
-              class="logout-button"
-            >
-              <template #icon>
-                <LogoutOutlined />
-              </template>
-              {{ t('common_logout') }}
-            </a-button>
           </div>
         </div>
-      </div>
 
-      <!-- 导航菜单部分 -->
-      <div class="menu-section">
-        <h3 class="section-title">{{ t('drawer_navigation') }}</h3>
-        <div class="menu-list">
-          <div class="menu-item" @click="goToHome">
-            <div class="menu-icon">
-              <HomeOutlined />
+        <!-- 导航菜单部分 -->
+        <div class="menu-section">
+          <h3 class="section-title">{{ t('drawer_navigation') }}</h3>
+          <div class="menu-list">
+            <div class="menu-item" @click="goToHome">
+              <div class="menu-icon">🏠</div>
+              <span class="menu-text">{{ t('drawer_home') }}</span>
             </div>
-            <span class="menu-text">{{ t('drawer_home') }}</span>
-          </div>
-          
-          <div
-            class="menu-item"
-            @click="goToI18nManager"
-            :class="{ 'disabled': !isAdminLoggedIn }"
-            :title="!isAdminLoggedIn ? t('common_needAdminPermission') : ''"
-          >
-            <div class="menu-icon">
-              <GlobalOutlined />
+            
+            <div
+              class="menu-item"
+              @click="goToI18nManager"
+              :class="{ 'disabled': !isAdminLoggedIn }"
+              :title="!isAdminLoggedIn ? t('common_needAdminPermission') : ''"
+            >
+              <div class="menu-icon">🌐</div>
+              <span class="menu-text">{{ t('header_i18nManager') }}</span>
             </div>
-            <span class="menu-text">{{ t('header_i18nManager') }}</span>
-          </div>
-          
-          <div
-            class="menu-item"
-            @click="goToProductManager"
-            :class="{ 'disabled': !isAdminLoggedIn }"
-            :title="!isAdminLoggedIn ? t('common_needAdminPermission') : ''"
-          >
-            <div class="menu-icon">
-              <AppstoreOutlined />
-            </div>
-            <span class="menu-text">{{ t('header_productManager') }}</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 语言切换部分 -->
-      <div class="language-section">
-        <h3 class="section-title">{{ t('header_language') }}</h3>
-        <div class="language-options">
-          <div 
-            class="language-option" 
-            :class="{ active: currentLanguage === 'zh-CN' }"
-            @click="switchLanguage('zh-CN')"
-          >
-            <span class="language-flag">🇨🇳</span>
-            <span class="language-text">{{ t('common_chinese') }}</span>
-            <div class="language-check" v-if="currentLanguage === 'zh-CN'">
-              <CheckOutlined />
-            </div>
-          </div>
-          
-          <div 
-            class="language-option" 
-            :class="{ active: currentLanguage === 'en' }"
-            @click="switchLanguage('en')"
-          >
-            <span class="language-flag">🇺🇸</span>
-            <span class="language-text">{{ t('common_english') }}</span>
-            <div class="language-check" v-if="currentLanguage === 'en'">
-              <CheckOutlined />
+            
+            <div
+              class="menu-item"
+              @click="goToProductManager"
+              :class="{ 'disabled': !isAdminLoggedIn }"
+              :title="!isAdminLoggedIn ? t('common_needAdminPermission') : ''"
+            >
+              <div class="menu-icon">📦</div>
+              <span class="menu-text">{{ t('header_productManager') }}</span>
             </div>
           </div>
         </div>
-      </div>
+        
+        <!-- 语言切换部分 -->
+        <div class="language-section">
+          <h3 class="section-title">{{ t('header_language') }}</h3>
+          <div class="language-options">
+            <div 
+              class="language-option" 
+              :class="{ active: currentLanguage === 'zh-CN' }"
+              @click="switchLanguage('zh-CN')"
+            >
+              <span class="language-flag">🇨🇳</span>
+              <span class="language-text">{{ t('common_chinese') }}</span>
+              <div class="language-check" v-if="currentLanguage === 'zh-CN'">✓</div>
+            </div>
+            
+            <div 
+              class="language-option" 
+              :class="{ active: currentLanguage === 'en' }"
+              @click="switchLanguage('en')"
+            >
+              <span class="language-flag">🇺🇸</span>
+              <span class="language-text">{{ t('common_english') }}</span>
+              <div class="language-check" v-if="currentLanguage === 'en'">✓</div>
+            </div>
+          </div>
+        </div>
       
       <!-- 登录模态框 -->
       <AdminLoginModal
-        v-model:open="showLoginModal"
+        :open="showLoginModal"
+        @open-change="handleLoginModalChange"
         @login-success="handleLoginSuccess"
         @login-failed="handleLoginFailed"
       />
     </div>
-  </a-drawer>
+  </div>
+
+  <!-- 自定义消息提示 -->
+  <div 
+    v-if="message.visible" 
+    class="custom-message" 
+    :class="`message-${message.type}`"
+  >
+    {{ message.content }}
+  </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter } from 'vue-router'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
 import AdminLoginModal from './AdminLoginModal.vue'
-import {
-  HomeOutlined,
-  GlobalOutlined,
-  AppstoreOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  LoginOutlined,
-  LogoutOutlined,
-  UserOutlined
-} from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
 
 const { currentLanguage, t, setLanguage } = useI18n()
 const router = useRouter()
 const { isAdminLoggedIn, logout, checkPermission } = useAdminAuth()
+
+// 简单的消息提示状态
+const message = ref({
+  visible: false,
+  content: '',
+  type: 'warning' // warning, success, error
+})
+
+// 显示消息提示
+const showMessage = (content, type = 'warning', duration = 3000) => {
+  message.value = { visible: true, content, type }
+  setTimeout(() => {
+    message.value.visible = false
+  }, duration)
+}
 
 const showLoginModal = ref(false)
 
@@ -165,14 +150,26 @@ const closeDrawer = () => {
   emit('close')
 }
 
+// 处理Drawer打开/关闭事件
+const handleOpenChange = (open) => {
+  if (!open) {
+    emit('close')
+  }
+}
+
+// 处理登录模态框打开/关闭事件
+const handleLoginModalChange = (open) => {
+  showLoginModal.value = open
+}
+
 const goToHome = () => {
   router.push('/')
   closeDrawer()
 }
 
 const goToI18nManager = () => {
-  if (!isAdminLoggedIn) {
-    message.warning(t('common_adminPermissionI18n'))
+  if (!isAdminLoggedIn.value) {
+    showMessage(t('common_adminPermissionI18n'), 'warning')
     showLoginModal.value = true
     return
   }
@@ -181,8 +178,8 @@ const goToI18nManager = () => {
 }
 
 const goToProductManager = () => {
-  if (!isAdminLoggedIn) {
-    message.warning(t('common_adminPermissionProduct'))
+  if (!isAdminLoggedIn.value) {
+    showMessage(t('common_adminPermissionProduct'), 'warning')
     showLoginModal.value = true
     return
   }
@@ -227,17 +224,31 @@ const switchLanguage = async (lang) => {
 </script>
 
 <style scoped>
-.custom-drawer :deep(.ant-drawer-header) {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 20px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  transition: opacity 0.3s ease;
 }
 
-.custom-drawer :deep(.ant-drawer-title) {
-  flex: 1;
-  margin: 0;
+.drawer-content-wrapper {
+  position: fixed;
+  top: 0;
+  right: -320px;
+  bottom: 0;
+  background-color: white;
+  z-index: 1000;
+  transition: right 0.3s ease;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+  overflow-y: auto;
+}
+
+.drawer-content-wrapper.drawer-open {
+  right: 0;
 }
 
 .custom-drawer-header {
@@ -245,6 +256,8 @@ const switchLanguage = async (lang) => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .drawer-title {
@@ -273,11 +286,6 @@ const switchLanguage = async (lang) => {
   background: #e6f7ff;
   color: #1890ff;
 }
-
-.custom-drawer :deep(.ant-drawer-body) {
-  padding: 0;
-}
-
 
 .drawer-content {
   padding: 0;
@@ -464,7 +472,7 @@ const switchLanguage = async (lang) => {
 
 /* 响应式调整 */
 @media (max-width: 480px) {
-  .custom-drawer :deep(.ant-drawer-header) {
+  .custom-drawer-header {
     padding: 16px 20px;
   }
   
@@ -477,5 +485,39 @@ const switchLanguage = async (lang) => {
   .language-option {
     padding: 10px 14px;
   }
+}
+
+/* 自定义消息提示样式 */
+.custom-message {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  opacity: 0.9;
+}
+
+.message-warning {
+  background-color: #fff7e6;
+  color: #fa8c16;
+  border: 1px solid #ffd591;
+}
+
+.message-success {
+  background-color: #f6ffed;
+  color: #52c41a;
+  border: 1px solid #b7eb8f;
+}
+
+.message-error {
+  background-color: #fff2f0;
+  color: #ff4d4f;
+  border: 1px solid #ffccc7;
 }
 </style>

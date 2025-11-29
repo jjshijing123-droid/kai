@@ -1,6 +1,6 @@
 
 <template>
-  <a-layout class="i18n-manager">
+  <div class="i18n-manager">
     <!-- 未登录提示 - 使用统一组件 -->
     <AdminAccessDenied
       v-if="!isAdminLoggedIn"
@@ -17,216 +17,233 @@
         <div class="header-content">
           <h2>{{ t('i18nManager_title') }}</h2>
           <div class="header-actions">
-            <a-button type="primary" @click="saveAllTranslations" :loading="saving">
-              <template #icon>
-                <SaveOutlined />
-              </template>
+            <button 
+              class="btn btn-primary" 
+              @click="saveAllTranslations" 
+              :disabled="saving"
+            >
+              <span class="btn-icon">💾</span>
               {{ t('i18nManager_saveAll') }}
-            </a-button>
-            <a-button @click="exportTranslations">
-              <template #icon>
-                <ExportOutlined />
-              </template>
+            </button>
+            <button class="btn btn-secondary" @click="exportTranslations">
+              <span class="btn-icon">📤</span>
               {{ t('i18nManager_export') }}
-            </a-button>
+            </button>
           </div>
         </div>
       </div>
 
-    <a-layout-content class="manager-content">
-      <!-- 翻译完整性概览 -->
-      <a-card :title="t('i18nManager_completeness')" class="completeness-section">
-        <a-row :gutter="[16, 16]">
-          <a-col v-for="lang in availableLanguages" :key="lang.code" :xs="24" :sm="12" :md="8" :lg="6">
-            <a-card
+      <div class="manager-content">
+        <!-- 翻译完整性概览 -->
+        <section class="card completeness-section">
+          <h3 class="card-title">{{ t('i18nManager_completeness') }}</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div 
+              v-for="lang in availableLanguages" 
+              :key="lang.code"
+              class="card lang-card"
               :class="{ 'current-language': lang.code === currentLanguage }"
-              size="small"
             >
-              <template #title>
+              <div class="card-header">
                 <div class="lang-header">
                   <span class="flag">{{ lang.flag }}</span>
                   <span class="lang-name">{{ lang.name }}</span>
-                  <a-tag v-if="lang.code === currentLanguage" color="blue">{{ currentLanguage === 'zh-CN' ? '当前' : 'Current' }}</a-tag>
-                </div>
-              </template>
-              
-              <div class="progress-section">
-                <a-progress
-                  :percent="translationCompleteness[lang.code]?.percentage || 0"
-                  :stroke-color="getProgressColor(translationCompleteness[lang.code]?.percentage || 0)"
-                  size="small"
-                />
-                <div class="stats">
-                  {{ translationCompleteness[lang.code]?.translated || 0 }}/{{ translationCompleteness[lang.code]?.total || 0 }}
+                  <span v-if="lang.code === currentLanguage" class="tag tag-blue">{{ currentLanguage === 'zh-CN' ? '当前' : 'Current' }}</span>
                 </div>
               </div>
               
-              <div class="quality-info" v-if="translationCompleteness[lang.code]?.quality">
-                <a-tag color="green">{{ currentLanguage === 'zh-CN' ? '质量' : 'Quality' }}: {{ translationCompleteness[lang.code]?.quality }}%</a-tag>
+              <div class="card-body">
+                <div class="progress-section">
+                  <div class="progress-container">
+                    <div 
+                      class="progress-bar"
+                      :style="{
+                        width: `${translationCompleteness[lang.code]?.percentage || 0}%`,
+                        backgroundColor: getProgressColor(translationCompleteness[lang.code]?.percentage || 0)
+                      }"
+                    ></div>
+                  </div>
+                  <div class="stats">
+                    {{ translationCompleteness[lang.code]?.translated || 0 }}/{{ translationCompleteness[lang.code]?.total || 0 }}
+                  </div>
+                </div>
+                
+                <div class="quality-info" v-if="translationCompleteness[lang.code]?.quality">
+                  <span class="tag tag-green">{{ currentLanguage === 'zh-CN' ? '质量' : 'Quality' }}: {{ translationCompleteness[lang.code]?.quality }}%</span>
+                </div>
+                
+                <div class="review-info" v-if="translationCompleteness[lang.code]?.needsReview?.length">
+                  <span class="tag tag-red">{{ currentLanguage === 'zh-CN' ? '需要审核' : 'Needs Review' }}: {{ translationCompleteness[lang.code]?.needsReview?.length }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }}</span>
+                </div>
               </div>
-              
-              <div class="review-info" v-if="translationCompleteness[lang.code]?.needsReview?.length">
-                <a-tag color="red">{{ currentLanguage === 'zh-CN' ? '需要审核' : 'Needs Review' }}: {{ translationCompleteness[lang.code]?.needsReview?.length }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }}</a-tag>
-              </div>
-            </a-card>
-          </a-col>
-        </a-row>
-      </a-card>
+            </div>
+          </div>
+        </section>
 
-      <!-- 需要审核的翻译 -->
-      <a-card
-        v-if="hasTranslationsNeedingReview"
-        :title="currentLanguage === 'zh-CN' ? '需要审核的翻译' : 'Translations Needing Review'"
-        class="review-section"
-        :head-style="{ borderBottom: '2px solid #ff4d4f' }"
-      >
-        <a-row :gutter="[16, 16]">
-          <a-col v-for="lang in availableLanguages" :key="lang.code" :xs="24" :sm="12" :lg="8">
-            <a-card
+        <!-- 需要审核的翻译 -->
+        <section 
+          v-if="hasTranslationsNeedingReview"
+          class="card review-section"
+        >
+          <h3 class="card-title">{{ currentLanguage === 'zh-CN' ? '需要审核的翻译' : 'Translations Needing Review' }}</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div 
+              v-for="lang in availableLanguages" 
+              :key="lang.code"
               v-if="translationCompleteness[lang.code]?.needsReview?.length"
-              size="small"
-              :bordered="false"
-              class="review-card"
+              class="card review-card"
             >
-              <template #title>
+              <div class="card-header">
                 <div class="review-header">
                   <span class="flag">{{ lang.flag }}</span>
                   <span class="lang-name">{{ lang.name }}</span>
-                  <a-badge :count="translationCompleteness[lang.code]?.needsReview?.length" :number-style="{ backgroundColor: '#ff4d4f' }" />
+                  <span class="badge badge-red">{{ translationCompleteness[lang.code]?.needsReview?.length }}</span>
                 </div>
-              </template>
+              </div>
               
-              <a-list
-                :data-source="translationCompleteness[lang.code]?.needsReview?.slice(0, 3)"
-                size="small"
-                :locale="{ emptyText: currentLanguage === 'zh-CN' ? '暂无需要审核的翻译' : 'No translations need review' }"
-              >
-                <template #renderItem="{ item }">
-                  <a-list-item class="review-item">
+              <div class="card-body">
+                <div class="list">
+                  <div 
+                    v-for="(item, index) in translationCompleteness[lang.code]?.needsReview?.slice(0, 3)" 
+                    :key="index"
+                    class="list-item review-item"
+                  >
                     <div class="review-content">
                       <div class="review-key">
-                        <a-typography-text code>{{ item.key }}</a-typography-text>
+                        <code>{{ item.key }}</code>
                       </div>
                       <div class="review-value">{{ item.value }}</div>
                       <div class="review-reason">
-                        <a-tag color="red" size="small">{{ item.reason }}</a-tag>
+                        <span class="tag tag-red tag-small">{{ item.reason }}</span>
                       </div>
                     </div>
-                  </a-list-item>
-                </template>
-              </a-list>
-              
-              <div v-if="translationCompleteness[lang.code]?.needsReview?.length > 3" class="review-more">
-                <a-typography-text type="secondary">
-                  {{ currentLanguage === 'zh-CN' ? '还有' : 'More' }} {{ translationCompleteness[lang.code]?.needsReview?.length - 3 }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }} {{ currentLanguage === 'zh-CN' ? '需要审核...' : 'need review...' }}
-                </a-typography-text>
+                  </div>
+                  
+                  <div v-if="!translationCompleteness[lang.code]?.needsReview?.length" class="empty-state">
+                    {{ currentLanguage === 'zh-CN' ? '暂无需要审核的翻译' : 'No translations need review' }}
+                  </div>
+                </div>
+                
+                <div v-if="translationCompleteness[lang.code]?.needsReview?.length > 3" class="review-more">
+                  <span class="text-secondary">
+                    {{ currentLanguage === 'zh-CN' ? '还有' : 'More' }} {{ translationCompleteness[lang.code]?.needsReview?.length - 3 }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }} {{ currentLanguage === 'zh-CN' ? '需要审核...' : 'need review...' }}
+                  </span>
+                </div>
               </div>
-            </a-card>
-          </a-col>
-        </a-row>
-      </a-card>
+            </div>
+          </div>
+        </section>
 
-      <!-- 翻译表格 -->
-      <a-card :title="t('i18nManager_allTranslations')" class="translations-section">
-        <template #extra>
-          <a-input
-            v-model:value="searchTerm"
-            :placeholder="t('i18nManager_search')"
-            style="width: 250px"
-          />
-        </template>
-        
-        <a-table
-          :dataSource="filteredKeys.map(key => ({ key }))"
-          :columns="tableColumns"
-          :pagination="false"
-          size="small"
-          class="translations-table"
-        >
-          <template #bodyCell="{ column, record, index }">
-            <template v-if="column.dataIndex === 'key'">
-              <a-typography-text code>{{ record.key }}</a-typography-text>
-            </template>
-            
-            <template v-else-if="column.dataIndex === 'actions'">
-              <a-space>
-                <a-button
-                  type="link"
-                  danger
-                  size="small"
-                  @click="handleDeleteTranslation(record.key)"
-                >
-                  <template #icon>
-                    <DeleteOutlined />
-                  </template>
-                  {{ t('i18nManager_delete') }}
-                </a-button>
-              </a-space>
-            </template>
-            
-            <template v-else>
-              <a-input
-                :value="translations[column.dataIndex] && translations[column.dataIndex][record.key] ? translations[column.dataIndex][record.key] : ''"
-                :placeholder="record.key"
-                @input="updateTranslationValue(column.dataIndex, record.key, $event.target.value)"
-                @blur="saveTranslation(column.dataIndex, record.key, $event.target.value)"
-                size="small"
+        <!-- 翻译表格 -->
+        <section class="card translations-section">
+          <div class="card-header with-actions">
+            <h3 class="card-title">{{ t('i18nManager_allTranslations') }}</h3>
+            <div class="card-actions">
+              <input
+                v-model="searchTerm"
+                :placeholder="t('i18nManager_search')"
+                class="input"
+                style="width: 250px"
               />
-            </template>
-          </template>
-        </a-table>
-        
-        <!-- 添加新翻译 -->
-        <a-card :title="currentLanguage === 'zh-CN' ? '添加新翻译' : 'Add New Translation'" class="add-translation-section" size="small">
-          <a-form layout="vertical">
-            <a-row :gutter="16">
-              <a-col :span="24">
-                <a-form-item :label="currentLanguage === 'zh-CN' ? '翻译键' : 'Translation Key'">
-                  <a-input
-                    v-model:value="newKey"
-                    :placeholder="t('i18nManager_newKey')"
-                  />
-                </a-form-item>
-              </a-col>
-            </a-row>
-            <a-row :gutter="16">
-              <a-col
-                v-for="lang in availableLanguages"
-                :key="lang.code"
-                :xs="24"
-                :sm="12"
-                :md="8"
-              >
-                <a-form-item :label="`${lang.flag} ${lang.name}`">
-                  <a-input
-                    v-model:value="newTranslations[lang.code]"
-                    :placeholder="t('i18nManager_newTranslation')"
-                  />
-                </a-form-item>
-              </a-col>
-            </a-row>
-            <a-row>
-              <a-col :span="24">
-                <a-button
-                  type="primary"
-                  @click="addTranslation"
-                  :disabled="!newKey"
-                  block
-                >
-                  <template #icon>
-                    <PlusOutlined />
-                  </template>
-                  {{ t('i18nManager_add') }}
-                </a-button>
-              </a-col>
-            </a-row>
-          </a-form>
-        </a-card>
-      </a-card>
-    </a-layout-content>
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <div class="table-container">
+              <table class="table translations-table">
+                <thead>
+                  <tr>
+                    <th class="table-header" style="width: 200px; position: sticky; left: 0; background: white; z-index: 10;">{{ t('i18nManager_translationKey') }}</th>
+                    <th 
+                      v-for="lang in availableLanguages" 
+                      :key="lang.code"
+                      class="table-header"
+                      style="width: 200px"
+                    >
+                      {{ lang.flag }} {{ lang.name }}
+                    </th>
+                    <th class="table-header" style="width: 100px; position: sticky; right: 0; background: white; z-index: 10;">{{ t('i18nManager_actions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="key in filteredKeys" :key="key">
+                    <td class="table-cell key-cell" style="position: sticky; left: 0; background: white; z-index: 5;">
+                      <code>{{ key }}</code>
+                    </td>
+                    <td 
+                      v-for="lang in availableLanguages" 
+                      :key="lang.code"
+                      class="table-cell"
+                    >
+                      <input
+                        type="text"
+                        :value="translations[lang.code] && translations[lang.code][key] ? translations[lang.code][key] : ''"
+                        :placeholder="key"
+                        @input="updateTranslationValue(lang.code, key, $event.target.value)"
+                        @blur="saveTranslation(lang.code, key, $event.target.value)"
+                        class="input input-small"
+                      />
+                    </td>
+                    <td class="table-cell actions-cell" style="position: sticky; right: 0; background: white; z-index: 5;">
+                      <button
+                        class="btn btn-link btn-danger btn-small"
+                        @click="handleDeleteTranslation(key)"
+                      >
+                        <span class="btn-icon">🗑️</span>
+                        {{ t('i18nManager_delete') }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- 添加新翻译 -->
+            <div class="add-translation-section card">
+              <h4 class="card-title">{{ currentLanguage === 'zh-CN' ? '添加新翻译' : 'Add New Translation' }}</h4>
+              <form class="form" @submit.prevent="addTranslation">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">{{ currentLanguage === 'zh-CN' ? '翻译键' : 'Translation Key' }}</label>
+                    <input
+                      v-model="newKey"
+                      :placeholder="t('i18nManager_newKey')"
+                      class="input"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <div 
+                    v-for="lang in availableLanguages" 
+                    :key="lang.code"
+                    class="form-group"
+                  >
+                    <label class="form-label">{{ lang.flag }} {{ lang.name }}</label>
+                    <input
+                      v-model="newTranslations[lang.code]"
+                      :placeholder="t('i18nManager_newTranslation')"
+                      class="input"
+                    />
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button
+                    type="submit"
+                    class="btn btn-primary btn-block"
+                    :disabled="!newKey"
+                  >
+                    <span class="btn-icon">➕</span>
+                    {{ t('i18nManager_add') }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
-    
-  </a-layout>
+  </div>
 </template>
 
 <script setup>
@@ -235,12 +252,6 @@ import i18n from '../i18n/index.js'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
 import AdminAccessDenied from './AdminAccessDenied.vue'
-import {
-  SaveOutlined,
-  ExportOutlined,
-  DeleteOutlined,
-  PlusOutlined
-} from '@ant-design/icons-vue'
 
 // 使用实际的 i18n 数据
 const { currentLanguage, availableLanguages, translationCompleteness, t, getTranslationKeys, addTranslations, updateTranslation, deleteTranslation } = useI18n()
@@ -255,39 +266,6 @@ const newTranslations = reactive({})
 const saving = ref(false)
 // 使用实际的翻译数据
 const translations = reactive({})
-
-// 表格列配置
-const tableColumns = computed(() => {
-  const columns = [
-    {
-      title: t('i18nManager_translationKey'),
-      dataIndex: 'key',
-      width: 200,
-      fixed: 'left'
-    }
-  ]
-  
-  // 添加语言列
-  if (availableLanguages.value && Array.isArray(availableLanguages.value)) {
-    availableLanguages.value.forEach(lang => {
-      columns.push({
-        title: `${lang.flag} ${lang.name}`,
-        dataIndex: lang.code,
-        width: 200
-      })
-    })
-  }
-  
-  // 添加操作列
-  columns.push({
-    title: t('i18nManager_actions'),
-    dataIndex: 'actions',
-    width: 100,
-    fixed: 'right'
-  })
-  
-  return columns
-})
 
 // 获取进度条颜色
 const getProgressColor = (percentage) => {
@@ -535,11 +513,8 @@ const handleLoginSuccess = () => {
   max-width: 1400px;
   margin: 0 auto;
   background-color: white;
-  /* 利用App.vue中已经计算好的高度空间，确保减去header后充分利用可用空间 */
-  min-height: calc(100vh - 64px); /* 与App.vue的main-content保持一致 */
+  min-height: calc(100vh - 64px);
   box-sizing: border-box;
-  /* 修复：移除overflow-y: auto，让阴影正常显示 */
-  /* 内容滚动由App.vue的main-content处理即可 */
 }
 
 /* 页面头部 */
@@ -550,7 +525,6 @@ const handleLoginSuccess = () => {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  /* 修复：移除诊断边框，恢复原始设计 */
 }
 
 .header-content {
@@ -584,8 +558,8 @@ const handleLoginSuccess = () => {
   gap: 12px;
 }
 
-/* 操作按钮 */
-.header-actions .ant-btn {
+/* 按钮样式 */
+.btn {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -595,32 +569,73 @@ const handleLoginSuccess = () => {
   font-size: 14px;
   font-weight: 500;
   transition: all 0.3s ease;
+  border: none;
+  outline: none;
 }
 
-.header-actions .ant-btn-primary {
+.btn-primary {
   background: linear-gradient(135deg, #1890ff, #36cfc9);
   color: white;
-  border: none;
   box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
 }
 
-.header-actions .ant-btn-primary:hover {
+.btn-primary:hover {
   background: linear-gradient(135deg, #40a9ff, #5cdbd3);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
 }
 
-.header-actions .ant-btn:not(.ant-btn-primary) {
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
   background: #f0f2f5;
   color: #4a4a4a;
   border: 1px solid #d9d9d9;
 }
 
-.header-actions .ant-btn:not(.ant-btn-primary):hover {
+.btn-secondary:hover {
   background: #e6f7ff;
   border-color: #1890ff;
   color: #1890ff;
   transform: translateY(-1px);
+}
+
+.btn-link {
+  background: transparent;
+  color: #1890ff;
+  padding: 4px 8px;
+  border: none;
+}
+
+.btn-link:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+.btn-danger {
+  color: #ff4d4f;
+}
+
+.btn-danger:hover {
+  color: #ff7875;
+}
+
+.btn-small {
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-icon {
+  font-size: 16px;
 }
 
 .manager-content {
@@ -629,26 +644,57 @@ const handleLoginSuccess = () => {
 }
 
 /* 卡片样式 */
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.card-title {
+  margin: 0;
+  padding: 20px 24px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.card-header {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+}
+
+.card-header.with-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+}
+
 .completeness-section,
 .review-section,
 .translations-section {
   margin-bottom: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  /* 修复：移除overflow: hidden，让阴影正常显示 */
-  /* 阴影不会被裁剪了 */
-}
-
-.completeness-section .ant-card,
-.review-section .ant-card,
-.translations-section .ant-card {
-  border-radius: 12px;
-  box-shadow: none;
 }
 
 /* 语言卡片 */
+.lang-card {
+  transition: all 0.3s ease;
+}
+
 .current-language {
-  border: 2px solid #1890ff !important;
+  border: 2px solid #1890ff;
   box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
 }
 
@@ -667,8 +713,51 @@ const handleLoginSuccess = () => {
   color: #1a1a1a;
 }
 
+/* 标签样式 */
+.tag {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tag-blue {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.tag-green {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.tag-red {
+  background: #fff2f0;
+  color: #ff4d4f;
+}
+
+.tag-small {
+  font-size: 11px;
+  padding: 1px 6px;
+}
+
+/* 进度条样式 */
 .progress-section {
   margin-bottom: 12px;
+}
+
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
 }
 
 .stats {
@@ -685,7 +774,7 @@ const handleLoginSuccess = () => {
 }
 
 /* 审核卡片 */
-.review-section .ant-card {
+.review-card {
   border: 1px solid #ffccc7;
   background: #fff2f0;
 }
@@ -696,16 +785,37 @@ const handleLoginSuccess = () => {
   gap: 8px;
 }
 
-.review-item {
-  border-bottom: 1px solid #f0f0f0;
-  transition: background-color 0.2s ease;
+/* 徽章样式 */
+.badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  min-width: 20px;
+  text-align: center;
 }
 
-.review-item:hover {
+.badge-red {
+  background: #ff4d4f;
+}
+
+/* 列表样式 */
+.list {
+  width: 100%;
+}
+
+.list-item {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+  padding: 12px 0;
+}
+
+.list-item:hover {
   background: #fafafa;
 }
 
-.review-item:last-child {
+.list-item:last-child {
   border-bottom: none;
 }
 
@@ -733,26 +843,79 @@ const handleLoginSuccess = () => {
   padding: 8px;
   border-top: 1px solid #f0f0f0;
   background: #fafafa;
+  margin-top: 8px;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  color: #8c8c8c;
+  padding: 16px 0;
+  font-size: 14px;
 }
 
 /* 翻译表格 */
-.translations-table {
+.table-container {
+  overflow-x: auto;
   margin-bottom: 24px;
 }
 
-.translations-table .ant-table {
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-.translations-table .ant-table-thead > tr > th {
+.table-header {
   background: #fafafa;
   font-weight: 600;
   color: #1a1a1a;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.translations-table .ant-table-tbody > tr:hover > td {
+.table-cell {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
+}
+
+.table tbody tr:hover .table-cell {
   background: #f0f2f5;
+}
+
+.key-cell {
+  font-weight: 500;
+}
+
+.actions-cell {
+  text-align: center;
+}
+
+/* 输入框样式 */
+.input {
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.input-small {
+  padding: 6px 10px;
+  font-size: 13px;
 }
 
 /* 添加翻译区域 */
@@ -760,7 +923,6 @@ const handleLoginSuccess = () => {
   margin-top: 24px;
   border: 1px dashed #d9d9d9;
   border-radius: 8px;
-  padding: 16px;
   background: #fafafa;
   transition: all 0.2s ease;
 }
@@ -770,45 +932,67 @@ const handleLoginSuccess = () => {
   background: #f0f2f5;
 }
 
-.add-translation-section .ant-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
+/* 表单样式 */
+.form {
+  width: 100%;
+}
+
+.form-row {
+  margin-bottom: 16px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
   font-weight: 500;
-  transition: all 0.3s ease;
+  color: #1a1a1a;
+  font-size: 14px;
 }
 
-.add-translation-section .ant-btn-primary {
-  background: linear-gradient(135deg, #1890ff, #36cfc9);
-  border: none;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+.form-actions {
+  margin-top: 24px;
 }
 
-.add-translation-section .ant-btn-primary:hover {
-  background: linear-gradient(135deg, #40a9ff, #5cdbd3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+/* 网格布局 */
+.grid {
+  display: grid;
+  gap: 16px;
 }
 
-/* 网格布局改进 */
-.completeness-section .ant-row,
-.review-section .ant-row {
-  margin: -8px;
+.grid-cols-1 {
+  grid-template-columns: repeat(1, 1fr);
 }
 
-.completeness-section .ant-col,
-.review-section .ant-col {
-  padding: 8px;
+.sm\:grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.md\:grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.lg\:grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+/* 文本样式 */
+.text-secondary {
+  color: #8c8c8c;
+  font-size: 14px;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .i18n-manager {
     padding: 16px;
-    /* 在移动端也保持正确的高度计算 */
     min-height: calc(100vh - 64px);
   }
   
@@ -831,6 +1015,22 @@ const handleLoginSuccess = () => {
     justify-content: flex-start;
     flex-wrap: wrap;
   }
+  
+  .grid {
+    gap: 12px;
+  }
+  
+  .sm\:grid-cols-2 {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(1, 1fr);
+  }
 }
 
 @media (max-width: 576px) {
@@ -838,14 +1038,19 @@ const handleLoginSuccess = () => {
     font-size: 20px;
   }
   
-  .header-actions .ant-btn {
+  .btn {
     padding: 6px 12px;
     font-size: 13px;
   }
   
-  .completeness-section .ant-col,
-  .review-section .ant-col {
-    padding: 4px;
+  .card-title {
+    padding: 16px;
+    font-size: 16px;
+  }
+  
+  .card-header,
+  .card-body {
+    padding: 12px;
   }
 }
 </style>
