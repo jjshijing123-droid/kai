@@ -1,7 +1,8 @@
 <template>
   <div class="product-list">
-    <LoadingState 
-      :loading="state.isLoading" 
+    <LoadingState
+      v-if="state.isLoading"
+      :loading="state.isLoading"
       :text="t('productList_loadingProducts')"
       :show-progress="true"
       :progress="loadingProgress"
@@ -25,15 +26,15 @@
     
     <!-- 产品列表 -->
     <div v-else class="product-grid">
-      <div 
-        v-for="product in paginatedProducts" 
-        :key="product.id" 
+      <div
+        v-for="product in paginatedProducts"
+        :key="product.id"
         class="product-card"
         @click="handleProductClick(product)"
       >
         <div class="product-image-container" :class="{ 'lazy-load': !product.imageLoaded }">
-          <img 
-            :src="product.mainImage" 
+          <img
+            :src="product.mainImage"
             :alt="product.name"
             class="product-image"
             loading="lazy"
@@ -51,14 +52,15 @@
           <h3 class="product-name">{{ product.displayName }}</h3>
           <div class="product-meta">
             <span class="product-date">{{ product.displayDate }}</span>
-            <a-button 
-              type="text" 
-              size="small" 
+            <Button
+              variant="text"
+              size="small"
               @click.stop="handleQuickPreview(product)"
               class="preview-btn"
-            >
-              <EyeOutlined />
-            </a-button>
+              :title="t('productList_quickPreview')"
+                          >
+                            <LucideIcon name="Eye" class="h-4 w-4" />
+                          </Button>
           </div>
         </div>
       </div>
@@ -66,7 +68,7 @@
     
     <!-- 分页组件 -->
     <div v-if="totalPages > 1" class="pagination-container">
-      <a-pagination
+      <Pagination
         v-model:current="pagination.current"
         v-model:page-size="pagination.pageSize"
         :total="filteredProducts.length"
@@ -85,18 +87,62 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import { useDataFetch, useListDataFetch } from '../composables/useDataFetch.js'
-import { message } from 'ant-design-vue'
 
 // 导入UI组件
 import LoadingState from './ui/LoadingState.vue'
 import ErrorState from './ui/ErrorState.vue'
 import EmptyState from './ui/EmptyState.vue'
+import Button from './ui/button.vue'
+import LucideIcon from './ui/LucideIcon.vue'
+import Pagination from './ui/pagination.vue'
 
 // 导入服务
 import productService from '../services/productService.js'
 
-// 图标
-import { EyeOutlined } from '@ant-design/icons-vue'
+// 简单的消息提示实现
+const showMessage = (type, text) => {
+  const messageDiv = document.createElement('div')
+  messageDiv.className = `message-${type}`
+  messageDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    z-index: 9999;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 300px;
+    word-wrap: break-word;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+  `
+  
+  if (type === 'warning') {
+    messageDiv.style.backgroundColor = '#faad14'
+  } else if (type === 'error') {
+    messageDiv.style.backgroundColor = '#ff4d4f'
+  } else if (type === 'success') {
+    messageDiv.style.backgroundColor = '#52c41a'
+  } else {
+    messageDiv.style.backgroundColor = '#1890ff'
+  }
+  
+  messageDiv.textContent = text
+  document.body.appendChild(messageDiv)
+  
+  // 3秒后自动移除
+  setTimeout(() => {
+    messageDiv.style.opacity = '0'
+    messageDiv.style.transform = 'translateX(100%)'
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        document.body.removeChild(messageDiv)
+      }
+    }, 300)
+  }, 3000)
+}
 
 const { t } = useI18n()
 const router = useRouter()
@@ -182,9 +228,9 @@ const totalPages = computed(() => {
 
 const emptyIcon = computed(() => {
   if (searchQuery.value || selectedCategory.value !== 'all') {
-    return '🔍'
+    return 'Search'
   }
-  return '📦'
+  return 'Package'
 })
 
 // 事件处理
@@ -368,10 +414,19 @@ defineExpose({
 .preview-btn {
   opacity: 0;
   transition: opacity 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
 }
 
 .product-card:hover .preview-btn {
   opacity: 1;
+}
+
+.preview-btn .icon {
+  font-size: 14px;
 }
 
 /* 分页容器 */

@@ -1,8 +1,8 @@
 /**
  * 产品管理服务
+ * 已迁移到原生实现，移除Ant Design Vue依赖
  */
 import apiService from './apiService'
-import { message } from 'ant-design-vue'
 
 class ProductService {
   constructor() {

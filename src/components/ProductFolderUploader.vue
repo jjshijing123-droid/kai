@@ -14,8 +14,8 @@
     >
       <div class="upload-content">
         <div class="upload-icon">
-          <FolderOpenOutlined />
-        </div>
+                  <LucideIcon name="Folder" class="h-12 w-12 text-primary" />
+                </div>
         <div class="upload-text">
           <div class="upload-title">{{ t('common_uploadProductFolder') }}</div>
           <div class="upload-subtitle">
@@ -35,8 +35,9 @@
 
     <!-- 文件夹名称输入 -->
     <div v-if="selectedFile" class="folder-name-section">
-      <a-form-item :label="t('common_productFolderName')" required>
-        <a-input
+      <div class="form-item">
+        <label class="form-label">{{ t('common_productFolderName') }}</label>
+        <Input
           v-model:value="folderName"
           :placeholder="t('common_folderNamePlaceholder')"
           :disabled="uploading"
@@ -48,7 +49,7 @@
         <div v-if="actualFolderName" class="info-text">
           {{ t('common_detectedFolderNameConflict') }}: <strong>{{ actualFolderName }}</strong>
         </div>
-      </a-form-item>
+      </div>
     </div>
 
     <!-- 上传进度 -->
@@ -57,7 +58,7 @@
         <span>{{ t('common_uploadingProductFolder') }}</span>
         <span class="progress-percent">{{ uploadProgress }}%</span>
       </div>
-      <a-progress
+      <Progress
         :percent="uploadProgress"
         :show-info="false"
         status="active"
@@ -70,7 +71,7 @@
 
     <!-- 上传结果 -->
     <div v-if="uploadResult" class="upload-result">
-      <a-alert
+      <Alert
         :message="uploadResult.success ? t('common_uploadSuccess') : t('common_uploadFailed')"
         :type="uploadResult.success ? 'success' : 'error'"
         show-icon
@@ -87,29 +88,27 @@
             <p>{{ uploadResult.error }}</p>
           </div>
         </template>
-      </a-alert>
+      </Alert>
     </div>
 
     <!-- 上传按钮 -->
     <div v-if="selectedFile && !uploading" class="upload-actions">
-      <a-button
-        type="primary"
-        :disabled="!canUpload || disabled"
-        @click="startUpload"
-        class="upload-button"
-      >
-        <template #icon>
-          <UploadOutlined />
-        </template>
-        {{ t('common_startUpload') }}
-      </a-button>
+      <Button
+              variant="primary"
+              :disabled="!canUpload || disabled"
+              @click="startUpload"
+              class="upload-button"
+            >
+              <LucideIcon name="Upload" class="h-4 w-4" />
+              {{ t('common_startUpload') }}
+            </Button>
       
-      <a-button
+      <Button
         @click="resetUpload"
         :disabled="disabled"
       >
         {{ t('common_cancel') }}
-      </a-button>
+      </Button>
     </div>
 
     <!-- 提示信息 -->
@@ -128,10 +127,11 @@
 <script setup>
 import { ref, computed, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
-import {
-  FolderOpenOutlined,
-  UploadOutlined
-} from '@ant-design/icons-vue'
+import Button from './ui/button.vue'
+import Input from './ui/input.vue'
+import Progress from './ui/progress.vue'
+import Alert from './ui/alert.vue'
+import LucideIcon from './ui/LucideIcon.vue'
 
 const { t } = useI18n()
 
@@ -459,6 +459,10 @@ defineExpose({
   display: none;
 }
 
+.icon {
+  font-size: 24px;
+}
+
 /* 文件夹名称输入 */
 .folder-name-section {
   margin-top: 20px;
@@ -466,6 +470,19 @@ defineExpose({
   background: #fafafa;
   border-radius: 6px;
   border: 1px solid #f0f0f0;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #262626;
+  line-height: 1.5;
 }
 
 .error-text {
@@ -525,6 +542,13 @@ defineExpose({
 
 .upload-button {
   min-width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-button .icon {
+  font-size: 16px;
 }
 
 /* 提示信息 */

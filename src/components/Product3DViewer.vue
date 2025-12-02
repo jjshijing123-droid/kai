@@ -79,7 +79,51 @@ import { useRoute } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import Product3DHeader from './Product3DHeader.vue'
 import Drawer from './Drawer.vue'
-import { message } from 'ant-design-vue'
+// 使用原生消息提示实现（已迁移到Shadcn-Vue架构）
+const showMessage = (type, text) => {
+  // 原生消息提示实现
+  const messageDiv = document.createElement('div')
+  messageDiv.className = `message-${type}`
+  messageDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    z-index: 9999;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 300px;
+    word-wrap: break-word;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+  `
+  
+  if (type === 'warning') {
+    messageDiv.style.backgroundColor = '#f59e0b'
+  } else if (type === 'error') {
+    messageDiv.style.backgroundColor = '#ef4444'
+  } else if (type === 'success') {
+    messageDiv.style.backgroundColor = '#22c55e'
+  } else {
+    messageDiv.style.backgroundColor = '#0ea5e9'
+  }
+  
+  messageDiv.textContent = text
+  document.body.appendChild(messageDiv)
+  
+  // 3秒后自动移除
+  setTimeout(() => {
+    messageDiv.style.opacity = '0'
+    messageDiv.style.transform = 'translateX(100%)'
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        document.body.removeChild(messageDiv)
+      }
+    }, 300)
+  }, 3000)
+}
 
 const { t } = useI18n()
 const route = useRoute()
@@ -757,9 +801,9 @@ const stopAutoRotation = () => {
 // 下载全部图片功能
 const downloadAllImages = async () => {
   if (isLoading.value) {
-    message.warning(t('product3dViewer_waitForLoading'))
-    return
-  }
+  showMessage('warning', t('product3dViewer_waitForLoading'))
+  return
+}
 
   try {
     isDownloading.value = true
@@ -841,14 +885,14 @@ const downloadAllImages = async () => {
         downloadProgressText.value = t('product3dViewer_downloadComplete')
       }).catch(error => {
         console.error('生成ZIP文件失败:', error)
-        message.error(t('product3dViewer_zipGenerateFailed'))
+        showMessage('error', t('product3dViewer_zipGenerateFailed'))
         isDownloading.value = false
         showDownloadProgress.value = false
       })
     }
   } catch (error) {
     console.error('下载失败:', error)
-    message.error(t('product3dViewer_downloadFailed'))
+    showMessage('error', t('product3dViewer_downloadFailed'))
     isDownloading.value = false
     showDownloadProgress.value = false
   }

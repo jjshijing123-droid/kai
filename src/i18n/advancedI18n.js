@@ -1,7 +1,6 @@
 import { ref, reactive } from 'vue'
 import { commonTranslations } from './common/commonTranslations.js'
 import { componentTranslations } from './components/componentTranslations.js'
-import { pageTranslations } from './pages/pageTranslations.js'
 
 /**
  * 改进的国际化管理系统
@@ -13,8 +12,7 @@ class AdvancedI18nService {
     this.listeners = new Set()
     this.translations = reactive({
       common: commonTranslations,
-      components: componentTranslations,
-      pages: pageTranslations
+      components: componentTranslations
     })
     this.cache = new Map()
     this.cacheTimeout = 30 * 60 * 1000 // 30分钟缓存

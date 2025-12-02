@@ -15,7 +15,7 @@
     >
       <div class="upload-content">
         <div class="upload-icon">
-          <CloudUploadOutlined />
+          <LucideIcon name="Cloud" size="48" />
         </div>
         <div class="upload-text">
           <div class="upload-title">{{ buttonText }}</div>
@@ -39,14 +39,15 @@
     <div v-if="fileList.length > 0" class="file-list">
       <div class="file-list-header">
         <span class="file-count">{{ t('fileUploader_selectedCount', { count: fileList.length }) }}</span>
-        <a-button
-          type="link"
+        <Button
+          variant="text"
           size="small"
           @click="clearFileList"
           :disabled="uploading"
+          class="clear-button"
         >
           {{ t('fileUploader_clear') }}
-        </a-button>
+        </Button>
       </div>
       
       <div class="file-items">
@@ -62,8 +63,8 @@
         >
           <div class="file-info">
             <div class="file-icon">
-              <FileImageOutlined v-if="isImageFile(file.name)" />
-              <FileOutlined v-else />
+              <LucideIcon v-if="isImageFile(file.name)" name="Image" size="20" />
+              <LucideIcon v-else name="FileText" size="20" />
             </div>
             <div class="file-details">
               <div class="file-name">{{ file.name }}</div>
@@ -74,7 +75,7 @@
           <div class="file-status">
             <!-- 上传进度 -->
             <div v-if="file.status === 'uploading'" class="upload-progress">
-              <a-progress
+              <Progress
                 :percent="file.progress"
                 size="small"
                 :show-info="false"
@@ -84,58 +85,58 @@
             
             <!-- 上传成功 -->
             <div v-else-if="file.status === 'success'" class="status-success">
-              <CheckCircleOutlined />
+              <LucideIcon name="Check" size="16" />
               <span>{{ t('fileUploader_uploadSuccess') }}</span>
             </div>
             
             <!-- 上传失败 -->
             <div v-else-if="file.status === 'error'" class="status-error">
-              <CloseCircleOutlined />
+              <LucideIcon name="X" size="16" />
               <span>{{ file.error || t('fileUploader_uploadFailedStatus') }}</span>
             </div>
             
             <!-- 等待上传 -->
             <div v-else class="status-pending">
-              <ClockCircleOutlined />
+              <LucideIcon name="Clock" size="16" />
               <span>{{ t('fileUploader_waitingUpload') }}</span>
             </div>
           </div>
           
           <div class="file-actions">
             <!-- 取消上传 -->
-            <a-button
+            <Button
               v-if="file.status === 'uploading'"
-              type="text"
+              variant="text"
               size="small"
-              danger
               @click="cancelUpload(file.id)"
               :title="t('fileUploader_cancelUpload')"
+              class="cancel-button"
             >
-              <CloseOutlined />
-            </a-button>
+              <LucideIcon name="X" size="16" />
+            </Button>
             
             <!-- 重新上传 -->
-            <a-button
+            <Button
               v-else-if="file.status === 'error'"
-              type="text"
+              variant="text"
               size="small"
               @click="retryUpload(file)"
               :title="t('fileUploader_retryUpload')"
             >
-              <ReloadOutlined />
-            </a-button>
+              <LucideIcon name="RefreshCw" size="16" />
+            </Button>
             
             <!-- 移除文件 -->
-            <a-button
+            <Button
               v-else
-              type="text"
+              variant="text"
               size="small"
-              danger
               @click="removeFile(file.id)"
               :title="t('fileUploader_removeFile')"
+              class="danger"
             >
-              <DeleteOutlined />
-            </a-button>
+              <LucideIcon name="Trash2" size="16" />
+            </Button>
           </div>
         </div>
       </div>
@@ -143,26 +144,24 @@
 
     <!-- 上传按钮 -->
     <div v-if="fileList.length > 0" class="upload-actions">
-      <a-button
-        type="primary"
+      <Button
+        variant="primary"
         :loading="uploading"
         :disabled="!canUpload || disabled"
         @click="startUpload"
         class="upload-button"
       >
-        <template #icon>
-          <UploadOutlined />
-        </template>
+        <LucideIcon name="Upload" size="16" />
         {{ uploading ? t('fileUploader_uploadingCount', { uploaded: uploadedCount, total: fileList.length }) : t('fileUploader_startUpload') }}
-      </a-button>
+      </Button>
       
-      <a-button
+      <Button
         v-if="!uploading"
         @click="clearFileList"
         :disabled="disabled"
       >
         {{ t('fileUploader_cancelButton') }}
-      </a-button>
+      </Button>
     </div>
 
     <!-- 提示信息 -->
@@ -171,7 +170,7 @@
     </div>
 
     <!-- 错误信息 -->
-    <a-alert
+    <Alert
       v-if="error"
       :message="error"
       type="error"
@@ -186,18 +185,10 @@
 <script setup>
 import { ref, computed, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
-import {
-  CloudUploadOutlined,
-  UploadOutlined,
-  FileOutlined,
-  FileImageOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  CloseOutlined,
-  ReloadOutlined,
-  DeleteOutlined
-} from '@ant-design/icons-vue'
+import Button from './ui/button.vue'
+import Progress from './ui/progress.vue'
+import Alert from './ui/alert.vue'
+import LucideIcon from './ui/LucideIcon.vue'
 
 const { t } = useI18n()
 
@@ -562,7 +553,6 @@ defineExpose({
 }
 
 .upload-icon {
-  font-size: 48px;
   color: #1890ff;
 }
 
@@ -648,7 +638,6 @@ defineExpose({
 }
 
 .file-icon {
-  font-size: 20px;
   color: #1890ff;
   flex-shrink: 0;
 }
@@ -747,6 +736,11 @@ defineExpose({
 /* 错误信息 */
 .error-alert {
   margin-top: 12px;
+}
+
+/* 图标样式 */
+.icon {
+  font-size: 16px;
 }
 
 /* 响应式设计 */

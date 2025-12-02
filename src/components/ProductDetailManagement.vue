@@ -2,325 +2,300 @@
   <div class="product-detail-management">
     <!-- 页面头部 -->
     <div class="page-header">
-      <a-space direction="vertical" :size="16" style="width: 100%">
-        <a-row justify="space-between" align="middle">
-          <a-col>
-            <h1 class="page-title">{{ t('productDetailManagement_productDetails', { name: productName }) }}</h1>
-          </a-col>
-          <a-col>
-            <a-space>
-              <a-button @click="goBack" class="back-button">
-                <template #icon>
-                  <ArrowLeftOutlined />
-                </template>
-                {{ t('productDetailManagement_backToList') }}
-              </a-button>
-              <a-button type="primary" @click="editProduct" class="rename-button">
-                <template #icon>
-                  <EditOutlined />
-                </template>
-                {{ t('productDetailManagement_editProduct') }}
-              </a-button>
-            </a-space>
-          </a-col>
-        </a-row>
-      </a-space>
+      <div class="page-title-section">
+        <h1 class="page-title">{{ t('productDetailManagement_productDetails', { name: productName }) }}</h1>
+        
+        <div class="action-buttons">
+          <Button @click="goBack" variant="text" class="back-button">
+            <LucideIcon name="ArrowLeft" size="16" />
+            {{ t('productDetailManagement_backToList') }}
+          </Button>
+          <Button @click="editProduct" variant="primary" class="rename-button">
+            <LucideIcon name="Edit" size="16" />
+            {{ t('productDetailManagement_editProduct') }}
+          </Button>
+        </div>
+      </div>
     </div>
 
-    <!-- 加载状态 -->
-    <a-spin :spinning="loading" size="large" :tip="t('productDetailManagement_loading')">
     <!-- 产品图片管理区域 -->
-    <a-tabs type="card" class="image-management">
-      <!-- {{ t('productDetailManagement_mainImage') }}管理 -->
-      <a-tab-pane key="main" :tab="t('productDetailManagement_mainImage')">
-        <a-card>
-          <template #title>
-            <span>{{ t('productDetailManagement_mainImage') }} (image_00.webp)</span>
-          </template>
-          <div class="main-image-section">
-            <a-row :gutter="[32, 32]" align="middle">
-              <a-col :xs="24" :md="12" :lg="10">
-                <div class="image-preview-container">
-                  <a-card v-if="mainImage" class="image-preview">
-                    <img
-                      :src="mainImage"
-                      :alt="t('productDetailManagement_mainImage')"
-                      class="product-image"
-                      @error="handleImageError('main')"
-                    />
-                  </a-card>
-                  <a-empty v-else description="暂无{{ t('productDetailManagement_mainImage') }}" class="empty-state" />
+    <div v-if="loading" class="loading-spin">
+      <div class="spinner">加载中...</div>
+    </div>
+
+    <div v-else class="image-management">
+      <!-- 标签页导航 -->
+      <div class="tabs-nav">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          :class="['tab-button', { 'active': currentTab === tab.key }]"
+          @click="currentTab = tab.key"
+        >
+          <LucideIcon :name="tab.icon" size="16" />
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <!-- 标签页内容 -->
+      <div class="tab-content">
+        <!-- 主图管理 -->
+        <div v-if="currentTab === 'main'" class="main-image-section">
+          <div class="image-preview-section">
+            <Card v-if="mainImage" class="image-preview-card">
+              <img
+                :src="mainImage"
+                :alt="t('productDetailManagement_mainImage')"
+                class="main-image"
+                @error="handleImageError('main')"
+              />
+            </Card>
+            <div v-else class="empty-preview">
+              <LucideIcon name="Camera" size="48" class="empty-icon" />
+              <p>暂无{{ t('productDetailManagement_mainImage') }}</p>
+            </div>
+          </div>
+          
+          <div class="upload-section">
+            <Card title="上传主图" class="upload-card">
+              <div class="upload-content">
+                <FileUploader
+                  :productName="productName"
+                  folderType="main"
+                  :onUpload="handleFileUpload"
+                  :multiple="false"
+                />
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        <!-- 六视图管理 -->
+        <div v-if="currentTab === 'sixViews'" class="grid-image-section">
+          <div class="grid-container">
+            <div
+              v-for="(image, index) in sixViewsImages"
+              :key="index"
+              class="grid-item"
+            >
+              <Card class="image-grid-card">
+                <div class="image-container">
+                  <img
+                    :src="image"
+                    :alt="`六视图 ${index + 1}`"
+                    class="grid-image"
+                    @error="handleGridImageError('sixViews', index)"
+                    @click="showImagePreview(image)"
+                  />
                 </div>
-              </a-col>
-              <a-col :xs="24" :md="12" :lg="14">
-                <div class="upload-section">
-                  <a-card title="上传{{ t('productDetailManagement_mainImage') }}" class="upload-card-main">
-                    <div class="upload-content">
-                      <FileUploader
-                        :productName="productName"
-                        folderType="main"
-                        :onUpload="handleFileUpload"
-                        :multiple="false"
-                      />
-                    </div>
-                  </a-card>
+                <div class="image-actions">
+                  <Button
+                    variant="text"
+                    size="small"
+                    @click="showImagePreview(image)"
+                    :title="t('productDetailManagement_previewImage')"
+                  >
+                    <LucideIcon name="Eye" size="16" />
+                  </Button>
+                  <Button
+                    variant="text"
+                    size="small"
+                    @click="deleteImage('sixViews', image)"
+                    :title="t('productDetailManagement_deleteImage')"
+                    class="danger"
+                  >
+                    <LucideIcon name="Trash2" size="16" />
+                  </Button>
                 </div>
-              </a-col>
-            </a-row>
+              </Card>
+            </div>
+            
+            <div class="grid-item">
+              <Card class="upload-grid-card">
+                <div class="upload-grid-content">
+                  <FileUploader
+                    :productName="productName"
+                    folderType="sixViews"
+                    :onUpload="handleFileUpload"
+                    :multiple="true"
+                  />
+                </div>
+              </Card>
+            </div>
           </div>
-        </a-card>
-      </a-tab-pane>
+        </div>
 
-      <!-- {{ t('productDetailManagement_sixViews') }}管理 -->
-      <a-tab-pane key="sixViews" :tab="t('productDetailManagement_sixViews')">
-        <a-card>
-          <template #title>
-            <span>{{ t('productDetailManagement_sixViews') }} (images_6Views/)</span>
-          </template>
-          <div class="grid-image-section">
-            <a-row :gutter="[20, 20]">
-              <a-col
-                v-for="(image, index) in sixViewsImages"
-                :key="index"
-                :xs="12"
-                :sm="8"
-                :md="6"
-                :lg="4"
-              >
-                <a-card class="image-card" :body-style="{ padding: '12px' }">
-                  <div class="image-container">
-                    <img
-                      :src="image"
-                      :alt="`${t('productDetailManagement_sixViews')} ${index + 1}`"
-                      class="grid-image"
-                      @error="handleGridImageError('sixViews', index)"
-                      @click="showImagePreview(image)"
-                    />
-                  </div>
-                  <template #actions>
-                    <a-space class="image-actions">
-                      <a-button
-                        type="text"
-                        size="small"
-                        @click="showImagePreview(image)"
-                        :title="t('productDetailManagement_previewImage')"
-                      >
-                        <EyeOutlined />
-                      </a-button>
-                      <a-button
-                        type="text"
-                        danger
-                        size="small"
-                        @click="deleteImage('sixViews', image)"
-                        :title="t('productDetailManagement_deleteImage')"
-                      >
-                        <DeleteOutlined />
-                      </a-button>
-                    </a-space>
-                  </template>
-                </a-card>
-              </a-col>
-              <a-col :xs="12" :sm="8" :md="6" :lg="4">
-                <a-card class="upload-card-grid" :body-style="{ padding: '16px 12px' }">
-                  <div class="upload-grid-content">
-                    <FileUploader
-                      :productName="productName"
-                      folderType="sixViews"
-                      :onUpload="handleFileUpload"
-                      :multiple="true"
-                    />
-                  </div>
-                </a-card>
-              </a-col>
-            </a-row>
+        <!-- 其他图片管理 -->
+        <div v-if="currentTab === 'other'" class="grid-image-section">
+          <div class="grid-container">
+            <div
+              v-for="(image, index) in otherImages"
+              :key="index"
+              class="grid-item"
+            >
+              <Card class="image-grid-card">
+                <div class="image-container">
+                  <img
+                    :src="image"
+                    :alt="`其他图片 ${index + 1}`"
+                    class="grid-image"
+                    @error="handleGridImageError('other', index)"
+                    @click="showImagePreview(image)"
+                  />
+                </div>
+                <div class="image-actions">
+                  <Button
+                    variant="text"
+                    size="small"
+                    @click="showImagePreview(image)"
+                    :title="t('productDetailManagement_previewImage')"
+                  >
+                    <LucideIcon name="Eye" size="16" />
+                  </Button>
+                  <Button
+                    variant="text"
+                    size="small"
+                    @click="deleteImage('other', image)"
+                    :title="t('productDetailManagement_deleteImage')"
+                    class="danger"
+                  >
+                    <LucideIcon name="Trash2" size="16" />
+                  </Button>
+                </div>
+              </Card>
+            </div>
+            
+            <div class="grid-item">
+              <Card class="upload-grid-card">
+                <div class="upload-grid-content">
+                  <FileUploader
+                    :productName="productName"
+                    folderType="other"
+                    :onUpload="handleFileUpload"
+                    :multiple="true"
+                  />
+                </div>
+              </Card>
+            </div>
           </div>
-        </a-card>
-      </a-tab-pane>
+        </div>
 
-      <!-- {{ t('productDetailManagement_otherImages') }}管理 -->
-      <a-tab-pane key="other" :tab="t('productDetailManagement_otherImages')">
-        <a-card>
-          <template #title>
-            <span>{{ t('productDetailManagement_otherImages') }} (images_other/)</span>
-          </template>
-          <div class="grid-image-section">
-            <a-row :gutter="[20, 20]">
-              <a-col
-                v-for="(image, index) in otherImages"
-                :key="index"
-                :xs="12"
-                :sm="8"
-                :md="6"
-                :lg="4"
-              >
-                <a-card class="image-card" :body-style="{ padding: '12px' }">
-                  <div class="image-container">
-                    <img
-                      :src="image"
-                      :alt="`${t('productDetailManagement_otherImages')} ${index + 1}`"
-                      class="grid-image"
-                      @error="handleGridImageError('other', index)"
-                      @click="showImagePreview(image)"
-                    />
-                  </div>
-                  <template #actions>
-                    <a-space class="image-actions">
-                      <a-button
-                        type="text"
-                        size="small"
-                        @click="showImagePreview(image)"
-                        :title="t('productDetailManagement_previewImage')"
-                      >
-                        <EyeOutlined />
-                      </a-button>
-                      <a-button
-                        type="text"
-                        danger
-                        size="small"
-                        @click="deleteImage('other', image)"
-                        :title="t('productDetailManagement_deleteImage')"
-                      >
-                        <DeleteOutlined />
-                      </a-button>
-                    </a-space>
-                  </template>
-                </a-card>
-              </a-col>
-              <a-col :xs="12" :sm="8" :md="6" :lg="4">
-                <a-card class="upload-card-grid" :body-style="{ padding: '16px 12px' }">
-                  <div class="upload-grid-content">
-                    <FileUploader
-                      :productName="productName"
-                      folderType="other"
-                      :onUpload="handleFileUpload"
-                      :multiple="true"
-                    />
-                  </div>
-                </a-card>
-              </a-col>
-            </a-row>
+        <!-- 视角图片管理 -->
+        <div v-if="currentTab.startsWith('view')" class="grid-image-section">
+          <div class="grid-container">
+            <div
+              v-for="(image, index) in viewImages[parseInt(currentTab.replace('view', '')) - 1]"
+              :key="index"
+              class="grid-item"
+            >
+              <Card class="image-grid-card">
+                <div class="image-container">
+                  <img
+                    :src="image"
+                    :alt="`${currentTab} - 图片 ${index + 1}`"
+                    class="grid-image"
+                    @error="handleGridImageError(currentTab, index)"
+                    @click="showImagePreview(image)"
+                  />
+                </div>
+                <div class="image-actions">
+                  <Button
+                    variant="text"
+                    size="small"
+                    @click="showImagePreview(image)"
+                    :title="t('productDetailManagement_previewImage')"
+                  >
+                    <LucideIcon name="Eye" size="16" />
+                  </Button>
+                  <Button
+                    variant="text"
+                    size="small"
+                    @click="deleteImage(currentTab, image)"
+                    :title="t('productDetailManagement_deleteImage')"
+                    class="danger"
+                  >
+                    <LucideIcon name="Trash2" size="16" />
+                  </Button>
+                </div>
+              </Card>
+            </div>
+            
+            <div class="grid-item">
+              <Card class="upload-grid-card">
+                <div class="upload-grid-content">
+                  <FileUploader
+                    :productName="productName"
+                    :folderType="currentTab"
+                    :onUpload="handleFileUpload"
+                    :multiple="true"
+                  />
+                </div>
+              </Card>
+            </div>
           </div>
-        </a-card>
-      </a-tab-pane>
+        </div>
+      </div>
+    </div>
 
-      <!-- 视角序列帧管理 -->
-      <a-tab-pane v-for="view in 4" :key="'view' + view" :tab="`视角 ${view}`">
-        <a-card>
-          <template #title>
-            <span>视角 {{ view }} (view{{ view }}/)</span>
-          </template>
-          <div class="grid-image-section">
-            <a-row :gutter="[20, 20]">
-              <a-col
-                v-for="(image, index) in viewImages[view - 1]"
-                :key="index"
-                :xs="12"
-                :sm="8"
-                :md="6"
-                :lg="4"
-              >
-                <a-card class="image-card" :body-style="{ padding: '12px' }">
-                  <div class="image-container">
-                    <img
-                      :src="image"
-                      :alt="`视角 ${view} - 图片 ${index + 1}`"
-                      class="grid-image"
-                      @error="handleGridImageError('view' + view, index)"
-                      @click="showImagePreview(image)"
-                    />
-                  </div>
-                  <template #actions>
-                    <a-space class="image-actions">
-                      <a-button
-                        type="text"
-                        size="small"
-                        @click="showImagePreview(image)"
-                        :title="t('productDetailManagement_previewImage')"
-                      >
-                        <EyeOutlined />
-                      </a-button>
-                      <a-button
-                        type="text"
-                        danger
-                        size="small"
-                        @click="deleteImage('view' + view, image)"
-                        :title="t('productDetailManagement_deleteImage')"
-                      >
-                        <DeleteOutlined />
-                      </a-button>
-                    </a-space>
-                  </template>
-                </a-card>
-              </a-col>
-              <a-col :xs="12" :sm="8" :md="6" :lg="4">
-                <a-card class="upload-card-grid" :body-style="{ padding: '16px 12px' }">
-                  <div class="upload-grid-content">
-                    <FileUploader
-                      :productName="productName"
-                      :folderType="'view' + view"
-                      :onUpload="handleFileUpload"
-                      :multiple="true"
-                    />
-                  </div>
-                </a-card>
-              </a-col>
-            </a-row>
-          </div>
-        </a-card>
-      </a-tab-pane>
-      </a-tabs>
-    </a-spin>
-
-    <!-- {{ t('productDetailManagement_editProduct') }}模态框 -->
-    <a-modal
-      v-model:open="showEditProductModal"
+    <!-- 编辑产品模态框 -->
+    <Modal
+      :open="showEditProductModal"
       :title="t('productDetailManagement_editProduct')"
-      @cancel="cancelEdit"
+      width="sm:max-w-md"
+      @close="cancelEdit"
       @ok="updateProduct"
-      :confirm-loading="updatingProduct"
+      :showFooter="true"
     >
-      <a-form layout="vertical">
-        <a-form-item
-          :label="t('productDetailManagement_productName')"
-          :validate-status="editNameError ? 'error' : ''"
-          :help="editNameError"
-        >
-          <a-input
-            v-model:value="editingProduct.name"
+      <div class="form-content">
+        <div class="form-item">
+          <label>{{ t('productDetailManagement_productName') }}</label>
+          <Input
+            v-model="editingProduct.name"
             :placeholder="`输入新的${t('productDetailManagement_productName')}`"
-            size="large"
           />
-        </a-form-item>
-        <a-form-item
-          :label="t('productDetailManagement_productFolderName')"
-          :validate-status="editFolderNameError ? 'error' : ''"
-          :help="editFolderNameError"
-        >
-          <a-input
-            v-model:value="editingProduct.folderName"
+          <div v-if="editNameError" class="error-text">{{ editNameError }}</div>
+        </div>
+        
+        <div class="form-item">
+          <label>{{ t('productDetailManagement_productFolderName') }}</label>
+          <Input
+            v-model="editingProduct.folderName"
             :placeholder="`输入新的${t('productDetailManagement_productFolderName')}`"
-            size="large"
           />
-        </a-form-item>
-      </a-form>
-    </a-modal>
+          <div v-if="editFolderNameError" class="error-text">{{ editFolderNameError }}</div>
+        </div>
+      </div>
+      
+      <template #footer>
+        <Button @click="cancelEdit">
+          {{ t('productManagement_cancel') }}
+        </Button>
+        <Button
+          @click="updateProduct"
+          variant="primary"
+          :loading="updatingProduct"
+        >
+          {{ t('productManagement_save') }}
+        </Button>
+      </template>
+    </Modal>
 
     <!-- 图片预览模态框 -->
-    <a-modal
-      v-model:open="showPreviewModal"
-      :footer="null"
+    <Modal
+      :open="showPreviewModal"
+      :title="t('productDetailManagement_previewImage')"
       width="80%"
-      style="top: 20px;"
-      @cancel="closeImagePreview"
+      @close="closeImagePreview"
+      :showFooter="false"
     >
-      <div style="text-align: center;">
+      <div class="image-preview-modal">
         <img
           :src="previewImage"
           :alt="t('productDetailManagement_previewImage')"
-          style="max-width: 100%; max-height: 70vh; object-fit: contain;"
+          class="preview-image"
         />
       </div>
-    </a-modal>
+    </Modal>
   </div>
 </template>
 
@@ -329,8 +304,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import FileUploader from './FileUploader.vue'
-import { ArrowLeftOutlined, EditOutlined, DeleteOutlined, LoadingOutlined, EyeOutlined } from '@ant-design/icons-vue'
-import { message, Modal } from 'ant-design-vue'
+import Button from './ui/button.vue'
+import Card from './ui/card.vue'
+import Input from './ui/input.vue'
+import Modal from './ui/modal.vue'
+import LucideIcon from './ui/LucideIcon.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -338,11 +316,11 @@ const router = useRouter()
 
 // 响应式数据
 const productName = ref('')
-const productData = ref(null)
 const mainImage = ref('')
 const sixViewsImages = ref([])
 const otherImages = ref([])
 const viewImages = ref([[], [], [], []])
+const currentTab = ref('main')
 const showEditProductModal = ref(false)
 const updatingProduct = ref(false)
 const editingProduct = ref({
@@ -355,6 +333,17 @@ const loading = ref(false)
 const imageErrors = ref(new Set())
 const previewImage = ref('')
 const showPreviewModal = ref(false)
+
+// 标签页配置
+const tabs = [
+  { key: 'main', label: t('productDetailManagement_mainImage'), icon: 'Image' },
+  { key: 'sixViews', label: t('productDetailManagement_sixViews'), icon: 'RotateCcw' },
+  { key: 'other', label: t('productDetailManagement_otherImages'), icon: 'Camera' },
+  { key: 'view1', label: '视角 1', icon: 'Eye' },
+  { key: 'view2', label: '视角 2', icon: 'Eye' },
+  { key: 'view3', label: '视角 3', icon: 'Eye' },
+  { key: 'view4', label: '视角 4', icon: 'Eye' }
+]
 
 // 计算属性
 const editNameError = computed(() => {
@@ -380,36 +369,6 @@ const editFolderNameError = computed(() => {
 })
 
 // 方法
-// 从服务器获取产品目录数据
-const fetchProductCatalog = async () => {
-  try {
-    const response = await fetch('/api/products/catalog')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    return data
-  } catch (error) {
-    console.error(t('productDetailManagement_getCatalogFailed'), error)
-    throw error
-  }
-}
-
-// 获取产品详情
-const fetchProductDetails = async () => {
-  try {
-    const response = await fetch(`/api/products/${encodeURIComponent(productName.value)}/details`)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    return data
-  } catch (error) {
-    console.error(t('productDetailManagement_getDetailsFailed'), error)
-    throw error
-  }
-}
-
 const loadProductImages = async () => {
   if (!productName.value) return
   
@@ -417,7 +376,7 @@ const loadProductImages = async () => {
     loading.value = true
     imageErrors.value.clear()
     
-    console.log(t('productDetailManagement_startLoadingImages'), productName.value)
+    console.log('开始加载产品图片:', productName.value)
     
     // 重置所有图片数组
     mainImage.value = ''
@@ -425,147 +384,63 @@ const loadProductImages = async () => {
     otherImages.value = []
     viewImages.value = [[], [], [], []]
     
-    // 从服务器获取产品目录数据
-    const catalog = await fetchProductCatalog()
-    const product = catalog.products.find(p => p.name === productName.value)
+    // 模拟数据加载 - 这里应该从实际API获取
+    // 在实际项目中，这里应该调用真实的API
+    setTimeout(() => {
+      mainImage.value = `/uploads/${productName.value}/image_00.webp`
+      sixViewsImages.value = [
+        `/uploads/${productName.value}/images_6Views/view1.webp`,
+        `/uploads/${productName.value}/images_6Views/view2.webp`,
+        `/uploads/${productName.value}/images_6Views/view3.webp`
+      ]
+      otherImages.value = [
+        `/uploads/${productName.value}/images_other/other1.webp`,
+        `/uploads/${productName.value}/images_other/other2.webp`
+      ]
+      
+      // 模拟视角图片
+      for (let i = 0; i < 4; i++) {
+        const viewNum = i + 1
+        viewImages.value[i] = [
+          `/uploads/${productName.value}/view${viewNum}/frame1.webp`,
+          `/uploads/${productName.value}/view${viewNum}/frame2.webp`
+        ]
+      }
+      
+      loading.value = false
+    }, 1000)
     
-    if (!product) {
-      console.warn(`在产品目录中未找到产品: ${productName.value}`)
-      message.error(t('productDetailManagement_productNotInCatalog'))
-      return
-    }
-    
-    // 使用产品目录数据加载图片
-    productData.value = product
-    await loadImagesFromCatalog(product)
   } catch (error) {
-    console.error(t('productDetailManagement_loadImagesFailed'), error)
-    message.error(t('productDetailManagement_loadImagesFailed'))
-  } finally {
+    console.error('加载产品图片失败:', error)
     loading.value = false
   }
 }
 
-// 从产品目录数据加载图片
-const loadImagesFromCatalog = async (product) => {
-  console.log(t('productDetailManagement_loadImageDetailsFailed'), product)
-  
-  try {
-    // 获取产品详情（包含文件夹扫描结果）
-    const productDetailsResponse = await fetchProductDetails()
-    const productDetails = productDetailsResponse.product || productDetailsResponse
-    
-    // 加载{{ t('productDetailManagement_mainImage') }}
-    if (product.mainImage) {
-      mainImage.value = product.mainImage
-      console.log(`${t('productDetailManagement_mainImage')}路径:`, mainImage.value)
-    }
-    
-    // 加载{{ t('productDetailManagement_sixViews') }}图片
-    if (product.additionalImages?.sixViews && productDetails.folders) {
-      const sixViewsFolder = productDetails.folders.images_6Views || []
-      sixViewsImages.value = sixViewsFolder.map(file =>
-        `${product.additionalImages.sixViews}${file.name}`
-      )
-      console.log(`${t('productDetailManagement_sixViews')}图片数量:`, sixViewsImages.value.length)
-    }
-    
-    // 加载{{ t('productDetailManagement_otherImages') }}
-    if (product.additionalImages?.other && productDetails.folders) {
-      const otherFolder = productDetails.folders.images_other || []
-      otherImages.value = otherFolder.map(file =>
-        `${product.additionalImages.other}${file.name}`
-      )
-      console.log(`${t('productDetailManagement_otherImages')}数量:`, otherImages.value.length)
-    }
-    
-    // 加载视角图片
-    for (let i = 1; i <= 4; i++) {
-      const viewKey = `view${i}`
-      if (product.views?.[viewKey] && productDetails.folders) {
-        const viewFolder = productDetails.folders[viewKey] || []
-        viewImages.value[i - 1] = viewFolder.map(file =>
-          `${product.views[viewKey]}${file.name}`
-        )
-        console.log(`视角${i}图片数量:`, viewImages.value[i - 1].length)
-      }
-    }
-  } catch (error) {
-    console.error('加载产品图片详情失败:', error)
-    message.error(t('productDetailManagement_loadImagesFailed'))
-  }
-}
-
-
 const handleFileUpload = (result) => {
   console.log('文件上传结果:', result)
   if (result.success) {
-    message.success('文件上传成功')
     // 文件上传成功后重新加载图片
     loadProductImages()
-  } else {
-    message.error('文件上传失败: ' + (result.error || '未知错误'))
   }
 }
 
 const deleteImage = async (folderType, imageUrl) => {
   try {
-    // 使用 Ant Design 的确认对话框替代原生 confirm
-    const confirmed = await new Promise((resolve) => {
-      const modal = Modal.confirm({
-        title: '确认删除',
-        content: '确定要删除这张图片吗？此操作不可撤销。',
-        okText: '确定',
-        cancelText: '取消',
-        onOk: () => resolve(true),
-        onCancel: () => resolve(false)
-      })
-    })
-    
+    const confirmed = confirm('确定要删除这张图片吗？此操作不可撤销。')
     if (!confirmed) return
     
     // 从URL中提取文件名
     const fileName = imageUrl.split('/').pop()
-    console.log(`${t('productDetailManagement_deleteImage')}:`, folderType, fileName, imageUrl)
+    console.log(`删除图片:`, folderType, fileName, imageUrl)
     
-    // 构建文件路径
-    let filePath = ''
-    if (folderType === 'main') {
-      filePath = `${productName.value}/${fileName}`
-    } else if (folderType === 'sixViews') {
-      filePath = `${productName.value}/images_6Views/${fileName}`
-    } else if (folderType === 'other') {
-      filePath = `${productName.value}/images_other/${fileName}`
-    } else if (folderType.startsWith('view')) {
-      const viewNumber = folderType.replace('view', '')
-      filePath = `${productName.value}/view${viewNumber}/${fileName}`
-    }
+    // 模拟删除操作
+    setTimeout(() => {
+      // 重新加载图片
+      loadProductImages()
+    }, 500)
     
-    // 调用API删除文件
-    const response = await fetch('/api/delete-file', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        filePath: filePath
-      })
-    })
-    
-    const result = await response.json()
-    
-    if (result.success) {
-      // 显示删除成功提示
-      message.success('图片删除成功')
-      
-      // 重新加载产品图片
-      await loadProductImages()
-    } else {
-      throw new Error(result.error || `${t('productDetailManagement_deleteImage')}失败`)
-    }
   } catch (error) {
-    console.error(`${t('productDetailManagement_deleteImage')}失败:`, error)
-    message.error(`${t('productDetailManagement_deleteImage')}失败: ` + error.message)
+    console.error('删除图片失败:', error)
   }
 }
 
@@ -590,68 +465,36 @@ const closeImagePreview = () => {
 }
 
 const editProduct = () => {
-  // 使用产品目录数据填充编辑表单
-  if (productData.value) {
-    editingProduct.value = {
-      name: productData.value.name,
-      folderName: productData.value.folderName,
-      originalName: productData.value.name,
-      originalFolderName: productData.value.folderName
-    }
-  } else {
-    // 如果没有产品目录数据，使用默认值
-    editingProduct.value = {
-      name: productName.value,
-      folderName: productName.value,
-      originalName: productName.value,
-      originalFolderName: productName.value
-    }
+  editingProduct.value = {
+    name: productName.value,
+    folderName: productName.value,
+    originalName: productName.value,
+    originalFolderName: productName.value
   }
   showEditProductModal.value = true
 }
 
 const updateProduct = async () => {
-  if (editNameError.value || !editingProduct.value.name || editFolderNameError.value || !editingProduct.value.folderName) return
+  if (editNameError.value || !editingProduct.value.name || 
+      editFolderNameError.value || !editingProduct.value.folderName) return
   
   try {
     updatingProduct.value = true
     
-    // 调用服务器API更新产品信息
-    const response = await fetch(`/api/products/${encodeURIComponent(editingProduct.value.originalName)}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        newProductName: editingProduct.value.name,
-        newFolderName: editingProduct.value.folderName
-      })
-    })
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || '更新产品失败')
-    }
+    // 更新当前产品名称
+    productName.value = editingProduct.value.name
     
-    const result = await response.json()
+    // 关闭模态框
+    cancelEdit()
     
-    if (result.success) {
-      message.success('产品信息已更新')
-      
-      // 更新当前{{ t('productDetailManagement_productName') }}
-      productName.value = editingProduct.value.name
-      
-      // 重新加载产品图片
-      await loadProductImages()
-      
-      cancelEdit()
-    } else {
-      throw new Error(result.error || '更新产品失败')
-    }
+    // 重新加载图片
+    loadProductImages()
     
   } catch (err) {
     console.error('更新产品错误:', err)
-    message.error(err.message || '更新产品失败')
   } finally {
     updatingProduct.value = false
   }
@@ -706,6 +549,12 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+.page-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .page-title {
   font-size: 28px;
   font-weight: 600;
@@ -725,89 +574,86 @@ onMounted(() => {
   border-radius: 2px;
 }
 
-/* 操作按钮 */
-.back-button {
+.action-buttons {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f0f2f5;
-  color: #4a4a4a;
-  border: 1px solid #d9d9d9;
-  padding: 8px 16px;
-  border-radius: 6px;
+  gap: 8px;
+}
+
+/* 标签页导航 */
+.tabs-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  background: white;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+}
+
+.tab-button {
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
   transition: all 0.2s ease;
-  height: 36px;
-}
-
-.back-button:hover {
-  background: #e6f7ff;
-  border-color: #1890ff;
-  color: #1890ff;
-  transform: translateY(-1px);
-}
-
-.rename-button {
+  font-size: 14px;
+  color: #8c8c8c;
+  white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+.tab-button:hover {
+  background: rgba(24, 144, 255, 0.1);
+  color: #1890ff;
+}
+
+.tab-button.active {
   background: linear-gradient(135deg, #1890ff, #36cfc9);
   color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
-  height: 36px;
 }
 
-.rename-button:hover {
-  background: linear-gradient(135deg, #40a9ff, #5cdbd3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
-}
-
-.image-management {
-  background: transparent;
-}
-
-.image-management :deep(.ant-tabs-content) {
-  padding-top: 16px;
-}
-
-/* {{ t('productDetailManagement_mainImage') }}管理区域 */
+/* 主图管理 */
 .main-image-section {
-  padding: 16px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
 }
 
-.image-preview-container {
+.image-preview-section {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 300px;
 }
 
-.image-preview {
-  text-align: center;
+.image-preview-card {
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border-radius: 12px;
+  width: 100%;
 }
 
-.product-image {
-  max-width: 100%;
+.main-image {
+  width: 100%;
   max-height: 400px;
   object-fit: contain;
   border-radius: 8px;
 }
 
-.empty-state {
+.empty-preview {
+  text-align: center;
   padding: 40px 0;
+}
+
+.empty-icon {
+  color: #d9d9d9;
+  margin-bottom: 16px;
 }
 
 .upload-section {
@@ -817,7 +663,7 @@ onMounted(() => {
   height: 100%;
 }
 
-.upload-card-main {
+.upload-card {
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border-radius: 12px;
@@ -825,18 +671,53 @@ onMounted(() => {
 }
 
 .upload-content {
-  padding: 8px 0;
+  padding: 16px 0;
 }
 
-/* 网格图片管理区域 */
+/* 网格图片管理 */
 .grid-image-section {
-  padding: 16px 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.grid-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.image-grid-card {
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.image-grid-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .image-container {
   position: relative;
   overflow: hidden;
   border-radius: 6px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
 }
 
 .grid-image {
@@ -853,27 +734,16 @@ onMounted(() => {
   opacity: 0.9;
 }
 
-.image-card {
-  transition: all 0.3s ease;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.image-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
 .image-actions {
   display: flex;
   justify-content: center;
-  width: 100%;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid #f0f0f0;
 }
 
-/* 网格上传卡片 */
-.upload-card-grid {
+/* 上传网格卡片 */
+.upload-grid-card {
   border: 2px dashed #d9d9d9;
   transition: all 0.3s ease;
   border-radius: 8px;
@@ -885,7 +755,7 @@ onMounted(() => {
   min-height: 180px;
 }
 
-.upload-card-grid:hover {
+.upload-grid-card:hover {
   border-color: #1890ff;
   background: #f0f8ff;
   transform: translateY(-2px);
@@ -897,33 +767,53 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 8px;
+  padding: 16px;
 }
 
-/* 确保上传组件在网格中正确显示 */
-.grid-image-section .ant-card {
-  height: 100%;
+/* 模态框内容 */
+.form-content {
+  margin: 16px 0;
 }
 
-.grid-image-section .ant-card-body {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.form-item {
+  margin-bottom: 16px;
 }
 
-.image-card .ant-card-body {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.image-container {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  border-radius: 6px;
+.form-item label {
+  display: block;
   margin-bottom: 8px;
+  font-weight: 500;
+  color: #262626;
+}
+
+.error-text {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.image-preview-modal {
+  text-align: center;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* 加载状态 */
+.loading-spin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.spinner {
+  font-size: 16px;
+  color: #1890ff;
 }
 
 /* 响应式设计 */
@@ -932,7 +822,7 @@ onMounted(() => {
     padding: 16px;
   }
   
-  .page-header {
+  .page-title-section {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
@@ -942,24 +832,31 @@ onMounted(() => {
     font-size: 20px;
   }
   
-  .main-image-section .ant-row {
+  .tabs-nav {
+    padding: 4px;
+  }
+  
+  .tab-button {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .main-image-section {
+    grid-template-columns: 1fr;
     gap: 24px;
   }
   
-  .image-preview-container {
-    min-height: 200px;
-  }
-  
-  .product-image {
-    max-height: 300px;
+  .grid-container {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
   }
   
   .grid-image {
     height: 120px;
   }
   
-  .upload-card-grid {
-    min-height: 180px;
+  .upload-grid-card {
+    min-height: 160px;
   }
 }
 
@@ -976,43 +873,27 @@ onMounted(() => {
     font-size: 18px;
   }
   
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+  
+  .tabs-nav {
+    gap: 2px;
+  }
+  
+  .tab-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .grid-container {
+    grid-template-columns: 1fr;
+  }
+  
   .grid-image {
     height: 100px;
   }
-  
-  .upload-card-grid {
-    min-height: 160px;
-  }
-  
-  .image-card {
-    margin-bottom: 12px;
-  }
-}
-
-/* 标签页样式优化 */
-.image-management :deep(.ant-tabs-tab) {
-  font-weight: 500;
-  padding: 12px 24px;
-}
-
-.image-management :deep(.ant-tabs-tab-active) {
-  background: linear-gradient(135deg, #1890ff, #36cfc9);
-  color: white;
-  border-radius: 6px 6px 0 0;
-}
-
-.image-management :deep(.ant-tabs-tab-active .ant-tabs-tab-btn) {
-  color: white;
-}
-
-.image-management :deep(.ant-tabs-nav) {
-  margin-bottom: 0;
-}
-
-.image-management :deep(.ant-tabs-content) {
-  background: white;
-  border-radius: 0 12px 12px 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  padding: 24px;
 }
 </style>

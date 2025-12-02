@@ -97,6 +97,14 @@ export const commonTranslations = {
     "common_profile": "Profile",
     "common_settings": "Settings",
     
+    // 登录相关
+    "common_adminLogin": "Admin Login",
+    "common_enterCredentials": "Please enter your admin credentials",
+    "common_enterUsername": "Please enter username",
+    "common_enterPassword": "Please enter password",
+    "common_loggingIn": "Logging in...",
+    "common_loginFailed": "Login failed",
+    
     // 确认对话框
     "common_confirm_title": "Confirm Action",
     "common_confirm_message": "Are you sure you want to {action}?",
@@ -220,6 +228,14 @@ export const commonTranslations = {
     "common_phone": "电话",
     "common_profile": "个人资料",
     "common_settings": "设置",
+    
+    // 登录相关
+    "common_adminLogin": "管理员登录",
+    "common_enterCredentials": "请输入管理员凭据",
+    "common_enterUsername": "请输入用户名",
+    "common_enterPassword": "请输入密码",
+    "common_loggingIn": "登录中...",
+    "common_loginFailed": "登录失败",
     
     // 确认对话框
     "common_confirm_title": "确认操作",

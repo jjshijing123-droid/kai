@@ -1,40 +1,34 @@
 <template>
   <div class="product-3d-header">
     <!-- 左边：返回按钮 -->
-    <a-button 
-      type="text" 
+    <Button 
+      variant="text"
       @click="handleBack" 
       class="back-button"
     >
-      <template #icon>
-        <LeftOutlined />
-      </template>
-    </a-button>
+      <LucideIcon name="ArrowLeft" size="18" class="icon" />
+    </Button>
     
     <!-- 右边：下载按钮和抽屉按钮 -->
     <div class="right-buttons">
       <!-- 下载按钮 -->
-      <a-button 
-        type="text" 
+      <Button 
+        variant="text"
         @click="handleDownload" 
         class="download-button"
       >
-        <template #icon>
-          <DownloadOutlined />
-        </template>
+        <LucideIcon name="Download" size="18" class="icon" />
         {{ t('product3dHeader_downloadAllImages') }}
-      </a-button>
+      </Button>
       
       <!-- 抽屉按钮 -->
-      <a-button 
-        type="text" 
+      <Button 
+        variant="text"
         @click="toggleDrawer" 
         class="drawer-button"
       >
-        <template #icon>
-          <MenuOutlined />
-        </template>
-      </a-button>
+        <LucideIcon name="Menu" size="18" class="icon" />
+      </Button>
     </div>
   </div>
 </template>
@@ -43,7 +37,8 @@
 import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
-import { LeftOutlined, MenuOutlined, DownloadOutlined } from '@ant-design/icons-vue'
+import Button from './ui/button.vue'
+import LucideIcon from './ui/LucideIcon.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -117,6 +112,15 @@ onUnmounted(() => {
   color: #4d4d4d;
   background: rgba(255, 255, 255, 0.1);
   border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover,
+.drawer-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #4d4d4d;
+  transform: scale(1.05);
 }
 
 .download-button {
@@ -126,13 +130,29 @@ onUnmounted(() => {
   height: 40px;
   color: #4d4d4d;
   font-weight: 500;
-  gap: 0px;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.download-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #4d4d4d;
+  transform: scale(1.02);
 }
 
 .back-button:hover,
 .download-button:hover,
 .drawer-button:hover {
   color: #4d4d4d;
+}
+
+.icon {
+  font-size: 18px;
 }
 
 /* 响应式设计 */
@@ -149,6 +169,11 @@ onUnmounted(() => {
   
   .download-button {
     height: 36px;
+    font-size: 14px;
+  }
+  
+  .icon {
+    font-size: 16px;
   }
 }
 
@@ -165,6 +190,16 @@ onUnmounted(() => {
   
   .download-button {
     height: 32px;
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+  
+  .download-button span {
+    font-size: 14px;
+  }
+  
+  .icon {
+    font-size: 14px;
   }
 }
 </style>

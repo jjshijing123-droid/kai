@@ -23,10 +23,12 @@
     />
     
     <!-- 错误状态 -->
-    <div v-else-if="hasError" class="error-placeholder">
-      <div class="error-icon">{{ errorIcon }}</div>
-      <span v-if="showErrorText" class="error-text">{{ errorText }}</span>
-    </div>
+        <div v-else-if="hasError" class="error-placeholder">
+          <div class="error-icon">
+            <LucideIcon name="Image" class="h-8 w-8 text-muted-foreground" />
+          </div>
+          <span v-if="showErrorText" class="error-text">{{ errorText }}</span>
+        </div>
     
     <!-- 占位符（可选） -->
     <div v-if="showPlaceholder && !shouldLoadImage && !hasError" class="placeholder">
@@ -39,6 +41,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import LucideIcon from './LucideIcon.vue'
 
 const props = defineProps({
   // 图片源
@@ -95,7 +98,7 @@ const props = defineProps({
   
   errorIcon: {
     type: String,
-    default: '🖼️'
+    default: 'Image'
   },
   
   errorText: {
@@ -316,7 +319,6 @@ defineExpose({
 }
 
 .error-icon {
-  font-size: 32px;
   margin-bottom: 8px;
   opacity: 0.6;
 }

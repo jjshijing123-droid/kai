@@ -1,10 +1,12 @@
 <template>
   <div class="error-container">
-    <div class="error-icon">{{ icon }}</div>
+    <div class="error-icon">
+      <LucideIcon name="AlertTriangle" class="h-12 w-12 text-destructive" />
+    </div>
     <p class="error-message">{{ message }}</p>
-    <button 
-      v-if="showRetry" 
-      @click="handleRetry" 
+    <button
+      v-if="showRetry"
+      @click="handleRetry"
       class="retry-button"
     >
       {{ retryText }}
@@ -13,6 +15,8 @@
 </template>
 
 <script setup>
+import LucideIcon from './LucideIcon.vue'
+
 const props = defineProps({
   message: {
     type: String,
@@ -20,7 +24,7 @@ const props = defineProps({
   },
   icon: {
     type: String,
-    default: '⚠️'
+    default: 'AlertTriangle'
   },
   showRetry: {
     type: Boolean,
@@ -50,7 +54,6 @@ const handleRetry = () => {
 }
 
 .error-icon {
-  font-size: 48px;
   margin-bottom: 16px;
 }
 
@@ -63,8 +66,8 @@ const handleRetry = () => {
 }
 
 .retry-button {
-  background-color: #4a90e2;
-  color: white;
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   border: none;
   padding: 10px 24px;
   border-radius: 6px;
@@ -74,6 +77,6 @@ const handleRetry = () => {
 }
 
 .retry-button:hover {
-  background-color: #357abd;
+  background-color: hsl(var(--primary) / 0.9);
 }
 </style>

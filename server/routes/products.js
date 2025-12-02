@@ -231,4 +231,29 @@ router.get('/name/:productName', async (req, res) => {
   }
 });
 
+// 根据产品名称获取产品详情
+router.get('/name/:productName', async (req, res) => {
+  try {
+    const { productName } = req.params;
+    console.log(`🔍 根据名称获取产品详情: ${productName}`);
+    
+    const productData = await productService.getProductByName(productName);
+    
+    console.log(`✅ 根据名称获取产品详情成功:`, productData);
+    
+    res.json({
+      success: true,
+      product: productData
+    });
+    
+  } catch (error) {
+    console.error('根据名称获取产品详情失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取产品详情失败',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

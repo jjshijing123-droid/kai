@@ -12,91 +12,67 @@
   <div v-else class="file-manager">
     <!-- 页面头部 -->
     <div class="page-header">
-      <a-space direction="vertical" :size="16" style="width: 100%">
-        <a-row justify="space-between" align="middle">
-          <a-col>
-            <h1 class="page-title">{{ t('productManagement_title') }}</h1>
-          </a-col>
-          <a-col>
-            <a-space>
-              <a-button @click="goBack" class="back-button">
-                <template #icon>
-                  <ArrowLeftOutlined />
-                </template>
-                {{ t('productManagement_back') }}
-              </a-button>
-              <a-button @click="refreshProducts" class="refresh-button" :loading="loading">
-                <template #icon>
-                  <ReloadOutlined />
-                </template>
-                {{ t('productManagement_refresh') }}
-              </a-button>
-              <a-button type="primary" @click="showCreateFolderModal = true" class="create-folder-button">
-                <template #icon>
-                  <FolderAddOutlined />
-                </template>
-                {{ t('productManagement_createFolder') }}
-              </a-button>
-              <a-button type="primary" @click="showUploadFolderModal = true" class="upload-folder-button">
-                <template #icon>
-                  <UploadOutlined />
-                </template>
-                {{ t('productManagement_uploadFolder') }}
-              </a-button>
-              <a-button type="primary" danger @click="showBatchUploadModal = true" class="batch-upload-button">
-                <template #icon>
-                  <CloudUploadOutlined />
-                </template>
-                {{ t('productManagement_batchUploadReplace') }}
-              </a-button>
-            </a-space>
-          </a-col>
-        </a-row>
-
-        <!-- 搜索和统计 -->
-        <a-row justify="space-between" align="middle">
-          <a-col>
-            <a-input
-              v-model:value="searchQuery"
-              :placeholder="t('productManagement_searchPlaceholder')"
-              style="width: 300px"
-            >
-              <template #prefix>
-                <SearchOutlined />
-              </template>
-            </a-input>
-          </a-col>
-          <a-col>
-            <span class="folder-count">
-              {{ t('productManagement_totalProductFolders') }} {{ filteredProducts.length }} {{ t('productManagement_productFolders') }}
-            </span>
-          </a-col>
-        </a-row>
-      </a-space>
+      <div class="page-title-section">
+        <h1 class="page-title">{{ t('productManagement_title') }}</h1>
+        
+        <div class="action-buttons">
+          <Button @click="goBack" variant="text" class="back-button">
+            <span class="icon">←</span>
+            {{ t('productManagement_back') }}
+          </Button>
+          <Button @click="refreshProducts" :loading="loading" variant="secondary" class="refresh-button">
+            <LucideIcon name="RefreshCw" class="h-4 w-4" />
+            {{ t('productManagement_refresh') }}
+          </Button>
+          <Button @click="showCreateFolderModal = true" variant="primary" class="create-folder-button">
+            <LucideIcon name="FolderPlus" class="h-4 w-4" />
+            {{ t('productManagement_createFolder') }}
+          </Button>
+          <Button @click="showUploadFolderModal = true" variant="primary" class="upload-folder-button">
+            <LucideIcon name="Upload" class="h-4 w-4" />
+            {{ t('productManagement_uploadFolder') }}
+          </Button>
+          <Button @click="showBatchUploadModal = true" variant="primary" class="batch-upload-button">
+            <LucideIcon name="Upload" class="h-4 w-4" />
+            {{ t('productManagement_batchUpload') }}
+          </Button>
+        </div>
+      </div>
+      
+      <div class="search-section">
+        <div class="search-input-container">
+          <Input
+            v-model="searchQuery"
+            :placeholder="t('productManagement_searchPlaceholder')"
+            class="search-input"
+          />
+          <span class="search-icon">
+            <LucideIcon name="Search" class="h-4 w-4" />
+          </span>
+        </div>
+        <div class="folder-count">
+          {{ t('productManagement_totalProductFolders') }} {{ filteredProducts.length }} {{ t('productManagement_productFolders') }}
+        </div>
+      </div>
     </div>
 
     <!-- 内容区域 -->
     <div class="content-area">
       <!-- 加载状态 -->
-      <a-spin v-if="loading" :spinning="loading" size="large" class="loading-spin">
-        <template #indicator>
-          <a-spin size="large" />
-        </template>
-      </a-spin>
+      <div v-if="loading" class="loading-spin">
+        <div class="spinner">加载中...</div>
+      </div>
 
       <!-- 错误状态 -->
-      <a-result
-        v-else-if="error"
-        status="error"
-        :title="t('productManagement_loading')"
-        :sub-title="error"
-      >
-        <template #extra>
-          <a-button type="primary" @click="fetchProducts">
+      <div v-else-if="error" class="error-state">
+        <div class="error-content">
+          <h3>{{ t('productManagement_loading') }}</h3>
+          <p>{{ error }}</p>
+          <Button @click="fetchProducts" variant="primary">
             {{ t('productManagement_retry') }}
-          </a-button>
-        </template>
-      </a-result>
+          </Button>
+        </div>
+      </div>
 
       <!-- 产品文件夹列表 -->
       <div v-else class="folder-grid">
@@ -108,7 +84,7 @@
           @contextmenu.prevent="handleShowContextMenu($event, product)"
         >
           <div class="folder-icon">
-            <FolderOutlined />
+            <LucideIcon name="Folder" class="h-8 w-8 text-primary" />
           </div>
           <div class="folder-info">
             <div class="folder-name">{{ product.name }}</div>
@@ -117,284 +93,237 @@
             </div>
           </div>
           <div class="folder-actions">
-            <a-button
-              type="text"
+            <Button
+              variant="text"
               size="small"
               @click.stop="renameFolder(product.name)"
               :title="t('productManagement_rename')"
             >
-              <EditOutlined />
-            </a-button>
-            <a-button
-              type="text"
+              <LucideIcon name="Edit" class="h-4 w-4" />
+            </Button>
+            <Button
+              variant="text"
               size="small"
               @click.stop="deleteFolder(product.name)"
               :title="t('productManagement_delete')"
-              danger
+              class="danger"
             >
-              <DeleteOutlined />
-            </a-button>
+              <LucideIcon name="Trash2" class="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
 
       <!-- 空状态 -->
-      <a-empty
-        v-if="!loading && !error && filteredProducts.length === 0"
-        :image="simpleImage"
-        class="empty-state"
-      >
-        <template #description>
+      <div v-if="!loading && !error && filteredProducts.length === 0" class="empty-state">
+        <div class="empty-content">
+          <LucideIcon name="FolderOpen" class="h-16 w-16 text-muted-foreground" />
           <p>{{ t('productManagement_noProductFolders') }}</p>
-        </template>
-        <a-button type="primary" @click="showCreateFolderModal = true">
-          {{ t('productManagement_createFirstFolder') }}
-        </a-button>
-      </a-empty>
+          <Button @click="showCreateFolderModal = true" variant="primary">
+            {{ t('productManagement_createFirstFolder') }}
+          </Button>
+        </div>
+      </div>
     </div>
 
     <!-- 创建文件夹模态框 -->
-    <a-modal
-      v-model:open="showCreateFolderModal"
+    <Modal
+      :open="showCreateFolderModal"
       :title="t('productManagement_createProductFolder')"
-      width="500px"
-      @cancel="closeCreateFolderModal"
+      width="sm:max-w-md"
+      @close="closeCreateFolderModal"
     >
-      <a-form layout="vertical">
-        <a-form-item
-          :label="t('productManagement_folderName')"
-          :validate-status="folderNameError ? 'error' : ''"
-          :help="folderNameError"
-        >
-          <a-input
-            v-model:value="newFolderName"
+      <div class="form-content">
+        <div class="form-item">
+          <label>{{ t('productManagement_folderName') }}</label>
+          <Input
+            v-model="newFolderName"
             :placeholder="t('productManagement_inputFolderName')"
-            size="large"
             @input="validateFolderName"
           />
-        </a-form-item>
-
-        <a-alert
-          type="info"
-          show-icon
-          :message="t('productManagement_folderStructure')"
-          :description="t('productManagement_folderStructureDesc')"
-          style="margin-bottom: 16px"
-        />
-      </a-form>
-
-      <template #footer>
-        <a-space>
-          <a-button @click="closeCreateFolderModal">
-            {{ t('productManagement_cancel') }}
-          </a-button>
-          <a-button
-            type="primary"
-            @click="createFolder"
-            :disabled="!newFolderName || !!folderNameError || creatingFolder"
-            :loading="creatingFolder"
-          >
-            {{ creatingFolder ? t('productManagement_creating') : t('productManagement_create') }}
-          </a-button>
-        </a-space>
-      </template>
-    </a-modal>
-
-    <!-- 重命名文件夹模态框 -->
-    <a-modal
-      v-model:open="showRenameFolderModal"
-      :title="t('productManagement_renameFolder')"
-      width="500px"
-      @cancel="closeRenameFolderModal"
-    >
-      <a-form layout="vertical">
-        <a-form-item
-          :label="t('productManagement_newFolderName')"
-          :validate-status="renameFolderNameError ? 'error' : ''"
-          :help="renameFolderNameError"
-        >
-          <a-input
-            v-model:value="renameFolderName"
-            :placeholder="t('productManagement_inputNewFolderName')"
-            size="large"
-            @input="validateRenameFolderName"
-          />
-        </a-form-item>
-      </a-form>
-
-      <template #footer>
-        <a-space>
-          <a-button @click="closeRenameFolderModal">
-            {{ t('productManagement_cancel') }}
-          </a-button>
-          <a-button
-            type="primary"
-            @click="confirmRenameFolder"
-            :disabled="!renameFolderName || !!renameFolderNameError || renamingFolder"
-            :loading="renamingFolder"
-          >
-            {{ renamingFolder ? t('productManagement_renaming') : t('productManagement_renameAction') }}
-          </a-button>
-        </a-space>
-      </template>
-    </a-modal>
-
-    <!-- 上传文件夹模态框 -->
-    <a-modal
-      v-model:open="showUploadFolderModal"
-      :title="t('productManagement_uploadProductFolder')"
-      width="800px"
-      @cancel="closeUploadFolderModal"
-      :footer="null"
-    >
-      <ProductFolderUploader
-        :button-text="t('productManagement_selectZipPackage')"
-        @upload-complete="handleUploadComplete"
-      />
-    </a-modal>
-
-    <!-- 批量上传替换模态框 -->
-    <a-modal
-      v-model:open="showBatchUploadModal"
-      :title="t('productManagement_batchUploadReplaceTitle')"
-      width="800px"
-      @cancel="closeBatchUploadModal"
-      :footer="null"
-    >
-      <div class="batch-upload-content">
-        <a-alert
-          type="warning"
-          show-icon
-          :message="t('productManagement_dangerousOperation')"
-          :description="t('productManagement_dangerousOperationDesc')"
-          style="margin-bottom: 20px"
-        />
-         
-        <div class="batch-upload-area">
-          <div
-            class="upload-zone"
-            :class="{ 'upload-zone--dragover': isBatchDragOver }"
-            @click="triggerBatchFileInput"
-            @drop="handleBatchDrop"
-            @dragover.prevent="handleBatchDragOver"
-            @dragleave.prevent="handleBatchDragLeave"
-          >
-            <div class="upload-zone-content">
-              <div class="upload-zone-icon">
-                <CloudUploadOutlined />
-              </div>
-              <div class="upload-zone-text">
-                <div class="upload-zone-title">{{ t('productManagement_selectZipTitle') }}</div>
-                <div class="upload-zone-subtitle">
-                  {{ t('productManagement_selectZipSubtitle') }}
-                </div>
-              </div>
-              <input
-                ref="batchFileInput"
-                type="file"
-                accept=".zip"
-                @change="handleBatchFileSelect"
-                class="batch-file-input"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- 已选择文件信息 -->
-        <div v-if="selectedBatchFile" class="selected-file-info">
-          <a-alert
-            type="info"
-            show-icon
-            :message="`${t('productManagement_selectedFile')} ${selectedBatchFile.name}`"
-            :description="`${t('productManagement_fileSize')} ${formatFileSize(selectedBatchFile.size)} ${t('productManagement_clickUploadButton')}`"
-            style="margin-bottom: 16px"
-          />
-        </div>
-
-        <!-- 上传按钮 -->
-        <div v-if="selectedBatchFile && !batchUploading" class="batch-upload-actions">
-          <a-button
-            type="primary"
-            danger
-            size="large"
-            @click="startBatchUpload"
-            class="batch-upload-start-button"
-          >
-            <template #icon>
-              <CloudUploadOutlined />
-            </template>
-            {{ t('productManagement_startBatchReplace') }}
-          </a-button>
-        </div>
-
-        <!-- 上传进度 -->
-        <div v-if="batchUploading" class="batch-upload-progress">
-          <div class="progress-header">
-            <span>{{ t('productManagement_executingBatchReplace') }}</span>
-            <span class="progress-percent">{{ batchUploadProgress }}%</span>
-          </div>
-          <a-progress
-            :percent="batchUploadProgress"
-            :show-info="false"
-            status="active"
-          />
-          <div class="progress-details">
-            <div>{{ batchUploadStatus }}</div>
-          </div>
-        </div>
-
-        <!-- 上传结果 -->
-        <div v-if="batchUploadResult" class="batch-upload-result">
-          <a-alert
-            :message="batchUploadResult.success ? t('productManagement_batchReplaceSuccess') : t('productManagement_batchReplaceFailed')"
-            :type="batchUploadResult.success ? 'success' : 'error'"
-            show-icon
-            closable
-            @close="batchUploadResult = null"
-          >
-            <template #description>
-              <div v-if="batchUploadResult.success">
-                <p>{{ batchUploadResult.message }}</p>
-                <p>{{ t('productManagement_processedFiles') }} {{ batchUploadResult.fileCount }} {{ t('common_files') }}</p>
-                <p>{{ t('productManagement_createdFolders') }} {{ batchUploadResult.folderCount }} {{ t('common_folders') }}</p>
-                <p v-if="batchUploadResult.backupPath">
-                  {{ t('productManagement_backupLocation') }} {{ batchUploadResult.backupPath }}
-                </p>
-              </div>
-              <div v-else>
-                <p>{{ batchUploadResult.message }}</p>
-              </div>
-            </template>
-          </a-alert>
-        </div>
-
-        <!-- 使用说明 -->
-        <div class="batch-upload-hint">
-          <p><strong>{{ t('productManagement_usageInstructions') }}</strong></p>
-          <ul>
-            <li>{{ t('productManagement_uploadZipInstructions1') }}</li>
-            <li>{{ t('productManagement_uploadZipInstructions2') }}</li>
-            <li>{{ t('productManagement_uploadZipInstructions3') }}</li>
-            <li>{{ t('productManagement_uploadZipInstructions4') }}</li>
-            <li>{{ t('productManagement_uploadZipInstructions5') }}</li>
-            <li>{{ t('productManagement_uploadZipInstructions6') }}</li>
-          </ul>
+          <div v-if="folderNameError" class="error-text">{{ folderNameError }}</div>
         </div>
       </div>
-    </a-modal>
+      
+      <template #footer>
+        <Button @click="closeCreateFolderModal">
+          {{ t('productManagement_cancel') }}
+        </Button>
+        <Button
+          @click="createFolder"
+          variant="primary"
+          :disabled="!newFolderName || !!folderNameError || creatingFolder"
+          :loading="creatingFolder"
+        >
+          {{ creatingFolder ? t('productManagement_creating') : t('productManagement_create') }}
+        </Button>
+      </template>
+    </Modal>
+
+    <!-- 重命名文件夹模态框 -->
+    <Modal
+      :open="showRenameFolderModal"
+      :title="t('productManagement_renameFolder')"
+      width="sm:max-w-md"
+      @close="closeRenameFolderModal"
+    >
+      <div class="form-content">
+        <div class="form-item">
+          <label>{{ t('productManagement_newFolderName') }}</label>
+          <Input
+            v-model="renameFolderName"
+            :placeholder="t('productManagement_inputNewFolderName')"
+            @input="validateRenameFolderName"
+          />
+          <div v-if="renameFolderNameError" class="error-text">{{ renameFolderNameError }}</div>
+        </div>
+      </div>
+      
+      <template #footer>
+        <Button @click="closeRenameFolderModal">
+          {{ t('productManagement_cancel') }}
+        </Button>
+        <Button
+          @click="confirmRenameFolder"
+          variant="primary"
+          :disabled="!renameFolderName || !!renameFolderNameError || renamingFolder"
+          :loading="renamingFolder"
+        >
+          {{ renamingFolder ? t('productManagement_renaming') : t('productManagement_renameAction') }}
+        </Button>
+      </template>
+    </Modal>
 
     <!-- 删除确认模态框 -->
-    <a-modal
-      v-model:open="showDeleteConfirm"
+    <Modal
+      :open="showDeleteConfirm"
       :title="t('productManagement_confirmDelete')"
-      @cancel="cancelDelete"
+      width="sm:max-w-md"
+      @close="cancelDelete"
       @ok="confirmDeleteFolder"
-      :ok-text="t('productManagement_okDelete')"
-      :cancel-text="t('productManagement_cancelDelete')"
-      ok-type="danger"
+      :showFooter="true"
     >
       <p>{{ t('productManagement_deleteConfirmContent') }}{{ folderToDelete }}{{ t('productManagement_deleteConfirmContent2') }}</p>
-    </a-modal>
+      
+      <template #footer>
+        <Button @click="cancelDelete">
+          {{ t('productManagement_cancelDelete') }}
+        </Button>
+        <Button
+          @click="confirmDeleteFolder"
+          variant="primary"
+          class="danger"
+        >
+          {{ t('productManagement_okDelete') }}
+        </Button>
+      </template>
+    </Modal>
+
+    <!-- 上传文件夹模态框 -->
+    <Modal
+      :open="showUploadFolderModal"
+      :title="t('productManagement_uploadProductFolder')"
+      width="lg:max-w-2xl"
+      @close="closeUploadFolderModal"
+    >
+      <ProductFolderUploader
+        :disabled="uploading"
+        @upload-start="handleUploadStart"
+        @upload-complete="handleUploadComplete"
+      />
+    </Modal>
+
+    <!-- 批量上传模态框 -->
+    <Modal
+      :open="showBatchUploadModal"
+      :title="t('productManagement_batchUpload')"
+      width="lg:max-w-2xl"
+      @close="closeBatchUploadModal"
+    >
+      <div class="batch-upload-content">
+        <div class="upload-section">
+          <div class="upload-info">
+            <h4 class="upload-title">
+              <LucideIcon name="Archive" class="h-5 w-5 text-primary mr-2" />
+              {{ t('productManagement_batchUploadZipFiles') }}
+            </h4>
+            <p class="upload-description">{{ t('productManagement_batchUploadZipDescription') }}</p>
+          </div>
+          
+          <!-- 警告提示 -->
+          <div class="warning-section">
+            <LucideIcon name="AlertTriangle" class="h-4 w-4 text-orange-500" />
+            <span>{{ t('productManagement_batchUploadWarning') }}</span>
+          </div>
+          
+          <!-- 压缩包选择器 -->
+          <div class="file-selector">
+            <input
+              ref="zipFileInput"
+              type="file"
+              accept=".zip,.rar,.7z"
+              @change="handleZipFileSelection"
+              style="display: none;"
+            />
+            <Button
+              @click="selectZipFiles"
+              variant="primary"
+              class="select-files-button"
+              :disabled="uploading"
+            >
+              <LucideIcon name="Archive" class="h-4 w-4" />
+              {{ t('productManagement_selectZipFiles') }}
+            </Button>
+            <span class="file-hint">{{ t('productManagement_zipFileHint') }}</span>
+          </div>
+
+          <!-- 已选择的压缩包 -->
+          <div v-if="selectedZipFiles.length > 0" class="selected-files">
+            <h5>{{ t('productManagement_selectedZipFiles') }} ({{ selectedZipFiles.length }})</h5>
+            <div class="files-list">
+              <div v-for="(file, index) in selectedZipFiles" :key="index" class="file-item">
+                <LucideIcon name="Archive" class="h-4 w-4 text-primary" />
+                <span class="file-name">{{ file.name }}</span>
+                <span class="file-size">({{ formatFileSize(file.size) }})</span>
+                <Button
+                  variant="text"
+                  size="small"
+                  @click="removeZipFile(index)"
+                  class="remove-file-btn"
+                >
+                  <LucideIcon name="X" class="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 上传进度 -->
+          <div v-if="uploading" class="upload-progress">
+            <div class="progress-info">
+              <span>{{ uploadStatus }}</span>
+              <span>{{ Math.round(uploadProgress) }}%</span>
+            </div>
+            <Progress :value="uploadProgress" />
+          </div>
+        </div>
+      </div>
+      
+      <template #footer>
+        <Button @click="closeBatchUploadModal" :disabled="uploading">
+          {{ t('productManagement_cancel') }}
+        </Button>
+        <Button
+          @click="startBatchZipUpload"
+          variant="primary"
+          :disabled="selectedZipFiles.length === 0 || uploading"
+          :loading="uploading"
+          class="upload-button"
+        >
+          <LucideIcon name="Upload" class="h-4 w-4" />
+          {{ t('productManagement_extractAndUpload') }}
+        </Button>
+      </template>
+    </Modal>
 
     <!-- 右键菜单 -->
     <div
@@ -404,19 +333,18 @@
       @click="hideContextMenu"
     >
       <div class="context-menu-item" @click="openFolder(contextMenuProduct.name)">
-        <FolderOpenOutlined />
+        <LucideIcon name="FolderOpen" class="h-4 w-4" />
         <span>{{ t('productManagement_open') }}</span>
       </div>
       <div class="context-menu-item" @click="renameFolder(contextMenuProduct.name)">
-        <EditOutlined />
+        <LucideIcon name="Edit" class="h-4 w-4" />
         <span>{{ t('productManagement_rename') }}</span>
       </div>
       <div class="context-menu-item" @click="deleteFolder(contextMenuProduct.name)">
-        <DeleteOutlined />
+        <LucideIcon name="Trash2" class="h-4 w-4" />
         <span>{{ t('productManagement_delete') }}</span>
       </div>
     </div>
-    
   </div>
 </template>
 
@@ -426,27 +354,16 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
 import AdminAccessDenied from './AdminAccessDenied.vue'
-import { message } from 'ant-design-vue'
-import {
-  ArrowLeftOutlined,
-  ReloadOutlined,
-  FolderAddOutlined,
-  FolderOutlined,
-  FolderOpenOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  UploadOutlined,
-  CloudUploadOutlined
-} from '@ant-design/icons-vue'
+import Button from './ui/button.vue'
+import Input from './ui/input.vue'
+import Modal from './ui/modal.vue'
+import Progress from './ui/progress.vue'
+import LucideIcon from './ui/LucideIcon.vue'
 import ProductFolderUploader from './ProductFolderUploader.vue'
 
 const { t } = useI18n()
 const router = useRouter()
 const { isAdminLoggedIn } = useAdminAuth()
-
-// 简单的空状态图片
-const simpleImage = undefined
 
 // 响应式数据
 const products = ref([])
@@ -454,12 +371,13 @@ const loading = ref(true)
 const error = ref(null)
 const searchQuery = ref('')
 const showCreateFolderModal = ref(false)
-const showUploadFolderModal = ref(false)
 const showRenameFolderModal = ref(false)
-const showDeleteConfirm = ref(false)
+const showUploadFolderModal = ref(false)
 const showBatchUploadModal = ref(false)
+const showDeleteConfirm = ref(false)
 const creatingFolder = ref(false)
 const renamingFolder = ref(false)
+const uploading = ref(false)
 const newFolderName = ref('')
 const renameFolderName = ref('')
 const folderToDelete = ref('')
@@ -469,15 +387,13 @@ const renameFolderNameError = ref('')
 const showContextMenu = ref(false)
 const contextMenuPosition = ref({ x: 0, y: 0 })
 const contextMenuProduct = ref(null)
-
-// 批量上传相关数据
-const batchFileInput = ref(null)
-const selectedBatchFile = ref(null)
-const isBatchDragOver = ref(false)
-const batchUploading = ref(false)
-const batchUploadProgress = ref(0)
-const batchUploadStatus = ref('')
-const batchUploadResult = ref(null)
+const selectedFiles = ref([])
+const currentUploadIndex = ref(0)
+const fileInput = ref(null)
+const selectedZipFiles = ref([])
+const zipFileInput = ref(null)
+const uploadStatus = ref('')
+const uploadProgress = ref(0)
 
 // 计算属性
 const filteredProducts = computed(() => {
@@ -487,17 +403,12 @@ const filteredProducts = computed(() => {
   )
 })
 
-const canBatchUpload = computed(() => {
-  return selectedBatchFile.value && true
-})
-
 // API接口配置
 const API_CONFIG = {
   GET_PRODUCTS: '/api/products',
   CREATE_PRODUCT: '/api/products',
   RENAME_PRODUCT: '/api/products',
-  DELETE_PRODUCT: '/api/products',
-  BATCH_REPLACE: '/api/batch-replace-products'
+  DELETE_PRODUCT: '/api/products'
 }
 
 // 主要的获取产品列表方法
@@ -506,50 +417,37 @@ const fetchProducts = async () => {
     loading.value = true
     error.value = null
 
-    console.log('🔄 开始从API获取产品列表...')
+    console.log('开始从API获取产品列表...')
     
-    // 使用后端API获取产品列表
     const response = await fetch(API_CONFIG.GET_PRODUCTS)
-    console.log('📡 API响应状态:', response.status)
+    console.log('API响应状态:', response.status)
     
     if (!response.ok) {
       throw new Error(`获取产品列表失败: ${response.status}`)
     }
     
     const data = await response.json()
-    console.log('📊 产品数据:', data)
+    console.log('产品数据:', data)
     
-    // 服务器直接返回产品数组，不需要包装
     if (Array.isArray(data)) {
       const processedProducts = data.map((product, index) => ({
-        // 优先使用folderName，如果没有则回退到name，确保数据一致性
         name: product.folderName || product.name,
         fileCount: product.fileCount || 0,
         totalSize: product.totalSize || 0,
         id: product.id || index + 1,
         category: product.category || 'general',
-        // 描述也优先使用folderName
         description: product.description || `Product folder: ${product.folderName || product.name}`,
         path: product.path || `Product/${product.folderName || product.name}`
       }))
       
       products.value = processedProducts.filter(product => product.name && product.name.trim() !== '')
-      
-      // 添加调试信息：显示处理后的产品名称
-      console.log('📋 处理后的产品列表名称:', products.value.map(p => ({
-        name: p.name,
-        folderName: p.folderName || 'undefined',
-        model: p.model
-      })))
-      
-      console.log(`✅ 成功加载 ${products.value.length} 个产品`)
+      console.log(`成功加载 ${products.value.length} 个产品`)
     } else {
-      console.error('❌ 产品数据格式错误')
       throw new Error('产品数据格式错误')
     }
     
   } catch (err) {
-    console.error('❌ 获取产品列表失败:', err)
+    console.error('获取产品列表失败:', err)
     error.value = err.message
     products.value = []
   } finally {
@@ -559,7 +457,6 @@ const fetchProducts = async () => {
 
 const refreshProducts = async () => {
   try {
-    console.log('🔄 手动刷新产品列表...')
     await fetchProducts()
   } catch (error) {
     console.error('手动刷新失败:', error)
@@ -637,8 +534,7 @@ const createFolder = async () => {
     const data = await response.json()
     
     if (response.ok && data.success) {
-      console.log(`✅ 产品文件夹创建成功: ${newFolderName.value}`)
-      message.success(`${t('productManagement_productFolderCreated')}${newFolderName.value}${t('productManagement_productFolderCreated2')}`)
+      console.log(`产品文件夹创建成功: ${newFolderName.value}`)
       
       // 重新获取产品列表
       await fetchProducts()
@@ -649,7 +545,6 @@ const createFolder = async () => {
     }
   } catch (err) {
     console.error('创建文件夹错误:', err)
-    message.error(`${t('productManagement_createFailed')}${err.message}`)
   } finally {
     creatingFolder.value = false
   }
@@ -681,8 +576,7 @@ const confirmRenameFolder = async () => {
     const data = await response.json()
     
     if (response.ok && data.success) {
-      console.log(`✅ 产品重命名成功: ${folderToRename.value} -> ${renameFolderName.value}`)
-      message.success(`${t('productManagement_productRenamed')}`)
+      console.log(`产品重命名成功: ${folderToRename.value} -> ${renameFolderName.value}`)
       
       // 重新获取产品列表
       await fetchProducts()
@@ -692,7 +586,6 @@ const confirmRenameFolder = async () => {
     }
   } catch (err) {
     console.error('重命名文件夹错误:', err)
-    message.error(`${t('productManagement_renameFailed')}${err.message}`)
   } finally {
     renamingFolder.value = false
   }
@@ -705,7 +598,7 @@ const deleteFolder = (folderName) => {
 
 const confirmDeleteFolder = async () => {
   try {
-    console.log(`🗑️ 开始删除产品: ${folderToDelete.value}`)
+    console.log(`开始删除产品: ${folderToDelete.value}`)
 
     const response = await fetch(`${API_CONFIG.DELETE_PRODUCT}/${encodeURIComponent(folderToDelete.value)}`, {
       method: 'DELETE'
@@ -714,11 +607,8 @@ const confirmDeleteFolder = async () => {
     const data = await response.json()
 
     if (response.ok && data.success) {
-      console.log(`✅ 产品删除成功: ${folderToDelete.value}`)
-      console.log(`🗑️ 删除详情:`, data)
-
-      message.success(`${t('productManagement_productDeleted')}${folderToDelete.value}${t('productManagement_productDeleted2')}`)
-
+      console.log(`产品删除成功: ${folderToDelete.value}`)
+      
       // 先关闭确认对话框，再刷新产品列表
       cancelDelete()
       // 重新获取产品列表
@@ -726,12 +616,10 @@ const confirmDeleteFolder = async () => {
 
     } else {
       const errorMsg = data.message || data.error || `${t('productManagement_deleteFailedText')}${response.status})`
-      console.error(`❌ 删除失败:`, errorMsg)
-      message.error(`${t('productManagement_deleteFailedMsg')}${errorMsg}`)
+      console.error(`删除失败:`, errorMsg)
     }
   } catch (err) {
-    console.error('❌ 删除操作失败:', err)
-    message.error(`${t('productManagement_deleteFailedMsg')}${err.message}`)
+    console.error('删除操作失败:', err)
   }
 }
 
@@ -772,25 +660,110 @@ const closeUploadFolderModal = () => {
 
 const closeBatchUploadModal = () => {
   showBatchUploadModal.value = false
-  // 清空批量上传相关状态
-  selectedBatchFile.value = null
-  isBatchDragOver.value = false
+  selectedFiles.value = []
+  currentUploadIndex.value = 0
+  selectedZipFiles.value = []
+  uploadStatus.value = ''
+  uploadProgress.value = 0
 }
 
-const handleUploadComplete = async (result) => {
-  console.log('产品文件夹上传完成:', result)
+const selectZipFiles = () => {
+  zipFileInput.value?.click()
+}
+
+const handleZipFileSelection = (event) => {
+  const files = Array.from(event.target.files)
+  // 过滤只保留压缩包文件
+  const zipFiles = files.filter(file => {
+    const ext = file.name.toLowerCase().split('.').pop()
+    return ['zip', 'rar', '7z'].includes(ext)
+  })
+  selectedZipFiles.value = zipFiles
+}
+
+const removeZipFile = (index) => {
+  selectedZipFiles.value.splice(index, 1)
+}
+
+const startBatchZipUpload = async () => {
+  if (selectedZipFiles.value.length === 0) return
   
-  if (result.success) {
-    // 上传成功，关闭模态框并刷新产品列表
-    closeUploadFolderModal()
+  uploading.value = true
+  uploadStatus.value = t('productManagement_startingBatchUpload')
+  uploadProgress.value = 10
+  
+  try {
+    const zipFile = selectedZipFiles.value[0] // 只处理第一个文件
+    
+    uploadStatus.value = t('productManagement_processing') + ': ' + zipFile.name
+    uploadProgress.value = 30
+    
+    // 创建FormData
+    const formData = new FormData()
+    formData.append('zipFile', zipFile)
+    
+    uploadProgress.value = 50
+    
+    // 调用正确的批量替换API
+    const response = await fetch('/api/uploads/batch-replace-products', {
+      method: 'POST',
+      body: formData
+    })
+    
+    uploadProgress.value = 70
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(`处理压缩包失败: ${zipFile.name} - ${errorData.message || response.status}`)
+    }
+    
+    const result = await response.json()
+    if (!result.success) {
+      throw new Error(`处理压缩包失败: ${zipFile.name} - ${result.message}`)
+    }
+    
+    console.log(`压缩包处理成功: ${zipFile.name}`, result)
+    uploadProgress.value = 90
+    
+    // 上传完成，重新获取产品列表
+    uploadStatus.value = t('productManagement_refreshingList')
     await fetchProducts()
     
-    // 显示成功消息
-    message.success(`${t('productManagement_productFolderUploaded')}${result.result.actualName}${t('productManagement_productFolderUploaded2')}`)
-  } else {
-    // 上传失败，显示错误信息
-    message.error(`${t('productManagement_uploadFailed')}${result.error}`)
+    uploadProgress.value = 100
+    uploadStatus.value = t('productManagement_uploadComplete')
+    
+    setTimeout(() => {
+      closeBatchUploadModal()
+    }, 1000)
+    
+  } catch (err) {
+    console.error('批量压缩包上传错误:', err)
+    uploadStatus.value = t('productManagement_uploadFailed') + ': ' + err.message
+    uploadProgress.value = 0
+    
+    // 刷新产品列表以显示当前状态
+    await fetchProducts()
+  } finally {
+    uploading.value = false
+    setTimeout(() => {
+      uploadProgress.value = 0
+    }, 2000)
   }
+}
+
+const handleUploadStart = (uploadData) => {
+  uploading.value = true
+  console.log('上传开始:', uploadData)
+}
+
+const handleUploadComplete = (result) => {
+  uploading.value = false
+  if (result.success) {
+    // 上传成功，重新获取产品列表
+    fetchProducts()
+    closeUploadFolderModal()
+  }
+  console.log('上传完成:', result)
 }
 
 const cancelDelete = () => {
@@ -800,158 +773,6 @@ const cancelDelete = () => {
 
 const goBack = () => {
   router.back()
-}
-
-// 批量上传相关方法
-const triggerBatchFileInput = () => {
-  batchFileInput.value?.click()
-}
-
-const handleBatchFileSelect = (event) => {
-  const files = Array.from(event.target.files)
-  if (files.length > 0) {
-    addBatchFile(files[0])
-  }
-  // 清空input值，允许重复选择相同文件
-  event.target.value = ''
-}
-
-const handleBatchDrop = (event) => {
-  event.preventDefault()
-  isBatchDragOver.value = false
-  
-  const files = Array.from(event.dataTransfer.files)
-  if (files.length > 0) {
-    addBatchFile(files[0])
-  }
-}
-
-const handleBatchDragOver = (event) => {
-  event.preventDefault()
-  isBatchDragOver.value = true
-}
-
-const handleBatchDragLeave = (event) => {
-  event.preventDefault()
-  isBatchDragOver.value = false
-}
-
-const addBatchFile = (file) => {
-  // 验证文件类型
-  if (!file.name.toLowerCase().endsWith('.zip')) {
-    message.error(t('productManagement_zipOnly'))
-    return
-  }
-
-  // 验证文件大小（500MB）
-  const maxSize = 500 * 1024 * 1024
-  if (file.size > maxSize) {
-    message.error(t('productManagement_fileSizeExceeded500'))
-    return
-  }
-
-  selectedBatchFile.value = file
-  console.log(`${t('productManagement_selectingBatchFile')}:`, file.name)
-}
-
-const startBatchUpload = async () => {
-  if (!selectedBatchFile.value || batchUploading.value) return
-  
-  batchUploading.value = true
-  batchUploadProgress.value = 0
-  batchUploadStatus.value = '准备上传...'
-  batchUploadResult.value = null
-  
-  try {
-    console.log('🚀 开始批量上传:', selectedBatchFile.value.name)
-    
-    // 创建FormData
-    const formData = new FormData()
-    formData.append('zipFile', selectedBatchFile.value)
-    
-    batchUploadStatus.value = '正在上传文件...'
-    batchUploadProgress.value = 10
-    
-    // 使用XMLHttpRequest来监听上传进度
-    const xhr = new XMLHttpRequest()
-    
-    // 监听上传进度
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable) {
-        const progress = Math.round((event.loaded / event.total) * 30) // 上传阶段占30%
-        batchUploadProgress.value = Math.max(batchUploadProgress.value, progress)
-      }
-    })
-    
-    // 监听响应
-    xhr.addEventListener('load', async () => {
-      if (xhr.status === 200) {
-        try {
-          batchUploadStatus.value = '正在处理文件...'
-          batchUploadProgress.value = 40
-          
-          const response = JSON.parse(xhr.responseText)
-          
-          if (response.success) {
-            batchUploadStatus.value = '更新产品列表...'
-            batchUploadProgress.value = 80
-            
-            // 刷新产品列表
-            await fetchProducts()
-            
-            batchUploadStatus.value = '完成'
-            batchUploadProgress.value = 100
-            
-            batchUploadResult.value = {
-              success: true,
-              message: response.message,
-              fileCount: response.fileCount,
-              folderCount: response.folderCount,
-              backupPath: response.backupPath
-            }
-            
-            // 关闭模态框并显示成功消息
-            message.success('批量替换成功！')
-            setTimeout(() => {
-              closeBatchUploadModal()
-            }, 3000)
-            
-          } else {
-            throw new Error(response.message || '批量替换失败')
-          }
-        } catch (parseError) {
-          throw new Error('解析响应失败: ' + parseError.message)
-        }
-      } else {
-        // 尝试解析错误响应
-        try {
-          const errorResponse = JSON.parse(xhr.responseText)
-          throw new Error(errorResponse.message || `服务器错误: ${xhr.status}`)
-        } catch (parseError) {
-          throw new Error(`服务器错误: ${xhr.status} - ${xhr.statusText}`)
-        }
-      }
-    })
-    
-    // 处理错误
-    xhr.addEventListener('error', () => {
-      throw new Error('网络错误，请检查网络连接')
-    })
-    
-    // 发送请求
-    xhr.open('POST', API_CONFIG.BATCH_REPLACE)
-    xhr.send(formData)
-    
-  } catch (error) {
-    console.error('批量上传失败:', error)
-    batchUploadResult.value = {
-      success: false,
-      message: error.message
-    }
-    message.error(`批量替换失败: ${error.message}`)
-  } finally {
-    batchUploading.value = false
-  }
 }
 
 // 生命周期
@@ -986,6 +807,13 @@ const handleLoginSuccess = () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+.page-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .page-title {
   font-size: 28px;
   font-weight: 600;
@@ -1005,90 +833,61 @@ const handleLoginSuccess = () => {
   border-radius: 2px;
 }
 
-/* 操作按钮 */
-.back-button {
+.action-buttons {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f0f2f5;
-  color: #4a4a4a;
-  border: 1px solid #d9d9d9;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.back-button:hover {
-  background: #e6f7ff;
-  border-color: #1890ff;
-  color: #1890ff;
-  transform: translateY(-1px);
-}
-
-.refresh-button {
+.search-section {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
-  background: #52c41a;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.2);
 }
 
-.refresh-button:hover {
-  background: #73d13d;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+.search-input-container {
+  position: relative;
 }
 
-.create-folder-button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, #1890ff, #36cfc9);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+.search-input {
+  width: 300px;
+  padding-right: 40px;
 }
 
-.create-folder-button:hover {
-  background: linear-gradient(135deg, #40a9ff, #5cdbd3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+.search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
 }
 
-/* 文件夹计数 */
 .folder-count {
   color: #8c8c8c;
   font-size: 14px;
   font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
-.folder-count::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: #52c41a;
-  border-radius: 50%;
+/* 表单样式 */
+.form-content {
+  margin: 16px 0;
+}
+
+.form-item {
+  margin-bottom: 16px;
+}
+
+.form-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #262626;
+}
+
+.error-text {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
 }
 
 /* 文件夹网格 */
@@ -1120,9 +919,10 @@ const handleLoginSuccess = () => {
 }
 
 .folder-icon {
-  font-size: 32px;
-  color: #1890ff;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .folder-info {
@@ -1185,7 +985,7 @@ const handleLoginSuccess = () => {
   background: #f0f2f5;
 }
 
-/* 加载状态 */
+/* 状态样式 */
 .loading-spin {
   display: flex;
   justify-content: center;
@@ -1193,98 +993,45 @@ const handleLoginSuccess = () => {
   min-height: 300px;
 }
 
-/* 空状态 */
+.spinner {
+  font-size: 16px;
+  color: #1890ff;
+}
+
+.error-state {
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.error-content h3 {
+  margin-bottom: 8px;
+  color: #262626;
+}
+
+.error-content p {
+  margin-bottom: 16px;
+  color: #8c8c8c;
+}
+
 .empty-state {
   padding: 80px 20px;
   text-align: center;
 }
 
-/* 批量上传样式 */
-.batch-upload-content {
-  width: 100%;
-}
-
-.batch-upload-area {
-  margin-bottom: 20px;
-}
-
-.upload-zone {
-  border: 2px dashed #d9d9d9;
-  border-radius: 8px;
-  padding: 40px 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: #fafafa;
-}
-
-.upload-zone:hover {
-  border-color: #ff4d4f;
-  background: #fff2f0;
-}
-
-.upload-zone--dragover {
-  border-color: #ff4d4f;
-  background: #fff2f0;
-}
-
-.upload-zone-content {
+.empty-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
 }
 
-.upload-zone-icon {
-  font-size: 48px;
-  color: #ff4d4f;
+.empty-icon {
+  margin-bottom: 16px;
 }
 
-.upload-zone-text {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.upload-zone-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.upload-zone-subtitle {
-  font-size: 14px;
+.empty-content p {
   color: #8c8c8c;
-}
-
-.batch-file-input {
-  display: none;
-}
-
-/* 批量上传提示 */
-.batch-upload-hint {
-  margin-top: 20px;
-  padding: 16px;
-  background: #fff2f0;
-  border: 1px solid #ffccc7;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #595959;
-}
-
-.batch-upload-hint p {
-  margin: 0 0 8px 0;
-  font-weight: 500;
-}
-
-.batch-upload-hint ul {
   margin: 0;
-  padding-left: 20px;
-}
-
-.batch-upload-hint li {
-  margin-bottom: 4px;
-  line-height: 1.4;
 }
 
 /* 响应式设计 */
@@ -1297,8 +1044,25 @@ const handleLoginSuccess = () => {
     padding: 20px;
   }
   
-  .page-title {
-    font-size: 24px;
+  .page-title-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .action-buttons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .search-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .search-input {
+    width: 100%;
   }
   
   .folder-grid {
@@ -1315,9 +1079,202 @@ const handleLoginSuccess = () => {
     font-size: 20px;
   }
   
-  .back-button, .create-folder-button {
-    padding: 6px 12px;
-    font-size: 13px;
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
   }
+  
+  .action-buttons .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.batch-upload-button {
+  background: linear-gradient(135deg, #1890ff, #36cfc9);
+  color: white;
+  border: none;
+}
+
+.batch-upload-button:hover {
+  background: linear-gradient(135deg, #40a9ff, #36cfc9);
+  opacity: 0.9;
+}
+
+/* 批量上传样式 */
+.batch-upload-content {
+  margin: 16px 0;
+}
+
+.upload-section {
+  padding: 20px;
+}
+
+.upload-info {
+  margin-bottom: 16px;
+}
+
+.upload-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #262626;
+  display: flex;
+  align-items: center;
+}
+
+.upload-description {
+  color: #8c8c8c;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.warning-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  color: #d46b08;
+  font-size: 13px;
+}
+
+.file-selector {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.select-files-button {
+  background: linear-gradient(135deg, #722ed1, #9254de);
+  border: none;
+  color: white;
+  font-size: 14px;
+  padding: 12px 24px;
+}
+
+.select-files-button:hover {
+  background: linear-gradient(135deg, #9254de, #722ed1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(114, 46, 209, 0.3);
+}
+
+.file-hint {
+  display: block;
+  margin-top: 8px;
+  color: #8c8c8c;
+  font-size: 12px;
+}
+
+.selected-files {
+  margin-top: 20px;
+}
+
+.selected-files h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.files-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, #fafafa, #f5f5f5);
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #262626;
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  background: linear-gradient(135deg, #f0f9ff, #e6f7ff);
+  border-color: #91d5ff;
+}
+
+.file-item:last-child {
+  margin-bottom: 0;
+}
+
+.file-name {
+  flex: 1;
+  font-weight: 500;
+  color: #262626;
+}
+
+.file-size {
+  color: #8c8c8c;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.remove-file-btn {
+  color: #8c8c8c;
+  padding: 4px;
+}
+
+.remove-file-btn:hover {
+  color: #ff4d4f;
+  background: #fff2f0;
+}
+
+.upload-progress {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.upload-status {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #389e0d;
+  font-style: italic;
+}
+
+.upload-button {
+  background: linear-gradient(135deg, #722ed1, #9254de) !important;
+  border: none !important;
+  color: white !important;
+}
+
+.upload-button:hover {
+  background: linear-gradient(135deg, #9254de, #722ed1) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(114, 46, 209, 0.3) !important;
+}
+
+.upload-button:disabled {
+  background: #d9d9d9 !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 </style>

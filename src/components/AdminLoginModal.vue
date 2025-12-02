@@ -1,76 +1,78 @@
 <template>
-  <a-modal
-    v-model:open="modalOpen"
-    :title="t('common_adminLogin')"
-    width="400px"
-    @cancel="handleCancel"
-    :footer="null"
-    :maskClosable="false"
-    :destroyOnClose="true"
-    class="admin-login-modal"
-  >
-    <a-form
-      ref="loginFormRef"
-      :model="loginForm"
-      :rules="loginRules"
-      layout="vertical"
-      @finish="handleLogin"
-    >
-      <div class="login-header">
-        <div class="login-icon">
-          <UserOutlined />
+<Modal
+  :open="modalOpen"
+  :title="modalTitle"
+  width="400px"
+  @close="handleCancel"
+  :show-footer="false"
+>
+  <div class="login-form-container">
+    <div class="login-header">
+      <div class="login-icon">
+        <LucideIcon name="Lock" size="48" />
+      </div>
+      <p class="login-description">{{ t('common_enterCredentials') }}</p>
+    </div>
+
+    <form @submit.prevent="handleLogin" class="login-form">
+      <div class="form-item">
+        <label class="form-label">{{ t('common_username') }}</label>
+        <div class="input-with-icon">
+          <Input
+            v-model="loginForm.username"
+            type="text"
+            :placeholder="t('common_enterUsername')"
+            size="large"
+            :disabled="loading"
+            @keypress.enter="handleLogin"
+            class="form-input"
+          />
+          <LucideIcon name="User" size="14" class="input-icon" />
         </div>
-        <p class="login-description">{{ t('common_enterCredentials') }}</p>
       </div>
 
-      <a-form-item
-        :label="t('common_username')"
-        name="username"
-      >
-        <a-input
-          v-model:value="loginForm.username"
-          :placeholder="t('common_enterUsername')"
-          size="large"
-          :prefix="h(UserOutlined)"
-          @pressEnter="handleLogin"
-        />
-      </a-form-item>
+      <div class="form-item">
+        <label class="form-label">{{ t('common_password') }}</label>
+        <div class="input-with-icon">
+          <PasswordInput
+            v-model="loginForm.password"
+            :placeholder="t('common_enterPassword')"
+            :disabled="loading"
+            size="large"
+            @pressEnter="handleLogin"
+            class="form-input"
+          />
+          <LucideIcon name="Lock" size="14" class="input-icon" />
+        </div>
+      </div>
 
-      <a-form-item
-        :label="t('common_password')"
-        name="password"
-      >
-        <a-input-password
-          v-model:value="loginForm.password"
-          :placeholder="t('common_enterPassword')"
-          size="large"
-          :prefix="h(LockOutlined)"
-          @pressEnter="handleLogin"
-        />
-      </a-form-item>
-
-      <a-form-item>
-        <a-button
-          type="primary"
-          html-type="submit"
+      <div class="form-actions">
+        <Button
+          type="submit"
+          variant="primary"
           size="large"
           :loading="loading"
           block
+          class="login-submit-btn"
         >
+          <LucideIcon :name="loading ? 'Loader' : 'Unlock'" size="16" class="icon" />
           {{ loading ? t('common_loggingIn') : t('common_login') }}
-        </a-button>
-      </a-form-item>
-    </a-form>
-
-  </a-modal>
+        </Button>
+      </div>
+    </form>
+  </div>
+</Modal>
 </template>
 
 <script setup>
-import { ref, h, watch, computed } from 'vue'
-import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
+import { ref, watch, computed } from 'vue'
 import { useAdminAuth } from '../composables/useAdminAuth'
 import { useI18n } from '../composables/useI18n.js'
+import Modal from './ui/modal.vue'
+import Input from './ui/input.vue'
+import PasswordInput from './ui/password-input.vue'
+import Button from './ui/button.vue'
+import LucideIcon from './ui/LucideIcon.vue'
 
 const { t } = useI18n()
 
@@ -92,31 +94,34 @@ const loginForm = ref({
   password: ''
 })
 
-const loginFormRef = ref()
 const loading = ref(false)
 
 // 响应式数据
 const modalOpen = ref(props.open)
 
+const modalTitle = computed(() => t('common_adminLogin'))
+
 // 监听props变化并更新本地状态
 watch(() => props.open, (newVal) => {
   modalOpen.value = newVal
+  if (!newVal) {
+    resetForm()
+  }
 })
-
-// 表单验证规则
-const loginRules = {
-  username: [
-    { required: true, message: t('common_enterUsername'), trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: t('common_enterPassword'), trigger: 'blur' }
-  ]
-}
 
 // 处理登录
 const handleLogin = async () => {
   try {
-    await loginFormRef.value.validateFields()
+    // 简单验证
+    if (!loginForm.value.username.trim()) {
+      alert(t('common_enterUsername'))
+      return
+    }
+    
+    if (!loginForm.value.password.trim()) {
+      alert(t('common_enterPassword'))
+      return
+    }
     
     loading.value = true
     const result = await login(loginForm.value.username, loginForm.value.password)
@@ -127,9 +132,12 @@ const handleLogin = async () => {
       resetForm()
     } else {
       emit('login-failed', result.error)
+      alert(result.error || t('common_loginFailed'))
     }
   } catch (error) {
     console.error(`${t('common_loginFailed')}:`, error)
+    emit('login-failed', error.message)
+    alert(t('common_loginFailed'))
   } finally {
     loading.value = false
   }
@@ -147,38 +155,15 @@ const resetForm = () => {
     username: '',
     password: ''
   }
-  loginFormRef.value?.clearValidate()
 }
-
-// 监听模态框关闭，重置表单
-watch(modalOpen, (newVal) => {
-  if (!newVal) {
-    resetForm()
-  }
-})
 </script>
 
 <style scoped>
-.admin-login-modal :deep(.ant-modal-header) {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 20px 24px;
+.admin-login-modal {
+  /* 自定义模态框样式 */
 }
 
-.admin-login-modal :deep(.ant-modal-title) {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a1a;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.admin-login-modal :deep(.ant-modal-title)::before {
-  content: '🔐';
-  font-size: 20px;
-}
-
-.admin-login-modal :deep(.ant-modal-body) {
+.login-form-container {
   padding: 24px;
 }
 
@@ -188,7 +173,6 @@ watch(modalOpen, (newVal) => {
 }
 
 .login-icon {
-  font-size: 48px;
   color: #1890ff;
   margin-bottom: 16px;
   display: flex;
@@ -201,82 +185,119 @@ watch(modalOpen, (newVal) => {
   margin: 0;
 }
 
-.admin-login-modal :deep(.ant-form-item) {
-  margin-bottom: 20px;
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.admin-login-modal :deep(.ant-form-item-label > label) {
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 14px;
   font-weight: 500;
   color: #262626;
+  line-height: 1.5;
 }
 
-.admin-login-modal :deep(.ant-input) {
-  border-radius: 6px;
-  border: 1px solid #d9d9d9;
-  transition: all 0.3s ease;
+.form-input {
+  /* 覆盖默认样式 */
 }
 
-.admin-login-modal :deep(.ant-input:focus) {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+.input-with-icon {
+  position: relative;
+  width: 100%;
 }
 
-.admin-login-modal :deep(.ant-input-affix-wrapper) {
-  border-radius: 6px;
-  border: 1px solid #d9d9d9;
-  transition: all 0.3s ease;
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8c8c8c;
+  z-index: 2;
+  pointer-events: none;
 }
 
-.admin-login-modal :deep(.ant-input-affix-wrapper:focus) {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+.input-with-icon .form-input {
+  width: 100%;
+  padding-left: 36px !important;
 }
 
-.admin-login-modal :deep(.ant-btn-primary) {
+.input-icon {
+  color: #8c8c8c;
+}
+
+.form-actions {
+  margin-top: 8px;
+}
+
+.login-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
   background: linear-gradient(135deg, #1890ff, #36cfc9);
   border: none;
+  color: white;
   border-radius: 6px;
-  font-weight: 500;
-  height: 40px;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+  cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+  width: 100%;
+  height: 40px;
 }
 
-.admin-login-modal :deep(.ant-btn-primary:hover) {
+.login-submit-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #40a9ff, #5cdbd3);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
 }
 
-.admin-login-modal :deep(.ant-btn-primary:active) {
+.login-submit-btn:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.admin-login-modal :deep(.ant-btn-primary[disabled]) {
+.login-submit-btn:disabled {
   background: #f0f0f0;
   color: #bfbfbf;
   border: none;
   box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.login-submit-btn .icon {
+  font-size: 16px;
 }
 
 /* 响应式设计 */
 @media (max-width: 480px) {
-  .admin-login-modal :deep(.ant-modal) {
-    top: 20px;
-    max-width: 100%;
-    margin: 0 16px;
-  }
-  
-  .admin-login-modal :deep(.ant-modal-header) {
-    padding: 16px 20px;
-  }
-  
-  .admin-login-modal :deep(.ant-modal-body) {
+  .login-form-container {
     padding: 20px;
   }
   
-  .login-icon {
-    font-size: 40px;
+  .login-submit-btn {
+    font-size: 13px;
+    height: 38px;
+  }
+  
+  .login-submit-btn .icon {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-login-modal .modal-content {
+    max-width: 100%;
+    margin: 0 16px;
   }
 }
 </style>

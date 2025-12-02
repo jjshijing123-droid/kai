@@ -1,15 +1,15 @@
 <template>
-  <a-layout class="app">
-    <a-layout-header v-if="!is3DViewerPage" class="layout-header">
+  <div class="app">
+    <header v-if="!is3DViewerPage" class="layout-header">
       <Header />
-    </a-layout-header>
+    </header>
     
-    <a-layout-content :class="['main-content', { 'full-screen': is3DViewerPage }]">
+    <main :class="['main-content', { 'full-screen': is3DViewerPage }]">
       <div class="container">
         <router-view />
       </div>
-    </a-layout-content>
-  </a-layout>
+    </main>
+  </div>
 </template>
 
 <script setup>

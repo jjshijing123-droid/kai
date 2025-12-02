@@ -1,6 +1,49 @@
 import { ref, computed } from 'vue'
-import { message } from 'ant-design-vue'
-import i18n from '../i18n/index.js'
+
+// 简单的消息提示实现（替代Ant Design Vue message）
+const showMessage = (type, text) => {
+  const messageDiv = document.createElement('div')
+  messageDiv.className = `message-${type}`
+  messageDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    z-index: 9999;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 300px;
+    word-wrap: break-word;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+  `
+  
+  if (type === 'warning') {
+    messageDiv.style.backgroundColor = '#f59e0b'
+  } else if (type === 'error') {
+    messageDiv.style.backgroundColor = '#ef4444'
+  } else if (type === 'success') {
+    messageDiv.style.backgroundColor = '#22c55e'
+  } else {
+    messageDiv.style.backgroundColor = '#0ea5e9'
+  }
+  
+  messageDiv.textContent = text
+  document.body.appendChild(messageDiv)
+  
+  // 3秒后自动移除
+  setTimeout(() => {
+    messageDiv.style.opacity = '0'
+    messageDiv.style.transform = 'translateX(100%)'
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        document.body.removeChild(messageDiv)
+      }
+    }, 300)
+  }, 3000)
+}
 
 // 管理员账号配置
 const ADMIN_CREDENTIALS = {
@@ -34,16 +77,16 @@ const login = async (username, password) => {
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       isAdminLoggedIn.value = true
       localStorage.setItem(ADMIN_SESSION_KEY, 'true')
-      message.success(i18n.t('common_adminLoginSuccess'))
+      showMessage('success', '管理员登录成功！')
       return { success: true }
     } else {
-      message.error(i18n.t('common_invalidCredentials'))
-      return { success: false, error: i18n.t('common_invalidCredentials') }
+      showMessage('error', '用户名或密码错误')
+      return { success: false, error: '用户名或密码错误' }
     }
   } catch (error) {
     console.error('登录错误:', error)
-    message.error(i18n.t('common_loginRetry'))
-    return { success: false, error: i18n.t('common_loginRetry') }
+    showMessage('error', '登录失败，请重试')
+    return { success: false, error: '登录失败，请重试' }
   }
 }
 
@@ -51,7 +94,7 @@ const login = async (username, password) => {
 const logout = () => {
   isAdminLoggedIn.value = false
   localStorage.removeItem(ADMIN_SESSION_KEY)
-  message.success(i18n.t('common_logoutSuccess'))
+  showMessage('success', '已成功登出')
 }
 
 // 检查是否有权限访问特定功能

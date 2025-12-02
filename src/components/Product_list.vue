@@ -14,14 +14,14 @@
 
     <!-- 错误状态 -->
     <div v-else-if="error" class="error-container">
-      <div class="error-icon">⚠️</div>
+      <LucideIcon name="AlertTriangle" size="48" class="error-icon" />
       <p>{{ error }}</p>
       <button @click="loadProducts" class="retry-button">{{ t('productList_retry') }}</button>
     </div>
 
     <!-- 空状态 -->
     <div v-else-if="products.length === 0" class="empty-container">
-      <div class="empty-icon">📦</div>
+      <LucideIcon name="Package" size="64" class="empty-icon" />
       <p>{{ t('productList_noProducts') }}</p>
     </div>
 
@@ -56,6 +56,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
+import LucideIcon from './ui/LucideIcon.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -590,8 +591,8 @@ onMounted(() => {
 }
 
 .error-icon {
-  font-size: 48px;
   margin-bottom: 16px;
+  color: #ff4d4f;
 }
 
 .error-container p {
@@ -628,8 +629,8 @@ onMounted(() => {
 }
 
 .empty-icon {
-  font-size: 64px;
   margin-bottom: 20px;
+  color: #8c8c8c;
   opacity: 0.6;
 }
 
@@ -779,7 +780,7 @@ onMounted(() => {
 
 /* ===== 图片错误状态样式 ===== */
 .product-image-container.image-error::before {
-  content: '❌ 图片加载失败';
+  content: '图片加载失败';
   position: absolute;
   top: 50%;
   left: 50%;

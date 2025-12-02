@@ -1,6 +1,5 @@
-
 <template>
-  <a-layout class="i18n-manager">
+  <div class="i18n-manager">
     <!-- 未登录提示 - 使用统一组件 -->
     <AdminAccessDenied
       v-if="!isAdminLoggedIn"
@@ -15,218 +14,230 @@
       <!-- 页面头部 -->
       <div class="page-header">
         <div class="header-content">
-          <h2>{{ t('i18nManager_title') }}</h2>
+          <h2 class="page-title">
+            <LucideIcon name="Globe" size="28" />
+            {{ t('i18nManager_title') }}
+          </h2>
           <div class="header-actions">
-            <a-button type="primary" @click="saveAllTranslations" :loading="saving">
-              <template #icon>
-                <SaveOutlined />
-              </template>
+            <Button @click="saveAllTranslations" :loading="saving" variant="primary">
+              <LucideIcon name="Save" size="16" />
               {{ t('i18nManager_saveAll') }}
-            </a-button>
-            <a-button @click="exportTranslations">
-              <template #icon>
-                <ExportOutlined />
-              </template>
+            </Button>
+            <Button @click="exportTranslations" variant="secondary">
+              <LucideIcon name="Upload" size="16" />
               {{ t('i18nManager_export') }}
-            </a-button>
+            </Button>
           </div>
         </div>
       </div>
 
-    <a-layout-content class="manager-content">
       <!-- 翻译完整性概览 -->
-      <a-card :title="t('i18nManager_completeness')" class="completeness-section">
-        <a-row :gutter="[16, 16]">
-          <a-col v-for="lang in availableLanguages" :key="lang.code" :xs="24" :sm="12" :md="8" :lg="6">
-            <a-card
-              :class="{ 'current-language': lang.code === currentLanguage }"
-              size="small"
-            >
-              <template #title>
-                <div class="lang-header">
-                  <span class="flag">{{ lang.flag }}</span>
-                  <span class="lang-name">{{ lang.name }}</span>
-                  <a-tag v-if="lang.code === currentLanguage" color="blue">{{ currentLanguage === 'zh-CN' ? '当前' : 'Current' }}</a-tag>
-                </div>
-              </template>
-              
-              <div class="progress-section">
-                <a-progress
-                  :percent="translationCompleteness[lang.code]?.percentage || 0"
-                  :stroke-color="getProgressColor(translationCompleteness[lang.code]?.percentage || 0)"
-                  size="small"
-                />
-                <div class="stats">
-                  {{ translationCompleteness[lang.code]?.translated || 0 }}/{{ translationCompleteness[lang.code]?.total || 0 }}
-                </div>
+      <Card :title="t('i18nManager_completeness')" class="completeness-section">
+        <div class="lang-grid">
+          <Card
+            v-for="lang in availableLanguages"
+            :key="lang.code"
+            :class="{ 'current-language': lang.code === currentLanguage }"
+            size="small"
+            class="lang-card"
+          >
+            <template #header>
+              <div class="lang-header">
+                <span class="flag">{{ lang.flag }}</span>
+                <span class="lang-name">{{ lang.name }}</span>
+                <Badge 
+                  v-if="lang.code === currentLanguage" 
+                  color="#1890ff"
+                >
+                  {{ currentLanguage === 'zh-CN' ? '当前' : 'Current' }}
+                </Badge>
               </div>
-              
-              <div class="quality-info" v-if="translationCompleteness[lang.code]?.quality">
-                <a-tag color="green">{{ currentLanguage === 'zh-CN' ? '质量' : 'Quality' }}: {{ translationCompleteness[lang.code]?.quality }}%</a-tag>
+            </template>
+            
+            <div class="progress-section">
+              <Progress
+                :percent="translationCompleteness[lang.code]?.percentage || 0"
+                :stroke-color="getProgressColor(translationCompleteness[lang.code]?.percentage || 0)"
+                size="small"
+              />
+              <div class="stats">
+                {{ translationCompleteness[lang.code]?.translated || 0 }}/{{ translationCompleteness[lang.code]?.total || 0 }}
               </div>
-              
-              <div class="review-info" v-if="translationCompleteness[lang.code]?.needsReview?.length">
-                <a-tag color="red">{{ currentLanguage === 'zh-CN' ? '需要审核' : 'Needs Review' }}: {{ translationCompleteness[lang.code]?.needsReview?.length }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }}</a-tag>
-              </div>
-            </a-card>
-          </a-col>
-        </a-row>
-      </a-card>
+            </div>
+            
+            <div class="quality-info" v-if="translationCompleteness[lang.code]?.quality">
+              <Badge color="green">
+                {{ currentLanguage === 'zh-CN' ? '质量' : 'Quality' }}: {{ translationCompleteness[lang.code]?.quality }}%
+              </Badge>
+            </div>
+            
+            <div class="review-info" v-if="translationCompleteness[lang.code]?.needsReview?.length">
+              <Badge color="red">
+                {{ currentLanguage === 'zh-CN' ? '需要审核' : 'Needs Review' }}: {{ translationCompleteness[lang.code]?.needsReview?.length }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }}
+              </Badge>
+            </div>
+          </Card>
+        </div>
+      </Card>
 
       <!-- 需要审核的翻译 -->
-      <a-card
+      <Card
         v-if="hasTranslationsNeedingReview"
         :title="currentLanguage === 'zh-CN' ? '需要审核的翻译' : 'Translations Needing Review'"
         class="review-section"
-        :head-style="{ borderBottom: '2px solid #ff4d4f' }"
       >
-        <a-row :gutter="[16, 16]">
-          <a-col v-for="lang in availableLanguages" :key="lang.code" :xs="24" :sm="12" :lg="8">
-            <a-card
-              v-if="translationCompleteness[lang.code]?.needsReview?.length"
-              size="small"
-              :bordered="false"
-              class="review-card"
-            >
-              <template #title>
-                <div class="review-header">
-                  <span class="flag">{{ lang.flag }}</span>
-                  <span class="lang-name">{{ lang.name }}</span>
-                  <a-badge :count="translationCompleteness[lang.code]?.needsReview?.length" :number-style="{ backgroundColor: '#ff4d4f' }" />
+        <div class="review-grid">
+          <Card
+            v-for="lang in availableLanguages"
+            :key="lang.code"
+            v-if="translationCompleteness[lang.code]?.needsReview?.length"
+            size="small"
+            :bordered="false"
+            class="review-card"
+          >
+            <template #header>
+              <div class="review-header">
+                <span class="flag">{{ lang.flag }}</span>
+                <span class="lang-name">{{ lang.name }}</span>
+                <Badge 
+                  :count="translationCompleteness[lang.code]?.needsReview?.length"
+                  :number-style="{ backgroundColor: '#ff4d4f' }"
+                />
+              </div>
+            </template>
+            
+            <div class="review-list">
+              <div
+                v-for="item in translationCompleteness[lang.code]?.needsReview?.slice(0, 3)"
+                :key="item.key"
+                class="review-item"
+              >
+                <div class="review-content">
+                  <div class="review-key">
+                    <code>{{ item.key }}</code>
+                  </div>
+                  <div class="review-value">{{ item.value }}</div>
+                  <div class="review-reason">
+                    <Badge color="red" size="small">{{ item.reason }}</Badge>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-if="translationCompleteness[lang.code]?.needsReview?.length > 3" class="review-more">
+                <span class="secondary-text">
+                  {{ currentLanguage === 'zh-CN' ? '还有' : 'More' }} {{ translationCompleteness[lang.code]?.needsReview?.length - 3 }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }} {{ currentLanguage === 'zh-CN' ? '需要审核...' : 'need review...' }}
+                </span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </Card>
+
+      <!-- 翻译表格 -->
+      <Card :title="t('i18nManager_allTranslations')" class="translations-section">
+        <template #header>
+          <div class="card-header">
+            <div class="card-title">{{ t('i18nManager_allTranslations') }}</div>
+            <div class="card-extra">
+              <Input
+                v-model:value="searchTerm"
+                :placeholder="t('i18nManager_search')"
+                style="width: 250px"
+                size="small"
+              />
+            </div>
+          </div>
+        </template>
+
+        <div class="translations-table-container">
+          <Table
+            :data-source="filteredKeys.map(key => ({ key }))"
+            :columns="tableColumns"
+            :pagination="false"
+            size="small"
+            class="translations-table"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.dataIndex === 'key'">
+                <code class="translation-key">{{ record.key }}</code>
+              </template>
+              
+              <template v-else-if="column.dataIndex === 'actions'">
+                <div class="action-buttons">
+                  <Button
+                    variant="text"
+                    size="small"
+                    @click="handleDeleteTranslation(record.key)"
+                    class="danger"
+                  >
+                    <LucideIcon name="Trash2" size="16" />
+                    {{ t('i18nManager_delete') }}
+                  </Button>
                 </div>
               </template>
               
-              <a-list
-                :data-source="translationCompleteness[lang.code]?.needsReview?.slice(0, 3)"
-                size="small"
-                :locale="{ emptyText: currentLanguage === 'zh-CN' ? '暂无需要审核的翻译' : 'No translations need review' }"
-              >
-                <template #renderItem="{ item }">
-                  <a-list-item class="review-item">
-                    <div class="review-content">
-                      <div class="review-key">
-                        <a-typography-text code>{{ item.key }}</a-typography-text>
-                      </div>
-                      <div class="review-value">{{ item.value }}</div>
-                      <div class="review-reason">
-                        <a-tag color="red" size="small">{{ item.reason }}</a-tag>
-                      </div>
-                    </div>
-                  </a-list-item>
-                </template>
-              </a-list>
-              
-              <div v-if="translationCompleteness[lang.code]?.needsReview?.length > 3" class="review-more">
-                <a-typography-text type="secondary">
-                  {{ currentLanguage === 'zh-CN' ? '还有' : 'More' }} {{ translationCompleteness[lang.code]?.needsReview?.length - 3 }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }} {{ currentLanguage === 'zh-CN' ? '需要审核...' : 'need review...' }}
-                </a-typography-text>
-              </div>
-            </a-card>
-          </a-col>
-        </a-row>
-      </a-card>
-
-      <!-- 翻译表格 -->
-      <a-card :title="t('i18nManager_allTranslations')" class="translations-section">
-        <template #extra>
-          <a-input
-            v-model:value="searchTerm"
-            :placeholder="t('i18nManager_search')"
-            style="width: 250px"
-          />
-        </template>
-        
-        <a-table
-          :dataSource="filteredKeys.map(key => ({ key }))"
-          :columns="tableColumns"
-          :pagination="false"
-          size="small"
-          class="translations-table"
-        >
-          <template #bodyCell="{ column, record, index }">
-            <template v-if="column.dataIndex === 'key'">
-              <a-typography-text code>{{ record.key }}</a-typography-text>
-            </template>
-            
-            <template v-else-if="column.dataIndex === 'actions'">
-              <a-space>
-                <a-button
-                  type="link"
-                  danger
+              <template v-else>
+                <Input
+                  :value="translations[column.dataIndex] && translations[column.dataIndex][record.key] ? translations[column.dataIndex][record.key] : ''"
+                  :placeholder="record.key"
+                  @input="updateTranslationValue(column.dataIndex, record.key, $event.target.value)"
+                  @blur="saveTranslation(column.dataIndex, record.key, $event.target.value)"
                   size="small"
-                  @click="handleDeleteTranslation(record.key)"
-                >
-                  <template #icon>
-                    <DeleteOutlined />
-                  </template>
-                  {{ t('i18nManager_delete') }}
-                </a-button>
-              </a-space>
+                />
+              </template>
             </template>
-            
-            <template v-else>
-              <a-input
-                :value="translations[column.dataIndex] && translations[column.dataIndex][record.key] ? translations[column.dataIndex][record.key] : ''"
-                :placeholder="record.key"
-                @input="updateTranslationValue(column.dataIndex, record.key, $event.target.value)"
-                @blur="saveTranslation(column.dataIndex, record.key, $event.target.value)"
-                size="small"
-              />
-            </template>
-          </template>
-        </a-table>
+          </Table>
+        </div>
         
         <!-- 添加新翻译 -->
-        <a-card :title="currentLanguage === 'zh-CN' ? '添加新翻译' : 'Add New Translation'" class="add-translation-section" size="small">
-          <a-form layout="vertical">
-            <a-row :gutter="16">
-              <a-col :span="24">
-                <a-form-item :label="currentLanguage === 'zh-CN' ? '翻译键' : 'Translation Key'">
-                  <a-input
-                    v-model:value="newKey"
-                    :placeholder="t('i18nManager_newKey')"
-                  />
-                </a-form-item>
-              </a-col>
-            </a-row>
-            <a-row :gutter="16">
-              <a-col
+        <Card 
+          :title="currentLanguage === 'zh-CN' ? '添加新翻译' : 'Add New Translation'" 
+          class="add-translation-section" 
+          size="small"
+        >
+          <div class="add-form">
+            <div class="form-row">
+              <div class="form-item full-width">
+                <label class="form-label">{{ currentLanguage === 'zh-CN' ? '翻译键' : 'Translation Key' }}</label>
+                <Input
+                  v-model:value="newKey"
+                  :placeholder="t('i18nManager_newKey')"
+                  size="small"
+                />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div
                 v-for="lang in availableLanguages"
                 :key="lang.code"
-                :xs="24"
-                :sm="12"
-                :md="8"
+                class="form-item"
               >
-                <a-form-item :label="`${lang.flag} ${lang.name}`">
-                  <a-input
-                    v-model:value="newTranslations[lang.code]"
-                    :placeholder="t('i18nManager_newTranslation')"
-                  />
-                </a-form-item>
-              </a-col>
-            </a-row>
-            <a-row>
-              <a-col :span="24">
-                <a-button
-                  type="primary"
-                  @click="addTranslation"
-                  :disabled="!newKey"
-                  block
-                >
-                  <template #icon>
-                    <PlusOutlined />
-                  </template>
-                  {{ t('i18nManager_add') }}
-                </a-button>
-              </a-col>
-            </a-row>
-          </a-form>
-        </a-card>
-      </a-card>
-    </a-layout-content>
+                <label class="form-label">{{ `${lang.flag} ${lang.name}` }}</label>
+                <Input
+                  v-model:value="newTranslations[lang.code]"
+                  :placeholder="t('i18nManager_newTranslation')"
+                  size="small"
+                />
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <Button
+                @click="addTranslation"
+                :disabled="!newKey"
+                variant="primary"
+                block
+              >
+                <LucideIcon name="Plus" size="16" />
+                {{ t('i18nManager_add') }}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </Card>
     </div>
-    
-  </a-layout>
+  </div>
 </template>
 
 <script setup>
@@ -235,12 +246,13 @@ import i18n from '../i18n/index.js'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
 import AdminAccessDenied from './AdminAccessDenied.vue'
-import {
-  SaveOutlined,
-  ExportOutlined,
-  DeleteOutlined,
-  PlusOutlined
-} from '@ant-design/icons-vue'
+import Button from './ui/button.vue'
+import Card from './ui/card.vue'
+import Input from './ui/input.vue'
+import Progress from './ui/progress.vue'
+import Badge from './ui/badge.vue'
+import Table from './ui/table.vue'
+import LucideIcon from './ui/LucideIcon.vue'
 
 // 使用实际的 i18n 数据
 const { currentLanguage, availableLanguages, translationCompleteness, t, getTranslationKeys, addTranslations, updateTranslation, deleteTranslation } = useI18n()
@@ -531,36 +543,31 @@ const handleLoginSuccess = () => {
 
 <style scoped>
 .i18n-manager {
-  padding: 0px;
+  padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
   background-color: white;
   /* 利用App.vue中已经计算好的高度空间，确保减去header后充分利用可用空间 */
   min-height: calc(100vh - 64px); /* 与App.vue的main-content保持一致 */
   box-sizing: border-box;
-  /* 修复：移除overflow-y: auto，让阴影正常显示 */
-  /* 内容滚动由App.vue的main-content处理即可 */
 }
 
 /* 页面头部 */
 .page-header {
   margin-bottom: 32px;
   padding: 24px;
-  margin-top: 24px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  /* 修复：移除诊断边框，恢复原始设计 */
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: auto;
 }
 
-.header-content h2 {
+.page-title {
   margin: 0;
   color: #1a1a1a;
   font-size: 28px;
@@ -570,7 +577,7 @@ const handleLoginSuccess = () => {
   gap: 12px;
 }
 
-.header-content h2::before {
+.page-title::before {
   content: '';
   display: inline-block;
   width: 4px;
@@ -584,66 +591,40 @@ const handleLoginSuccess = () => {
   gap: 12px;
 }
 
-/* 操作按钮 */
-.header-actions .ant-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.header-actions .ant-btn-primary {
-  background: linear-gradient(135deg, #1890ff, #36cfc9);
-  color: white;
-  border: none;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
-}
-
-.header-actions .ant-btn-primary:hover {
-  background: linear-gradient(135deg, #40a9ff, #5cdbd3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
-}
-
-.header-actions .ant-btn:not(.ant-btn-primary) {
-  background: #f0f2f5;
-  color: #4a4a4a;
-  border: 1px solid #d9d9d9;
-}
-
-.header-actions .ant-btn:not(.ant-btn-primary):hover {
-  background: #e6f7ff;
-  border-color: #1890ff;
-  color: #1890ff;
-  transform: translateY(-1px);
-}
-
-.manager-content {
-  padding: 0;
-  background: transparent;
-}
-
 /* 卡片样式 */
 .completeness-section,
 .review-section,
 .translations-section {
   margin-bottom: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  /* 修复：移除overflow: hidden，让阴影正常显示 */
-  /* 阴影不会被裁剪了 */
 }
 
-.completeness-section .ant-card,
-.review-section .ant-card,
-.translations-section .ant-card {
-  border-radius: 12px;
-  box-shadow: none;
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.card-extra {
+  margin-left: auto;
+}
+
+/* 语言网格 */
+.lang-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
 }
 
 /* 语言卡片 */
@@ -665,6 +646,7 @@ const handleLoginSuccess = () => {
 .lang-name {
   font-weight: 600;
   color: #1a1a1a;
+  flex: 1;
 }
 
 .progress-section {
@@ -685,7 +667,7 @@ const handleLoginSuccess = () => {
 }
 
 /* 审核卡片 */
-.review-section .ant-card {
+.review-card {
   border: 1px solid #ffccc7;
   background: #fff2f0;
 }
@@ -696,9 +678,15 @@ const handleLoginSuccess = () => {
   gap: 8px;
 }
 
+.review-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 .review-item {
   border-bottom: 1px solid #f0f0f0;
   transition: background-color 0.2s ease;
+  padding: 12px 0;
 }
 
 .review-item:hover {
@@ -715,6 +703,14 @@ const handleLoginSuccess = () => {
 
 .review-key {
   margin-bottom: 4px;
+}
+
+.translation-key {
+  background: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
 .review-value {
@@ -735,24 +731,20 @@ const handleLoginSuccess = () => {
   background: #fafafa;
 }
 
+.secondary-text {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
 /* 翻译表格 */
-.translations-table {
+.translations-table-container {
   margin-bottom: 24px;
+  overflow: auto;
 }
 
-.translations-table .ant-table {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.translations-table .ant-table-thead > tr > th {
-  background: #fafafa;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.translations-table .ant-table-tbody > tr:hover > td {
-  background: #f0f2f5;
+.action-buttons {
+  display: flex;
+  gap: 8px;
 }
 
 /* 添加翻译区域 */
@@ -760,7 +752,6 @@ const handleLoginSuccess = () => {
   margin-top: 24px;
   border: 1px dashed #d9d9d9;
   border-radius: 8px;
-  padding: 16px;
   background: #fafafa;
   transition: all 0.2s ease;
 }
@@ -770,38 +761,43 @@ const handleLoginSuccess = () => {
   background: #f0f2f5;
 }
 
-.add-translation-section .ant-btn {
+.add-form {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 6px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.3s ease;
+  color: #1a1a1a;
 }
 
-.add-translation-section .ant-btn-primary {
-  background: linear-gradient(135deg, #1890ff, #36cfc9);
-  border: none;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
-.add-translation-section .ant-btn-primary:hover {
-  background: linear-gradient(135deg, #40a9ff, #5cdbd3);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
-}
-
-/* 网格布局改进 */
-.completeness-section .ant-row,
-.review-section .ant-row {
-  margin: -8px;
-}
-
-.completeness-section .ant-col,
-.review-section .ant-col {
-  padding: 8px;
+/* 图标样式 */
+.icon {
+  display: inline-block;
+  font-size: 16px;
 }
 
 /* 响应式设计 */
@@ -816,7 +812,7 @@ const handleLoginSuccess = () => {
     padding: 20px;
   }
   
-  .header-content h2 {
+  .page-title {
     font-size: 24px;
   }
   
@@ -831,21 +827,30 @@ const handleLoginSuccess = () => {
     justify-content: flex-start;
     flex-wrap: wrap;
   }
+  
+  .lang-grid,
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .card-extra {
+    margin-left: 0;
+  }
 }
 
 @media (max-width: 576px) {
-  .header-content h2 {
+  .page-title {
     font-size: 20px;
   }
   
-  .header-actions .ant-btn {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-  
-  .completeness-section .ant-col,
-  .review-section .ant-col {
-    padding: 4px;
+  .form-row {
+    grid-template-columns: 1fr;
   }
 }
 </style>

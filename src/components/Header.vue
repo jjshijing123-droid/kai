@@ -7,35 +7,27 @@
     <!-- 统一响应式导航 -->
     <div class="header-controls">
       <!-- 桌面端显示的导航按钮 -->
-      <div class="nav-buttons">
-        <a-button type="text" @click="goToI18nManager" class="nav-button">
-          <template #icon>
-            <GlobalOutlined />
-          </template>
+      <div class="nav-buttons desktop-only">
+        <Button variant="text" @click="goToI18nManager" class="nav-button">
+          <LucideIcon name="Globe" size="16" />
           {{ t('header_i18nManager') }}
-        </a-button>
+        </Button>
         
-        <a-button type="text" @click="goToProductManager" class="nav-button">
-          <template #icon>
-            <AppstoreOutlined />
-          </template>
+        <Button variant="text" @click="goToProductManager" class="nav-button">
+          <LucideIcon name="Package" size="16" />
           {{ t('header_productManager') }}
-        </a-button>
+        </Button>
         
-        <a-button type="text" @click="toggleLanguage" class="lang-button">
-          <template #icon>
-            <TranslationOutlined />
-          </template>
+        <Button variant="text" @click="toggleLanguage" class="lang-button">
+          <LucideIcon name="RefreshCw" size="16" />
           {{ currentLanguage === 'zh-CN' ? t('common_english') : t('common_chinese') }}
-        </a-button>
+        </Button>
       </div>
       
-      <!-- 移动端菜单按钮 -->
-      <a-button type="text" @click="toggleMenu" class="menu-button">
-        <template #icon>
-          <MenuOutlined />
-        </template>
-      </a-button>
+      <!-- 通用抽屉菜单按钮（在所有屏幕尺寸下显示） -->
+      <Button variant="text" @click="toggleMenu" class="menu-button">
+        <LucideIcon name="Menu" class="h-5 w-5" />
+      </Button>
     </div>
     
     <!-- 统一抽屉菜单 -->
@@ -51,12 +43,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter, useRoute } from 'vue-router'
 import Drawer from './Drawer.vue'
-import {
-  GlobalOutlined,
-  AppstoreOutlined,
-  TranslationOutlined,
-  MenuOutlined
-} from '@ant-design/icons-vue'
+import Button from './ui/button.vue'
+import LucideIcon from './ui/LucideIcon.vue'
 
 const { currentLanguage, toggleLanguage, t } = useI18n()
 const router = useRouter()
@@ -145,28 +133,54 @@ onUnmounted(() => {
 
 /* 导航按钮组 */
 .nav-buttons {
-  display:none;
+  display: flex;
   align-items: center;
-  gap: 0px;
+  gap: 8px;
+}
+
+/* 桌面端专用导航按钮（在小屏幕上隐藏） */
+.desktop-only {
+  display: flex;
+}
+
+@media (max-width: 1024px) {
+  .desktop-only {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
 }
 
 .nav-button,
 .lang-button {
   display: flex;
   align-items: center;
-  gap: 0px;
+  gap: 6px;
   font-weight: 500;
   color: #4d4d4d;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
 }
 
 .nav-button:hover,
 .lang-button:hover {
+  background: #f5f5f5;
   color: #4d4d4d;
 }
 
-/* 菜单按钮 */
+.nav-button .icon,
+.lang-button .icon {
+  font-size: 16px;
+}
+
+/* 菜单按钮（在所有屏幕尺寸下都显示） */
 .menu-button {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
@@ -177,7 +191,6 @@ onUnmounted(() => {
 .menu-button:hover {
   background: #f5f5f5;
 }
-
 
 /* 3D查看器页面专用样式 */
 .header-3d-view {
@@ -192,15 +205,6 @@ onUnmounted(() => {
   
   .logo-image {
     height: 50px;
-  }
-  
-  /* 在移动端隐藏导航按钮，显示菜单按钮 */
-  .nav-buttons {
-    display: none;
-  }
-  
-  .menu-button {
-    display: flex;
   }
 }
 
