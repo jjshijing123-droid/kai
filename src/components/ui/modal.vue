@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click="onClose">
-      <div 
+      <div
         class="modal-container"
         :class="[width]"
         @click.stop
@@ -17,7 +17,7 @@
               @click="onClose"
             >
               <span class="sr-only">Close</span>
-              <span class="text-xl">×</span>
+              <LucideIcon name="X" class="h-4 w-4" />
             </button>
           </div>
           
@@ -35,6 +35,8 @@
 </template>
 
 <script setup>
+import LucideIcon from './LucideIcon.vue'
+
 const props = defineProps({
   open: {
     type: Boolean,
@@ -153,6 +155,10 @@ const onClose = () => {
 .modal-close-btn:hover {
   background: #f5f5f5;
   color: #262626;
+}
+
+.modal-close-btn :deep(svg) {
+  display: block;
 }
 
 /* 主体 */

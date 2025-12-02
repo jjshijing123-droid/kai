@@ -26,7 +26,7 @@ const props = defineProps({
   },
   status: {
     type: String,
-    default: 'normal' // normal, active, success, exception
+    default: 'active' // normal, active, success, exception
   },
   showInfo: {
     type: Boolean,

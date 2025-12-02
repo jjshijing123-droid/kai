@@ -351,6 +351,18 @@ const baseTranslations = {
     "productManagement_processingFiles": "Processing files...",
     "productManagement_newProductsWillReplace": "New products will replace all existing products",
 
+    // Enhanced Create Folder Modal translations
+    "productManagement_createFolderDescription": "Create a new product folder with standardized structure including images and documentation",
+    "productManagement_folderNameHelp": "Name should be 2-50 characters, avoid special characters and spaces at start/end",
+    "productManagement_folderNameValid": "Folder name is valid",
+    "productManagement_folderNameExamples": "Suggested Names",
+    "productManagement_folderNameTooShort": "Folder name must be at least 2 characters long",
+    "productManagement_folderNameTooLong": "Folder name cannot exceed 50 characters",
+    "productManagement_folderNameNoLeadingTrailingSpaces": "Folder name cannot start or end with spaces",
+    "productManagement_folderNameContainsInvalidSequence": "Folder name cannot contain '..' or consecutive slashes",
+    "productManagement_validationError": "An error occurred during validation",
+    "productManagement_keyboardHint": "Press Enter to create or Esc to cancel",
+
     // ProductList组件扩展
     "productList_productIdValidationFailed": "Product ID validation failed",
     "productList_folderNameMissing": "Product folder name missing",
@@ -836,6 +848,18 @@ const baseTranslations = {
     "productManagement_replaceOperation": "完整产品替换操作",
     "productManagement_processingFiles": "正在处理文件...",
     "productManagement_newProductsWillReplace": "新产品将替换所有现有产品",
+
+    // Enhanced Create Folder Modal translations
+    "productManagement_createFolderDescription": "创建一个新的产品文件夹，包含标准化的结构，包括图片和文档",
+    "productManagement_folderNameHelp": "名称应为2-50个字符，避免特殊字符和首尾空格",
+    "productManagement_folderNameValid": "文件夹名称有效",
+    "productManagement_folderNameExamples": "建议名称",
+    "productManagement_folderNameTooShort": "文件夹名称至少需要2个字符",
+    "productManagement_folderNameTooLong": "文件夹名称不能超过50个字符",
+    "productManagement_folderNameNoLeadingTrailingSpaces": "文件夹名称不能以空格开头或结尾",
+    "productManagement_folderNameContainsInvalidSequence": "文件夹名称不能包含'..'或连续斜杠",
+    "productManagement_validationError": "验证过程中发生错误",
+    "productManagement_keyboardHint": "按 Enter 创建或 Esc 取消",
 
     // ProductList组件扩展
     "productList_productIdValidationFailed": "产品ID验证失败",

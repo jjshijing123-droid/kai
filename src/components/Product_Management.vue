@@ -38,7 +38,8 @@
             />
           </div>
           <div class="action-buttons">
-            <Button @click="showCreateFolderModal = true" variant="primary" class="create-folder-button">
+            <Button @click="showCreateFolderModalEnhanced" variant="primary" class="create-folder-button">
+              <LucideIcon name="FolderPlus" class="h-4 w-4" />
               {{ t('productManagement_createFolder') }}
             </Button>
             <Button @click="showBatchUploadModal = true" variant="primary" class="batch-upload-button">
@@ -96,23 +97,37 @@
     <Modal
       :open="showCreateFolderModal"
       :title="t('productManagement_createProductFolder')"
-      width="sm:max-w-md"
+      width="w-full max-w-sm mx-4 sm:mx-0 sm:w-[520px] sm:max-w-none"
       @close="closeCreateFolderModal"
     >
-      <div class="form-content">
-        <div class="form-item">
-          <label>{{ t('productManagement_folderName') }}</label>
+      <div class="space-y-4">
+        <div class="space-y-2">
+          <label for="folder-name-input" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            {{ t('productManagement_folderName') }}
+          </label>
           <Input
+            id="folder-name-input"
+            ref="folderNameInput"
             v-model="newFolderName"
             :placeholder="t('productManagement_inputFolderName')"
             @input="validateFolderName"
+            @keydown="handleKeyDown"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            maxlength="50"
+            :aria-label="t('productManagement_folderName')"
+            :aria-invalid="!!folderNameError"
+            role="textbox"
           />
-          <div v-if="folderNameError" class="error-text">{{ folderNameError }}</div>
+        </div>
+        <div v-if="folderNameError" class="text-sm text-red-500">
+          {{ folderNameError }}
         </div>
       </div>
       
       <template #footer>
-        <Button @click="closeCreateFolderModal">
+        <Button @click="closeCreateFolderModal" variant="secondary" :disabled="creatingFolder">
           {{ t('productManagement_cancel') }}
         </Button>
         <Button
@@ -203,7 +218,7 @@
     <Modal
       :open="showBatchUploadModal"
       :title="t('productManagement_batchUpload')"
-      width="lg:max-w-4xl"
+      width="w-[520px]"
       @close="closeBatchUploadModal"
     >
       <div class="batch-upload-content">
@@ -226,184 +241,56 @@
         </div>
 
         <!-- 第一步：选择压缩包 -->
-        <div v-if="currentUploadStep === 1" class="upload-section">
-          <div class="upload-info">
-            <h4 class="upload-title">
-              <LucideIcon name="Archive" class="h-5 w-5 text-primary mr-2" />
-              {{ t('productManagement_selectZipPackage') }}
-            </h4>
-            <p class="upload-description">{{ t('productManagement_batchUploadReplaceDescription') }}</p>
-          </div>
-          
-          <!-- 重要提示 -->
-          <div class="warning-section">
-            <LucideIcon name="AlertTriangle" class="h-4 w-4 text-orange-500" />
-            <span>{{ t('productManagement_replaceAllProductsWarning') }}</span>
-          </div>
-          
-          <!-- 压缩包拖拽上传区域 -->
-          <div
-            class="zip-upload-zone"
-            :class="{ 'drag-over': isDragOver }"
-            @click="selectZipFiles"
-            @dragover.prevent="handleDragOver"
-            @dragleave="handleDragLeave"
-            @drop="handleDrop"
-          >
-            <input
-              ref="zipFileInput"
-              type="file"
-              accept=".zip,.rar,.7z"
-              @change="handleZipFileSelection"
-              style="display: none;"
-            />
-            <div class="upload-zone-content">
-              <LucideIcon name="Upload" class="upload-icon" />
-              <h4 class="upload-zone-title">{{ t('productManagement_uploadZipFile') }}</h4>
-              <p class="upload-zone-hint">{{ t('productManagement_clickOrDragHint') }}</p>
-            </div>
-          </div>
+        <zip-upload-zone
+          v-if="currentUploadStep === 1"
+          ref="zipUploadZoneRef"
+          :disabled="uploading"
+          @file-selected="handleZipFileSelected"
+          @file-validated="handleZipFileValidated"
+          @file-removed="handleZipFileRemoved"
+        />
 
-          <!-- 已选择的压缩包 -->
+        <!-- 第二步：上传进度 -->
+        <div v-if="currentUploadStep === 2" class="progress-section space-y-4">
+          <!-- 已选择的文件 -->
           <div v-if="selectedZipFiles.length > 0" class="selected-files">
-            <h5>{{ t('productManagement_selectedZipFile') }}</h5>
-            <div class="files-list">
-              <div v-for="(file, index) in selectedZipFiles" :key="index" class="file-item">
+            <h5 class="text-sm font-medium text-gray-700 mb-2">{{ t('productManagement_selectedZipFile') }}</h5>
+            <div class="space-y-2">
+              <div v-for="(file, index) in selectedZipFiles" :key="index" class="flex items-center gap-3 p-2 bg-gray-50 rounded-md">
                 <LucideIcon name="Archive" class="h-4 w-4 text-primary" />
-                <span class="file-name">{{ file.name }}</span>
-                <span class="file-size">({{ formatFileSize(file.size) }})</span>
-                <span class="file-validation" :class="{ 'valid': zipFileValid, 'invalid': !zipFileValid && zipFileValidationChecked }">
-                  <LucideIcon :name="zipFileValid ? 'CheckCircle' : 'XCircle'" class="h-4 w-4" />
-                </span>
-                <Button
-                  variant="text"
-                  size="small"
-                  @click="removeZipFile(index)"
-                  class="remove-file-btn"
-                >
-                  <LucideIcon name="X" class="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            <!-- 文件验证状态 -->
-            <div v-if="zipFileValidationChecked" class="validation-status">
-              <div v-if="zipFileValid" class="validation-success">
-                <LucideIcon name="CheckCircle" class="h-4 w-4 text-green-500" />
-                <span>{{ t('productManagement_zipFileValid') }}</span>
-              </div>
-              <div v-else class="validation-error">
-                <LucideIcon name="XCircle" class="h-4 w-4 text-red-500" />
-                <span>{{ zipFileValidationMessage }}</span>
+                <span class="text-sm text-gray-600 flex-1">{{ file.name }}</span>
+                <span class="text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 第二步：预览文件结构 -->
-        <div v-if="currentUploadStep === 2" class="preview-section">
-          <div class="preview-header">
-            <h4 class="preview-title">
-              <LucideIcon name="FolderTree" class="h-5 w-5 text-primary mr-2" />
-              {{ t('productManagement_previewReplaceContent') }}
-            </h4>
-            <p class="preview-description">{{ t('productManagement_willReplaceAllProducts') }}</p>
-          </div>
-
-          <!-- 文件结构预览 -->
-          <div v-if="zipFileStructure" class="file-structure">
-            <div class="replace-info">
-              <div class="replace-notice">
-                <LucideIcon name="RotateCcw" class="h-5 w-5 text-orange-500" />
-                <span>{{ t('productManagement_replaceOperation') }}</span>
+          <!-- 上传进度 -->
+          <div class="upload-progress p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div class="space-y-4">
+              <!-- 进度状态和百分比 -->
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-green-600">{{ uploadStatus }}</span>
+                <span class="text-sm font-semibold text-green-700">{{ Math.round(uploadProgress) }}%</span>
               </div>
-            </div>
-            
-            <div class="structure-stats">
-              <div class="stat-item">
-                <span class="stat-label">{{ t('productManagement_totalFiles') }}:</span>
-                <span class="stat-value">{{ zipFileStructure.totalFiles }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">{{ t('productManagement_totalFolders') }}:</span>
-                <span class="stat-value">{{ zipFileStructure.totalFolders }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">{{ t('productManagement_estimatedSize') }}:</span>
-                <span class="stat-value">{{ formatFileSize(zipFileStructure.estimatedSize) }}</span>
-              </div>
-            </div>
-
-            <div class="structure-tree">
-              <div class="preview-note">
-                <p>{{ t('productManagement.newProductsWillReplace') }}</p>
-              </div>
-              <div
-                v-for="(folder, folderName) in zipFileStructure.folders"
-                :key="folderName"
-                class="folder-preview"
-              >
-                <div class="folder-header">
-                  <LucideIcon name="Folder" class="h-4 w-4 text-blue-500" />
-                  <span class="folder-name">{{ folderName }}</span>
-                  <span class="folder-count">{{ folder.files }} {{ t('productManagement_files') }}</span>
+              
+              <!-- 进度条 -->
+              <Progress :percent="uploadProgress" class="w-full h-2" />
+              
+              <!-- 详细的进度信息 -->
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-500">{{ t('productManagement_currentStage') }}</span>
+                  <span class="text-xs font-medium text-gray-700">{{ currentStageText }}</span>
                 </div>
-                <div class="folder-files">
-                  <div
-                    v-for="file in folder.fileList.slice(0, 5)"
-                    :key="file.name"
-                    class="file-item"
-                  >
-                    <LucideIcon name="FileText" class="h-3 w-3 text-gray-500" />
-                    <span class="file-name">{{ file.name }}</span>
-                    <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-500">{{ t('productManagement_processedFiles') }}</span>
+                    <span class="text-xs font-semibold text-blue-600">{{ processedFiles }}/{{ totalFiles }}</span>
                   </div>
-                  <div v-if="folder.fileList.length > 5" class="more-files">
-                    ... {{ t('productManagement_andMore') }} {{ folder.fileList.length - 5 }} {{ t('productManagement_moreFiles') }}
+                  <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-500">{{ t('productManagement_processedFolders') }}</span>
+                    <span class="text-xs font-semibold text-blue-600">{{ processedFolders }}/{{ totalFolders }}</span>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div v-else class="preview-loading">
-            <div class="loading-spinner">
-              <LucideIcon name="Loader2" class="h-6 w-6 animate-spin text-primary" />
-            </div>
-            <p>{{ t('productManagement_analyzingZipContent') }}</p>
-          </div>
-        </div>
-
-        <!-- 第三步：上传进度 -->
-        <div v-if="currentUploadStep === 3" class="progress-section">
-          <div class="progress-header">
-            <h4 class="progress-title">
-              <LucideIcon name="Upload" class="h-5 w-5 text-primary mr-2" />
-              {{ t('productManagement_uploadingProgress') }}
-            </h4>
-          </div>
-
-          <div class="upload-progress">
-            <div class="progress-info">
-              <span class="progress-status">{{ uploadStatus }}</span>
-              <span class="progress-percentage">{{ Math.round(uploadProgress) }}%</span>
-            </div>
-            <Progress :value="uploadProgress" />
-            
-            <!-- 详细的进度信息 -->
-            <div class="progress-details">
-              <div class="progress-stage">
-                <span class="stage-label">{{ t('productManagement_currentStage') }}:</span>
-                <span class="stage-value">{{ currentStageText }}</span>
-              </div>
-              <div class="progress-stats">
-                <div class="stat">
-                  <span class="stat-label">{{ t('productManagement_processedFiles') }}:</span>
-                  <span class="stat-value">{{ processedFiles }}/{{ totalFiles }}</span>
-                </div>
-                <div class="stat">
-                  <span class="stat-label">{{ t('productManagement_processedFolders') }}:</span>
-                  <span class="stat-value">{{ processedFolders }}/{{ totalFolders }}</span>
                 </div>
               </div>
             </div>
@@ -423,33 +310,12 @@
           :disabled="!zipFileValid || uploading"
           class="next-step-button"
         >
-          {{ t('productManagement_previewStructure') }}
-          <LucideIcon name="ChevronRight" class="h-4 w-4 ml-2" />
-        </Button>
-        
-        <Button
-          v-if="currentUploadStep === 2"
-          @click="prevStep"
-          variant="secondary"
-          class="prev-step-button"
-        >
-          <LucideIcon name="ChevronLeft" class="h-4 w-4 mr-2" />
-          {{ t('productManagement_back') }}
-        </Button>
-        
-        <Button
-          v-if="currentUploadStep === 2"
-          @click="nextStep"
-          variant="primary"
-          :disabled="uploading"
-          class="next-step-button"
-        >
           {{ t('productManagement_startUpload') }}
           <LucideIcon name="ChevronRight" class="h-4 w-4 ml-2" />
         </Button>
         
         <Button
-          v-if="currentUploadStep === 3"
+          v-if="currentUploadStep === 2"
           @click="prevStep"
           variant="secondary"
           class="prev-step-button"
@@ -459,7 +325,7 @@
         </Button>
         
         <Button
-          v-if="currentUploadStep === 3"
+          v-if="currentUploadStep === 2"
           @click="startBatchZipUpload"
           variant="primary"
           :disabled="uploading"
@@ -509,6 +375,7 @@ import LucideIcon from './ui/LucideIcon.vue'
 import SearchInput from './ui/search-input.vue'
 import JSZip from 'jszip'
 import ProductFolderUploader from './ProductFolderUploader.vue'
+import ZipUploadZone from './ZipUploadZone.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -541,8 +408,21 @@ const currentUploadIndex = ref(0)
 const fileInput = ref(null)
 const selectedZipFiles = ref([])
 const zipFileInput = ref(null)
+const zipUploadZoneRef = ref(null)
 const uploadStatus = ref('')
 const uploadProgress = ref(0)
+
+// 新增：创建文件夹相关的响应式数据
+const folderNameInput = ref(null)
+const folderNameExamples = ref([
+  '新产品系列',
+  '2024年度产品',
+  '移动应用',
+  'Web应用',
+  '桌面软件'
+])
+const isValidatingName = ref(false)
+const nameValidationTimeout = ref(null)
 
 // 拖拽上传相关数据
 const isDragOver = ref(false)
@@ -554,11 +434,6 @@ const uploadSteps = ref([
     key: 'select',
     title: t('productManagement_step1_title'),
     description: t('productManagement_step1_description')
-  },
-  {
-    key: 'preview',
-    title: t('productManagement_step2_title'),
-    description: t('productManagement_step2_description')
   },
   {
     key: 'upload',
@@ -657,24 +532,105 @@ const formatFileSize = (bytes) => {
 }
 
 const validateFolderName = () => {
-  if (!newFolderName.value) {
-    folderNameError.value = ''
-    return
+  // 清除之前的验证超时
+  if (nameValidationTimeout.value) {
+    clearTimeout(nameValidationTimeout.value)
   }
   
-  const invalidChars = /[<>:/\\|?*\x00-\x1F]/
-  if (invalidChars.test(newFolderName.value)) {
-    folderNameError.value = t('productManagement_folderNameContainsInvalid')
-    return
+  isValidatingName.value = true
+  
+  // 模拟异步验证，延迟验证以避免频繁调用
+  nameValidationTimeout.value = setTimeout(async () => {
+    try {
+      if (!newFolderName.value || newFolderName.value.trim() === '') {
+        folderNameError.value = ''
+        isValidatingName.value = false
+        return
+      }
+      
+      const name = newFolderName.value.trim()
+      
+      // 基本格式验证
+      if (name.length < 2) {
+        folderNameError.value = t('productManagement_folderNameTooShort')
+        isValidatingName.value = false
+        return
+      }
+      
+      if (name.length > 50) {
+        folderNameError.value = t('productManagement_folderNameTooLong')
+        isValidatingName.value = false
+        return
+      }
+      
+      const invalidChars = /[<>:/\\|?*\x00-\x1F]/
+      if (invalidChars.test(name)) {
+        folderNameError.value = t('productManagement_folderNameContainsInvalid')
+        isValidatingName.value = false
+        return
+      }
+      
+      // 检查是否以空格开头或结尾
+      if (newFolderName.value !== name) {
+        folderNameError.value = t('productManagement_folderNameNoLeadingTrailingSpaces')
+        isValidatingName.value = false
+        return
+      }
+      
+      // 检查重复名称（客户端验证）
+      if (products.value.some(p => p.name === name)) {
+        folderNameError.value = t('productManagement_folderNameExists')
+        isValidatingName.value = false
+        return
+      }
+      
+      // 特殊字符检查
+      if (name.includes('..') || name.includes('//') || name.includes('\\\\')) {
+        folderNameError.value = t('productManagement_folderNameContainsInvalidSequence')
+        isValidatingName.value = false
+        return
+      }
+      
+      folderNameError.value = ''
+    } catch (error) {
+      console.error('验证文件夹名称时出错:', error)
+      folderNameError.value = t('productManagement_validationError')
+    } finally {
+      isValidatingName.value = false
+    }
+  }, 300)
+}
+
+// 键盘事件处理
+const handleKeyDown = (event) => {
+  // Enter键创建文件夹
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    if (newFolderName.value && !folderNameError.value && !creatingFolder.value) {
+      createFolder()
+    }
   }
   
-  // 检查文件夹名称是否已存在
-  if (products.value.some(p => p.name === newFolderName.value)) {
-    folderNameError.value = t('productManagement_folderNameExists')
-    return
+  // Escape键关闭弹窗
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeCreateFolderModal()
   }
+}
+
+// 应用示例名称
+const applyExampleName = (exampleName) => {
+  if (creatingFolder.value) return
   
-  folderNameError.value = ''
+  newFolderName.value = exampleName
+  // 手动触发验证
+  setTimeout(() => {
+    validateFolderName()
+    // 自动聚焦到输入框
+    folderNameInput.value?.focus()
+    // 选中所有文本
+    folderNameInput.value?.select()
+  }, 50)
 }
 
 const validateRenameFolderName = () => {
@@ -829,6 +785,23 @@ const closeCreateFolderModal = () => {
   newFolderName.value = ''
   folderNameError.value = ''
   creatingFolder.value = false
+  isValidatingName.value = false
+  
+  // 清除验证超时
+  if (nameValidationTimeout.value) {
+    clearTimeout(nameValidationTimeout.value)
+    nameValidationTimeout.value = null
+  }
+}
+
+// 打开创建文件夹模态框时自动聚焦
+const showCreateFolderModalEnhanced = (event) => {
+  showCreateFolderModal.value = true
+  
+  // 延迟聚焦以确保DOM已更新
+  setTimeout(() => {
+    folderNameInput.value?.focus()
+  }, 100)
 }
 
 const closeRenameFolderModal = () => {
@@ -860,7 +833,6 @@ const resetMultiStepUpload = () => {
   zipFileValid.value = false
   zipFileValidationChecked.value = false
   zipFileValidationMessage.value = ''
-  zipFileStructure.value = null
   processedFiles.value = 0
   totalFiles.value = 0
   processedFolders.value = 0
@@ -869,17 +841,35 @@ const resetMultiStepUpload = () => {
   isDragOver.value = false
 }
 
+// 处理ZIP文件选择
+const handleZipFileSelected = (files) => {
+  selectedZipFiles.value = files
+}
+
+// 处理ZIP文件验证
+const handleZipFileValidated = (validationResult) => {
+  zipFileValid.value = validationResult.valid
+  zipFileValidationChecked.value = true
+  if (!validationResult.valid) {
+    zipFileValidationMessage.value = validationResult.message
+  } else {
+    zipFileValidationMessage.value = ''
+  }
+}
+
+// 处理ZIP文件移除
+const handleZipFileRemoved = (index) => {
+  // 文件移除由ZipUploadZone组件内部处理
+  // 这里可以添加额外的清理逻辑
+}
+
 // 多步骤导航方法
 const nextStep = async () => {
   if (currentUploadStep.value === 1) {
-    // 验证ZIP文件并进入预览步骤
+    // 从第一步直接进入第二步（上传进度）
     if (zipFileValid.value) {
-      await analyzeZipStructure()
       currentUploadStep.value = 2
     }
-  } else if (currentUploadStep.value === 2) {
-    // 直接进入上传步骤
-    currentUploadStep.value = 3
   }
 }
 
@@ -889,217 +879,11 @@ const prevStep = () => {
   }
 }
 
-// ZIP文件分析和验证
-const analyzeZipStructure = async () => {
-  try {
-    zipFileStructure.value = null
-    
-    const zipFile = selectedZipFiles.value[0]
-    
-    // 使用Web API读取ZIP文件内容
-    const arrayBuffer = await zipFile.arrayBuffer()
-    const uint8Array = new Uint8Array(arrayBuffer)
-    
-    // 简化的ZIP文件分析 - 基于文件扩展名和路径进行分类
-    const fileAnalysis = await analyzeZipFileContent(zipFile)
-    
-    zipFileStructure.value = fileAnalysis
-    
-  } catch (error) {
-    console.error('分析ZIP文件结构失败:', error)
-    zipFileValidationMessage.value = t('productManagement_zipAnalysisFailed')
-    zipFileValid.value = false
-  }
-}
-
-// 分析ZIP文件内容的辅助函数 - 使用JSZip进行真实分析
-const analyzeZipFileContent = async (zipFile) => {
-  try {
-    console.log('开始分析ZIP文件:', zipFile.name)
-    
-    // 使用JSZip读取ZIP文件
-    const zip = new JSZip()
-    const zipContent = await zip.loadAsync(zipFile)
-    
-    console.log('ZIP文件读取完成，包含', Object.keys(zipContent.files).length, '个条目')
-    
-    // 分析文件结构
-    const fileAnalysis = parseZipStructure(zipContent.files)
-    
-    console.log('ZIP结构分析完成:', fileAnalysis)
-    
-    return fileAnalysis
-    
-  } catch (error) {
-    console.error('ZIP文件分析失败:', error)
-    
-    // 失败时返回基础信息
-    return {
-      totalFiles: 1,
-      totalFolders: 1,
-      estimatedSize: zipFile.size,
-      folders: {
-        'Analysis_Failed': {
-          files: 1,
-          fileList: [
-            { name: zipFile.name, size: zipFile.size }
-          ]
-        }
-      }
-    }
-  }
-}
-
-// 真正分析ZIP文件结构的函数
-const parseZipStructure = (zipFiles) => {
-  const folders = {}
-  let totalFiles = 0
-  let totalFolders = 0
-  let totalSize = 0
-  
-  // 获取所有文件，排除文件夹条目
-  const files = Object.keys(zipFiles)
-    .filter(name => !zipFiles[name].dir)
-    .sort()
-  
-  console.log('文件列表:', files)
-  
-  // 按路径分组文件
-  files.forEach(filePath => {
-    const fileInfo = zipFiles[filePath]
-    const pathParts = filePath.split('/')
-    
-    // 获取根文件夹名称
-    const rootFolder = pathParts[0]
-    
-    if (!folders[rootFolder]) {
-      folders[rootFolder] = {
-        files: 0,
-        fileList: []
-      }
-      totalFolders++
-    }
-    
-    // 提取文件名和大小
-    const fileName = pathParts[pathParts.length - 1]
-    const fileSize = fileInfo._data ? fileInfo._data.uncompressedSize : 0
-    const relativePath = pathParts.slice(1).join('/')
-    
-    folders[rootFolder].files++
-    folders[rootFolder].fileList.push({
-      name: relativePath || fileName,
-      size: fileSize,
-      fullPath: filePath
-    })
-    
-    totalFiles++
-    totalSize += fileSize
-  })
-  
-  return {
-    totalFiles,
-    totalFolders,
-    estimatedSize: totalSize,
-    folders
-  }
-}
-
-const selectZipFiles = () => {
-  zipFileInput.value?.click()
-}
-
-const handleZipFileSelection = async (event) => {
-  const files = Array.from(event.target.files)
-  await processZipFiles(files)
-}
-
-const handleDrop = async (event) => {
-  event.preventDefault()
-  isDragOver.value = false
-  
-  const files = Array.from(event.dataTransfer.files)
-  await processZipFiles(files)
-}
-
-const handleDragOver = (event) => {
-  event.preventDefault()
-  isDragOver.value = true
-}
-
-const handleDragLeave = (event) => {
-  event.preventDefault()
-  isDragOver.value = false
-}
-
-const processZipFiles = async (files) => {
-  // 过滤只保留压缩包文件
-  const zipFiles = files.filter(file => {
-    const ext = file.name.toLowerCase().split('.').pop()
-    return ['zip', 'rar', '7z'].includes(ext)
-  })
-  selectedZipFiles.value = zipFiles
-  
-  // 重置验证状态
-  zipFileValid.value = false
-  zipFileValidationChecked.value = false
-  zipFileValidationMessage.value = ''
-  
-  // 验证选择的文件
-  if (zipFiles.length > 0) {
-    await validateZipFile(zipFiles[0])
-  }
-}
-
-const validateZipFile = async (file) => {
-  try {
-    // 检查文件大小 (限制为500MB)
-    const maxSize = 500 * 1024 * 1024
-    if (file.size > maxSize) {
-      zipFileValidationMessage.value = t('productManagement_fileTooLarge')
-      zipFileValid.value = false
-      zipFileValidationChecked.value = true
-      return
-    }
-    
-    // 检查文件类型
-    const ext = file.name.toLowerCase().split('.').pop()
-    if (!['zip', 'rar', '7z'].includes(ext)) {
-      zipFileValidationMessage.value = t('productManagement_unsupportedFileType')
-      zipFileValid.value = false
-      zipFileValidationChecked.value = true
-      return
-    }
-    
-    // 模拟文件验证过程
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    zipFileValid.value = true
-    zipFileValidationChecked.value = true
-    zipFileValidationMessage.value = ''
-    
-  } catch (error) {
-    console.error('ZIP文件验证失败:', error)
-    zipFileValidationMessage.value = t('productManagement_zipValidationFailed')
-    zipFileValid.value = false
-    zipFileValidationChecked.value = true
-  }
-}
-
-const removeZipFile = (index) => {
-  selectedZipFiles.value.splice(index, 1)
-  
-  // 重置验证状态
-  zipFileValid.value = false
-  zipFileValidationChecked.value = false
-  zipFileValidationMessage.value = ''
-  zipFileStructure.value = null
-}
-
 const startBatchZipUpload = async () => {
   if (selectedZipFiles.value.length === 0) return
   
-  // 切换到第三步：上传进度
-  currentUploadStep.value = 3
+  // 切换到第二步：上传进度
+  currentUploadStep.value = 2
   uploading.value = true
   uploadProgress.value = 0
   
@@ -1953,16 +1737,24 @@ const handleLoginSuccess = () => {
   background: #f0f2f5;
 }
 
-/* 表单样式 */
-.form-content {
-  margin: 16px 0;
-}
-
-.form-item {
+/* 传统表单样式兼容性 */
+.form-content .form-item {
   margin-bottom: 16px;
 }
 
-.form-item label {
+.form-content .form-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #262626;
+}
+
+/* 传统表单样式兼容性 */
+.form-content .form-item {
+  margin-bottom: 16px;
+}
+
+.form-content .form-item label {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
@@ -2139,31 +1931,6 @@ const handleLoginSuccess = () => {
 .remove-file-btn:hover {
   color: #ff4d4f;
   background: #fff2f0;
-}
-
-.upload-progress {
-  margin-top: 20px;
-  padding: 16px;
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
-  border-radius: 6px;
-}
-
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 13px;
-  color: #52c41a;
-  font-weight: 600;
-}
-
-.upload-status {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #389e0d;
-  font-style: italic;
 }
 
 .upload-button {
@@ -2718,5 +2485,7 @@ const handleLoginSuccess = () => {
   .warning-content {
     padding: 16px;
   }
+
+  /* 移除不需要的响应式样式 */
 }
 </style>
