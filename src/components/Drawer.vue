@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- 自定义抽屉实现 -->
+    <!-- 简约抽屉实现 -->
     <div v-if="isOpen" class="drawer-overlay" @click="closeDrawer">
       <div class="drawer-panel" @click.stop>
         <div class="drawer-header">
@@ -246,7 +246,7 @@ const switchLanguage = async (lang) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
@@ -256,8 +256,7 @@ const switchLanguage = async (lang) => {
 .drawer-panel {
   width: 320px;
   height: 100%;
-  background: white;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
   display: flex;
   flex-direction: column;
 }
@@ -267,13 +266,16 @@ const switchLanguage = async (lang) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 16px;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .drawer-title {
   flex: 1;
   margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
 }
 
 .drawer-close-btn {
@@ -284,56 +286,51 @@ const switchLanguage = async (lang) => {
   height: 32px;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #8c8c8c;
+  transition: background-color 0.2s ease;
+  color: #6c757d;
   font-size: 16px;
 }
 
 .drawer-close-btn:hover {
-  background: #f5f5f5;
-  color: #262626;
-}
-
-.close-icon {
-  font-size: 16px;
+  background: #f8f9fa;
+  color: #495057;
 }
 
 /* 抽屉内容 */
 .drawer-content {
   flex: 1;
   overflow-y: auto;
-  padding: 0 24px;
+  padding: 0;
 }
 
 /* 管理员部分样式 */
 .admin-section {
-  padding: 20px 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 16px;
 }
 
 .admin-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .admin-login-item {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid #f0f0f0;
-  color: #1890ff;
+  transition: background-color 0.2s ease;
+  border: 1px solid #e9ecef;
+  color: #495057;
   font-weight: 500;
+  background: #ffffff;
 }
 
 .admin-login-item:hover {
-  background: #f0f9ff;
-  border-color: #91d5ff;
+  background: #f8f9fa;
 }
 
 .admin-logged-in {
@@ -341,9 +338,9 @@ const switchLanguage = async (lang) => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-radius: 8px;
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
+  border-radius: 4px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
 }
 
 .admin-info {
@@ -353,28 +350,27 @@ const switchLanguage = async (lang) => {
 }
 
 .logout-button {
-  color: #8c8c8c;
+  color: #6c757d;
   font-size: 12px;
   height: 24px;
   padding: 0 8px;
 }
 
 .logout-button:hover {
-  color: #ff4d4f;
-  background: #fff2f0;
+  color: #dc3545;
+  background: #fff5f5;
 }
 
 /* 菜单部分样式 */
 .menu-section {
-  padding: 20px 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 16px;
 }
 
 .section-title {
-  margin: 0 0 16px 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: #8c8c8c;
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6c757d;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -382,27 +378,26 @@ const switchLanguage = async (lang) => {
 .menu-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   border: 1px solid transparent;
+  background: #ffffff;
 }
 
 .menu-item:hover {
-  background: #f5f5f5;
-  border-color: #e0e0e0;
+  background: #f8f9fa;
 }
 
 .menu-item:active {
-  background: #e6f7ff;
-  border-color: #91d5ff;
+  background: #e9ecef;
 }
 
 .menu-icon {
@@ -412,13 +407,13 @@ const switchLanguage = async (lang) => {
   width: 20px;
   height: 20px;
   margin-right: 12px;
-  color: #1890ff;
+  color: #495057;
 }
 
 .menu-text {
   font-size: 14px;
   font-weight: 500;
-  color: #262626;
+  color: #212529;
   flex: 1;
 }
 
@@ -429,39 +424,39 @@ const switchLanguage = async (lang) => {
 
 .menu-item.disabled:hover {
   background: transparent;
-  border-color: #f0f0f0;
+  border-color: #e9ecef;
 }
 
 /* 语言切换部分样式 */
 .language-section {
-  padding: 20px 0;
+  padding: 16px;
 }
 
 .language-options {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .language-option {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+  border: 1px solid #e9ecef;
   position: relative;
+  background: #ffffff;
 }
 
 .language-option:hover {
-  background: #f5f5f5;
-  border-color: #e0e0e0;
+  background: #f8f9fa;
 }
 
 .language-option.active {
-  background: #e6f7ff;
-  border-color: #91d5ff;
+  background: #f8f9fa;
+  border-color: #dee2e6;
 }
 
 .language-flag {
@@ -472,7 +467,7 @@ const switchLanguage = async (lang) => {
 .language-text {
   font-size: 14px;
   font-weight: 500;
-  color: #262626;
+  color: #212529;
   flex: 1;
 }
 
@@ -482,12 +477,7 @@ const switchLanguage = async (lang) => {
   justify-content: center;
   width: 16px;
   height: 16px;
-  color: #1890ff;
-}
-
-.check-icon {
-  font-size: 12px;
-  font-weight: bold;
+  color: #6c757d;
 }
 
 /* 响应式调整 */
@@ -497,21 +487,19 @@ const switchLanguage = async (lang) => {
   }
   
   .drawer-header {
-    padding: 16px 20px;
+    padding: 12px 16px;
   }
   
-  .drawer-content {
-    padding: 0 20px;
-  }
-  
+  .admin-section,
   .menu-section,
   .language-section {
-    padding: 20px 0;
+    padding: 12px;
   }
   
   .menu-item,
-  .language-option {
-    padding: 10px 14px;
+  .language-option,
+  .admin-login-item {
+    padding: 10px 12px;
   }
 }
 </style>
