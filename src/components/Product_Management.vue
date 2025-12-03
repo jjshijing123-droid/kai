@@ -84,11 +84,23 @@
         </div>
         
         <!-- 上传区域 -->
-        <div class="upload-section" @click="showUploadFolderModal = true">
-          <div class="upload-content">
-            <LucideIcon name="Folder" class="h-10 w-10 text-primary" />
-            <p class="upload-title">{{ t('productManagement_uploadFolder') }}</p>
-            <p class="upload-hint">{{ t('productManagement_dragDropHint') }}</p>
+        <div class="upload-section-container">
+          <!-- 上传文件夹 -->
+          <div class="upload-section" @click="showUploadFolderModal = true">
+            <div class="upload-content">
+              <LucideIcon name="Folder" class="h-10 w-10 text-primary" />
+              <p class="upload-title">{{ t('productManagement_uploadFolder') }}</p>
+              <p class="upload-hint">{{ t('productManagement_dragDropHint') }}</p>
+            </div>
+          </div>
+          
+          <!-- 上传文件 -->
+          <div class="upload-section" @click="showUploadFileModal = true">
+            <div class="upload-content">
+              <LucideIcon name="FileUp" class="h-10 w-10 text-primary" />
+              <p class="upload-title">{{ t('productManagement_uploadFiles') }}</p>
+              <p class="upload-hint">{{ t('productManagement_dragDropFilesHint') }}</p>
+            </div>
           </div>
         </div>
         
@@ -269,6 +281,21 @@
         @upload-complete="handleUploadComplete"
       />
     </Modal>
+    
+    <!-- 上传文件模态框 -->
+    <Modal
+      :open="showUploadFileModal"
+      :title="t('productManagement_uploadFiles')"
+      width="lg:max-w-2xl"
+      @close="closeUploadFileModal"
+    >
+      <ProductFileUploader
+        :disabled="uploading"
+        :current-path="currentPath.join('/')"
+        @upload-start="handleUploadStart"
+        @upload-complete="handleUploadComplete"
+      />
+    </Modal>
 
     <!-- 批量上传模态框 -->
     <Modal
@@ -440,6 +467,7 @@ import LucideIcon from './ui/LucideIcon.vue'
 import SearchInput from './ui/search-input.vue'
 import JSZip from 'jszip'
 import ProductFolderUploader from './ProductFolderUploader.vue'
+import ProductFileUploader from './ProductFileUploader.vue'
 import ZipUploadZone from './ZipUploadZone.vue'
 
 const { t } = useI18n()
@@ -456,6 +484,7 @@ const searchQuery = ref('')
 const showCreateFolderModal = ref(false)
 const showRenameFolderModal = ref(false)
 const showUploadFolderModal = ref(false)
+const showUploadFileModal = ref(false)
 const showBatchUploadModal = ref(false)
 const showDeleteConfirm = ref(false)
 const creatingFolder = ref(false)
@@ -932,6 +961,10 @@ const closeRenameFolderModal = () => {
 
 const closeUploadFolderModal = () => {
   showUploadFolderModal.value = false
+}
+
+const closeUploadFileModal = () => {
+  showUploadFileModal.value = false
 }
 
 const closeBatchUploadModal = () => {
@@ -1513,6 +1546,15 @@ const handleLoginSuccess = () => {
   border-radius: 8px;
   padding: 29px;
   row-gap: 10px;
+}
+
+/* 上传区域容器 */
+.upload-section-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* 上传区域 */

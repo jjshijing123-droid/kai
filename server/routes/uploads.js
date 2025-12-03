@@ -19,6 +19,14 @@ const upload = multer({
   }
 });
 
+// Multer配置 - 用于文件上传（支持多文件）
+const fileUpload = multer({
+  dest: 'uploads/',
+  limits: {
+    fileSize: 100 * 1024 * 1024 // 100MB per file
+  }
+});
+
 /**
  * 上传管理路由
  */
@@ -95,6 +103,30 @@ router.get('/upload-progress/:uploadId', (req, res) => {
     progress: 100,
     message: '上传完成'
   });
+});
+
+// 上传文件到指定文件夹
+router.post('/upload-files', fileUpload.array('file'), async (req, res) => {
+  try {
+    const files = req.files;
+    const { folderPath } = req.body;
+    
+    console.log('📁 收到文件上传请求');
+    console.log('📄 文件数量:', files.length);
+    console.log('📁 目标路径:', folderPath);
+    
+    const result = await uploadService.uploadFiles(files, folderPath);
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('文件上传失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '文件上传失败: ' + error.message,
+      error: error.message
+    });
+  }
 });
 
 module.exports = router;

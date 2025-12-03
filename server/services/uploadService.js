@@ -382,6 +382,100 @@ class UploadService {
       throw new Error(`重新生成产品目录失败: ${error.message}`);
     }
   }
+
+  /**
+   * 上传文件到指定文件夹
+   */
+  async uploadFiles(files, folderPath) {
+    try {
+      console.log('收到文件上传请求');
+      
+      if (!files || !files.length) {
+        throw new Error('请选择要上传的文件');
+      }
+      
+      if (!folderPath) {
+        throw new Error('文件夹路径不能为空');
+      }
+      
+      const targetFolderPath = path.join(this.serverPath, folderPath);
+      console.log('📁 目标文件夹:', targetFolderPath);
+      
+      // 检查目标文件夹是否存在
+      if (!fs.existsSync(targetFolderPath)) {
+        fs.mkdirSync(targetFolderPath, { recursive: true });
+      }
+      
+      const uploadedFiles = [];
+      
+      // 逐个处理文件
+      for (const file of files) {
+        try {
+          const fileName = file.originalname;
+          const filePath = path.join(targetFolderPath, fileName);
+          
+          // 检查文件是否已存在
+          let actualFileName = fileName;
+          let counter = 1;
+          
+          while (fs.existsSync(path.join(targetFolderPath, actualFileName))) {
+            const fileExt = path.extname(fileName);
+            const baseName = path.basename(fileName, fileExt);
+            actualFileName = `${baseName}_副本${counter}${fileExt}`;
+            counter++;
+          }
+          
+          const finalFilePath = path.join(targetFolderPath, actualFileName);
+          
+          // 读取上传的文件并写入目标位置
+          const fileContent = fs.readFileSync(file.path);
+          fs.writeFileSync(finalFilePath, fileContent);
+          
+          // 记录上传的文件信息
+          uploadedFiles.push({
+            originalName: fileName,
+            actualName: actualFileName,
+            path: finalFilePath,
+            relativePath: path.join(folderPath, actualFileName),
+            size: file.size
+          });
+          
+          console.log(`✅ 文件上传成功: ${actualFileName}`);
+          
+        } catch (fileError) {
+          console.error(`文件上传失败: ${file.originalname}`, fileError);
+          // 继续处理其他文件，不中断整个上传过程
+        }
+      }
+      
+      // 清理临时文件
+      files.forEach(file => {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      });
+      
+      // 如果上传的是产品文件夹下的文件，重新生成产品目录
+      if (folderPath.startsWith('Product/')) {
+        console.log('🔄 重新生成产品目录...');
+        await this.regenerateProductCatalog();
+      }
+      
+      console.log(`🎉 文件上传完成! 成功上传 ${uploadedFiles.length}/${files.length} 个文件`);
+      
+      return {
+        success: true,
+        message: `文件上传完成，成功上传 ${uploadedFiles.length}/${files.length} 个文件`,
+        uploadedFiles: uploadedFiles,
+        successfulCount: uploadedFiles.length,
+        failedCount: files.length - uploadedFiles.length
+      };
+      
+    } catch (error) {
+      console.error('文件上传失败:', error);
+      throw new Error(`文件上传失败: ${error.message}`);
+    }
+  }
 }
 
 module.exports = UploadService;

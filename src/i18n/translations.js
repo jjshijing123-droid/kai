@@ -367,6 +367,10 @@ const baseTranslations = {
     "productList_productIdValidationFailed": "Product ID validation failed",
     "productList_folderNameMissing": "Product folder name missing",
     "productList_folderPathMissing": "Product folder path missing",
+    
+    // 新增文件上传相关翻译键
+    "productManagement_uploadFiles": "Upload Files",
+    "productManagement_dragDropFilesHint": "Click or drag files here to upload",
     "productList_catalogDataValidationResult": "Product catalog data validation result",
     "productList_startFetchingFromCatalog": "🔍 Starting to fetch product data from catalog JSON file",
     "productList_filePath": "📁 File path:",
@@ -835,6 +839,10 @@ const baseTranslations = {
     "productManagement_zipValidationFailed": "ZIP文件验证失败",
     "productManagement_zipAnalysisFailed": "ZIP文件结构分析失败",
     "productManagement_completingUpload": "完成完整替换...",
+    
+    // 新增文件上传相关翻译键
+    "productManagement_uploadFiles": "上传文件",
+    "productManagement_dragDropFilesHint": "点击或拖拽文件到此处上传",
     "productManagement_preparingUpload": "准备完整替换...",
     "productManagement_batchUploadReplaceDescription": "此操作将完全替换所有现有产品",
     "productManagement_replaceAllProductsWarning": "⚠️ 这将完全替换所有现有产品！",
