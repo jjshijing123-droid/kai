@@ -229,7 +229,7 @@
       "path": "Product/RS32Y-OB/",
       "folder": "Product/RS32Y-OB/",
       "mainImage": "/Product/RS32Y-OB/image_00.webp",
-      "totalSize": 14213594,
+      "totalSize": 14204946,
       "fileCount": 135,
       "views": {
         "view1": "/Product/RS32Y-OB/view1/",
@@ -244,6 +244,6 @@
     }
   ],
   "totalProducts": 11,
-  "lastUpdated": "2025-12-02T11:49:55.184Z",
+  "lastUpdated": "2025-12-03T03:00:18.141Z",
   "version": "2.0"
 }

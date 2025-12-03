@@ -53,7 +53,7 @@ class ProductService {
       const products = [];
       const items = fs.readdirSync(productPath, { withFileTypes: true });
       
-      console.log('🔍 开始计算产品文件夹大小...');
+      console.log('🔍 开始计算产品文件夹内容...');
       
       for (const item of items) {
         if (item.isDirectory()) {
@@ -77,15 +77,39 @@ class ProductService {
             path: `Product/${item.name}`,
             totalSize: folderInfo.totalSize,
             fileCount: folderInfo.fileCount,
-            modified: stats.mtime
+            modified: stats.mtime,
+            isDirectory: true
           };
           
           products.push(productData);
-          console.log(`✅ 产品数据:`, productData);
+          console.log(`✅ 文件夹数据:`, productData);
+        } else if (item.isFile()) {
+          const filePath = path.join(productPath, item.name);
+          const stats = fs.statSync(filePath);
+          
+          console.log(`📄 处理文件: ${item.name}`);
+          console.log(`   文件: ${item.name}`);
+          console.log(`   大小: ${stats.size} bytes`);
+          
+          const fileData = {
+            name: item.name,
+            folderName: item.name,
+            id: products.length + 1,
+            category: 'file',
+            description: `Product file: ${item.name}`,
+            path: `Product/${item.name}`,
+            totalSize: stats.size,
+            fileCount: 1,
+            modified: stats.mtime,
+            isDirectory: false
+          };
+          
+          products.push(fileData);
+          console.log(`✅ 文件数据:`, fileData);
         }
       }
       
-      console.log(`📊 完成产品列表计算，共 ${products.length} 个产品`);
+      console.log(`📊 完成产品列表计算，共 ${products.length} 个项目（包含文件夹和文件）`);
       
       return products;
     } catch (error) {
@@ -127,29 +151,29 @@ class ProductService {
   }
 
   /**
-   * 重命名产品
+   * 重命名产品或文件
    */
   async renameProduct(productName, newProductName, newFolderName) {
     if (!newProductName || !newFolderName) {
       throw new Error('新产品名称和新文件夹名称不能为空');
     }
     
-    console.log(`重命名产品: ${productName} -> ${newFolderName}`);
+    console.log(`重命名项目: ${productName} -> ${newFolderName}`);
     
-    const oldFolderPath = path.join(this.serverPath, 'Product', productName);
-    const newFolderPath = path.join(this.serverPath, 'Product', newFolderName);
+    const oldItemPath = path.join(this.serverPath, 'Product', productName);
+    const newItemPath = path.join(this.serverPath, 'Product', newFolderName);
     
-    if (!fs.existsSync(oldFolderPath)) {
-      throw new Error('原产品文件夹不存在');
+    if (!fs.existsSync(oldItemPath)) {
+      throw new Error('原项目不存在');
     }
     
-    if (fs.existsSync(newFolderPath)) {
-      throw new Error('新文件夹名称已存在');
+    if (fs.existsSync(newItemPath)) {
+      throw new Error('新项目名称已存在');
     }
     
-    fs.renameSync(oldFolderPath, newFolderPath);
+    fs.renameSync(oldItemPath, newItemPath);
     
-    console.log(`产品重命名成功: ${productName} -> ${newFolderName}`);
+    console.log(`项目重命名成功: ${productName} -> ${newFolderName}`);
     
     return {
       oldName: productName,
@@ -160,25 +184,25 @@ class ProductService {
   }
 
   /**
-   * 删除产品
+   * 删除产品或文件
    */
   async deleteProduct(productName) {
-    console.log(`删除产品: ${productName}`);
+    console.log(`删除项目: ${productName}`);
     
-    const productFolderPath = path.join(this.serverPath, 'Product', productName);
+    const productItemPath = path.join(this.serverPath, 'Product', productName);
     
-    let physicalFolderDeleted = false;
+    let physicalItemDeleted = false;
     
-    if (fs.existsSync(productFolderPath)) {
-      fs.rmSync(productFolderPath, { recursive: true, force: true });
-      console.log(`已删除物理文件夹: ${productFolderPath}`);
-      physicalFolderDeleted = true;
+    if (fs.existsSync(productItemPath)) {
+      fs.rmSync(productItemPath, { recursive: true, force: true });
+      console.log(`已删除物理项目: ${productItemPath}`);
+      physicalItemDeleted = true;
     } else {
-      console.warn(`物理文件夹不存在: ${productFolderPath}`);
+      console.warn(`物理项目不存在: ${productItemPath}`);
     }
     
     return {
-      physicalFolderDeleted,
+      physicalItemDeleted,
       deletedProduct: {
         name: productName,
         path: `Product/${productName}`

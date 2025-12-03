@@ -28,7 +28,7 @@ function getFullProductFolderName(parentPath, folderName) {
 }
 
 // 获取文件夹详情
-router.get('/:folderPath/details', async (req, res) => {
+router.get('/:folderPath(.*)/details', async (req, res) => {
   try {
     const { folderPath } = req.params;
     

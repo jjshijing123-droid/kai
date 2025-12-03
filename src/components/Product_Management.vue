@@ -48,14 +48,38 @@
           </div>
         </div>
         
-        <!-- 统计信息 -->
-        <div class="stats-section">
-          <div class="stats-left">
-            <LucideIcon name="Folder" class="h-4 w-4" />
-            <span>{{ t('productManagement_product') }}</span>
+        <!-- 面包屑和统计信息容器 -->
+        <div class="breadcrumb-stats-container">
+          <!-- 面包屑导航 -->
+          <div class="breadcrumb-section">
+            <div class="frame337">
+              <LucideIcon name="Folder" class="h-4 w-4" />
+              <span v-for="(pathItem, index) in currentPath" :key="index" class="breadcrumb-item">
+                <span 
+                  v-if="index === 0" 
+                  class="breadcrumb-link" 
+                  @click="navigateToPath([pathItem])"
+                >
+                  {{ pathItem }}
+                </span>
+                <span v-else>
+                  <span class="breadcrumb-separator">/</span>
+                  <span 
+                    class="breadcrumb-link" 
+                    @click="navigateToPath(currentPath.slice(0, index + 1))"
+                  >
+                    {{ pathItem }}
+                  </span>
+                </span>
+              </span>
+            </div>
           </div>
-          <div class="stats-right">
-            <span>{{ t('productManagement_folderCount') }}: <span class="highlight">{{ filteredProducts.length }}</span> {{ t('productManagement_slash') }} {{ t('productManagement_fileCount') }}: <span class="highlight">0</span></span>
+          
+          <!-- 统计信息 -->
+          <div class="stats-section">
+            <div class="stats-right">
+              <span>{{ t('productManagement_folderCount') }}: <span class="highlight">{{ filteredProducts.filter(p => p.isDirectory).length }}</span> {{ t('productManagement_slash') }} {{ t('productManagement_fileCount') }}: <span class="highlight">{{ filteredProducts.filter(p => !p.isDirectory).length }}</span></span>
+            </div>
           </div>
         </div>
         
@@ -71,7 +95,7 @@
         <!-- 产品文件夹列表 -->
         <div class="folder-grid">
           <div
-            v-for="product in filteredProducts"
+            v-for="product in filteredProducts.filter(p => p.isDirectory)"
             :key="product.name"
             class="folder-item"
             @click="openFolder(product.name)"
@@ -86,6 +110,38 @@
                   <span class="folder-name">{{ product.name }}</span>
                 </div>
                 <div class="folder-size">{{ formatFileSize(product.totalSize || 0) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 产品文件列表 -->
+        <div class="file-list">
+          <div
+            v-for="file in filteredProducts.filter(p => !p.isDirectory)"
+            :key="file.name"
+            class="file-item"
+            @contextmenu.prevent="handleShowContextMenu($event, file)"
+          >
+            <div class="file-content">
+              <div class="file-info">
+                <div class="file-name">{{ file.name }}</div>
+                <div class="file-meta">
+                  <span class="file-size">{{ formatFileSize(file.totalSize || 0) }}</span>
+                  <span class="file-date">{{ new Date(file.modified).toLocaleDateString() }}</span>
+                  <span class="file-time">{{ new Date(file.modified).toLocaleTimeString() }}</span>
+                </div>
+              </div>
+              <div class="file-actions">
+                <Button variant="ghost" size="sm">
+                  <LucideIcon name="Eye" class="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <LucideIcon name="Download" class="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <LucideIcon name="Trash2" class="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
@@ -345,14 +401,23 @@
       :style="{ left: contextMenuPosition.x + 'px', top: contextMenuPosition.y + 'px' }"
       @click="hideContextMenu"
     >
-      <div class="context-menu-item" @click="openFolder(contextMenuProduct.name)">
+      <!-- 只对文件夹显示打开选项 -->
+      <div 
+        v-if="contextMenuProduct.isDirectory" 
+        class="context-menu-item" 
+        @click="openFolder(contextMenuProduct.name)"
+      >
         <LucideIcon name="FolderOpen" class="h-4 w-4" />
         <span>{{ t('productManagement_open') }}</span>
       </div>
+      
+      <!-- 重命名选项 -->
       <div class="context-menu-item" @click="renameFolder(contextMenuProduct.name)">
         <LucideIcon name="Edit" class="h-4 w-4" />
         <span>{{ t('productManagement_rename') }}</span>
       </div>
+      
+      <!-- 删除选项 -->
       <div class="context-menu-item" @click="deleteFolder(contextMenuProduct.name)">
         <LucideIcon name="Trash2" class="h-4 w-4" />
         <span>{{ t('productManagement_delete') }}</span>
@@ -383,6 +448,8 @@ const { isAdminLoggedIn } = useAdminAuth()
 
 // 响应式数据
 const products = ref([])
+const currentFolderContent = ref([])
+const currentPath = ref(['Product'])
 const loading = ref(true)
 const error = ref(null)
 const searchQuery = ref('')
@@ -474,50 +541,19 @@ const API_CONFIG = {
 // 主要的获取产品列表方法
 const fetchProducts = async () => {
   try {
-    loading.value = true
-    error.value = null
-
-    console.log('开始从API获取产品列表...')
-    
-    const response = await fetch(API_CONFIG.GET_PRODUCTS)
-    console.log('API响应状态:', response.status)
-    
-    if (!response.ok) {
-      throw new Error(`获取产品列表失败: ${response.status}`)
-    }
-    
-    const data = await response.json()
-    console.log('产品数据:', data)
-    
-    if (Array.isArray(data)) {
-      const processedProducts = data.map((product, index) => ({
-        name: product.folderName || product.name,
-        fileCount: product.fileCount || 0,
-        totalSize: product.totalSize || 0,
-        id: product.id || index + 1,
-        category: product.category || 'general',
-        description: product.description || `Product folder: ${product.folderName || product.name}`,
-        path: product.path || `Product/${product.folderName || product.name}`
-      }))
-      
-      products.value = processedProducts.filter(product => product.name && product.name.trim() !== '')
-      console.log(`成功加载 ${products.value.length} 个产品`)
-    } else {
-      throw new Error('产品数据格式错误')
-    }
-    
+    // 初始加载时，获取当前路径下的内容
+    await fetchFolderContent()
   } catch (err) {
     console.error('获取产品列表失败:', err)
     error.value = err.message
     products.value = []
-  } finally {
     loading.value = false
   }
 }
 
 const refreshProducts = async () => {
   try {
-    await fetchProducts()
+    await fetchFolderContent()
   } catch (error) {
     console.error('手动刷新失败:', error)
   }
@@ -764,9 +800,91 @@ const confirmDeleteFolder = async () => {
   }
 }
 
+// 导航到指定路径
+const navigateToPath = (newPath) => {
+  currentPath.value = newPath
+  fetchFolderContent()
+}
+
+// 打开文件夹，显示其内容
 const openFolder = (folderName) => {
-  // 跳转到文件夹管理页面
-  router.push(`/folder/${folderName}`)
+  // 在当前页面显示子文件夹内容
+  currentPath.value.push(folderName)
+  fetchFolderContent()
+}
+
+// 获取指定文件夹内容
+const fetchFolderContent = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    
+    const folderPath = currentPath.value.join('/')
+    console.log(`获取文件夹内容: ${folderPath}`)
+    
+    // 调用文件夹详情API
+    const response = await fetch(`/api/folder/${folderPath}/details`)
+    
+    if (!response.ok) {
+      throw new Error(`获取文件夹内容失败: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    console.log('文件夹内容:', data)
+    
+    if (data.success) {
+      // 转换后端返回的数据格式为前端期望的格式
+      const folderData = data.folder
+      const content = []
+      
+      // 添加文件夹
+      if (folderData.folders) {
+        Object.entries(folderData.folders).forEach(([folderName, folderInfo]) => {
+          content.push({
+            name: folderName,
+            folderName: folderName,
+            id: content.length + 1,
+            category: 'general',
+            description: `Folder: ${folderName}`,
+            path: folderInfo.path,
+            totalSize: folderInfo.totalSize,
+            fileCount: folderInfo.fileCount,
+            modified: new Date(),
+            isDirectory: true
+          })
+        })
+      }
+      
+      // 添加文件
+      if (folderData.files) {
+        folderData.files.forEach((file, index) => {
+          content.push({
+            name: file.name,
+            folderName: file.name,
+            id: content.length + 1,
+            category: 'file',
+            description: `File: ${file.name}`,
+            path: file.path,
+            totalSize: file.size,
+            fileCount: 1,
+            modified: file.modified,
+            isDirectory: false
+          })
+        })
+      }
+      
+      products.value = content
+      console.log(`成功加载 ${content.length} 个项目`)
+    } else {
+      throw new Error(data.message || '获取文件夹内容失败')
+    }
+  } catch (err) {
+    console.error('获取文件夹内容失败:', err)
+    error.value = err.message
+    products.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleShowContextMenu = (event, product) => {
@@ -994,7 +1112,7 @@ const cancelDelete = () => {
 }
 
 const goBack = () => {
-  router.back()
+  router.push('/')
 }
 
 // 生命周期
@@ -1033,7 +1151,7 @@ const handleLoginSuccess = () => {
   padding-top: 20px;
   padding-bottom: 20px;
   width: 100%;
-  height: 54px;
+  height: auto;
   margin-bottom: 20px;
   box-sizing: border-box;
 }
@@ -1097,6 +1215,7 @@ const handleLoginSuccess = () => {
   padding: 20px;
   gap: 20px;
   width: 100%;
+  height: auto;
   box-sizing: border-box;
 }
 
@@ -1357,34 +1476,15 @@ const handleLoginSuccess = () => {
 /* 统计信息 */
 .stats-section {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  padding: 20px 4px;
-  height: 32px;
+  padding: 0;
+  height: auto;
   background: transparent;
   border-radius: 0;
-  width: 100%;
+  width: auto;
   box-sizing: border-box;
-}
-
-.stats-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.stats-left span {
-  font-size: 12px;
-  font-weight: 700;
-  color: #202020;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  line-height: 13px;
-  letter-spacing: 0;
-}
-
-.stats-left svg {
-  width: 14px;
-  height: 14px;
+  margin-bottom: 0;
 }
 
 .stats-right {
@@ -1400,23 +1500,6 @@ const handleLoginSuccess = () => {
   font-weight: normal;
   line-height: 13px;
   letter-spacing: 0;
-}
-
-/* 统计信息样式优化 */
-.stats-section .stats-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #626262;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  line-height: 13px;
-  letter-spacing: 0;
-}
-
-.stats-section .stats-right .highlight {
-  color: #007ab1;
-  font-weight: normal;
 }
 
 /* Frame 317 - 上传区域 */
@@ -1487,8 +1570,9 @@ const handleLoginSuccess = () => {
 .frame340 {
   display: flex;
   flex-shrink: 0;
-  align-items: flex-start;
+  align-items: center;
   align-self: stretch;
+  justify-content: center;
   padding-right: 1px;
 }
 
@@ -1496,10 +1580,208 @@ const handleLoginSuccess = () => {
 .folder-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(2, 1fr);
   gap: 12px;
   width: 100%;
-  min-height: 150px;
+  height: auto;
+  min-height: auto;
+}
+
+.folder-item {
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  height: auto;
+  box-sizing: border-box;
+  min-height: 80px;
+}
+
+.folder-item:hover {
+  background: #f5f5f5;
+  border-color: #00a0d9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 面包屑和统计信息容器 */
+.breadcrumb-stats-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* 面包屑样式 */
+.breadcrumb-section {
+  flex: 1;
+  margin-bottom: 0;
+  width: auto;
+}
+
+.frame337 {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0px;
+  width: 100%;
+  height: auto;
+  padding: 8px 0;
+  font-size: 12px;
+  color: #626262;
+}
+
+.breadcrumb-item {
+  display:block;
+  align-items: center;
+  line-height: 18px;
+  height: 18px;
+  margin-left: 4px;
+  gap: 0px;
+}
+
+.breadcrumb-link {
+  color: inherit;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  line-height: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.breadcrumb-link:hover {
+  color: #00a0d9;
+}
+
+.breadcrumb-separator {
+  color: #b3b3b3;
+  font-size: 14px;
+  font-family: inherit;
+  margin: 0;
+  line-height: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.frame337 svg {
+  height: 18px;
+  width: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  color: #00a0d9;
+}
+
+.breadcrumb-item:last-child .breadcrumb-link {
+  color: #202020;
+  font-weight: 700;
+}
+
+/* 移除旧的样式 */
+.autoWrapper,
+.autoWrapper2 {
+  display: none !important;
+}
+
+/* 文件列表样式 */
+.file-list {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+}
+
+.file-item {
+  background: #ffffff;
+  border-bottom: 1px solid #e8e8e8;
+  border-radius: 0;
+  padding: 16px 20px;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: auto;
+  min-height: 64px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.file-item:last-child {
+
+}
+
+.file-item:hover {
+  background: #f5f5f5;
+}
+
+.file-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #202020;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+}
+
+.file-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #626262;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+}
+
+.file-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.file-actions button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  height: 20px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.file-actions button:hover {
+  background: #e0e0e0;
+}
+
+.file-type {
+  font-size: 12px;
+  color: #626262;
+  margin-left: 4px;
 }
 
 /* 文件夹自动包装容器 */

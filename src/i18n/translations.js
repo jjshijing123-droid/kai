@@ -36,7 +36,7 @@ const baseTranslations = {
     "i18nManager_saveSuccess": "Translations saved successfully",
 
     // ProductManagement组件
-    "productManagement_title": "Product Management",
+    "productManagement_title": "Product Folder Management",
     "productManagement_back": "Back",
     "productManagement_searchPlaceholder": "Search products...",
     "productManagement_pleaseInput": "Please input",
@@ -538,7 +538,7 @@ const baseTranslations = {
     "i18nManager_saveSuccess": "翻译保存成功",
 
     // ProductManagement组件
-    "productManagement_title": "产品管理",
+    "productManagement_title": "产品文件夹管理",
     "productManagement_back": "返回",
     "productManagement_searchPlaceholder": "搜索产品...",
     "productManagement_pleaseInput": "请输入",

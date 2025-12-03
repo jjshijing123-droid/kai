@@ -7,7 +7,8 @@ const FileService = require('./fileService');
  */
 class FolderService {
   constructor() {
-    this.serverPath = __dirname.replace(/server\/services$/, '');
+    // 项目根目录应该是server目录的父目录
+    this.serverPath = path.resolve(__dirname, '../../');
     this.fileService = new FileService();
   }
 
@@ -19,7 +20,17 @@ class FolderService {
       console.log(`获取文件夹详情: ${folderPath}`);
       
       // 构建完整的文件夹路径
-      const fullPath = path.join(this.serverPath, folderPath.startsWith('Product/') ? folderPath : `Product/${folderPath}`);
+      let fullPath;
+      if (folderPath === 'Product') {
+        // 当路径是Product时，直接使用
+        fullPath = path.join(this.serverPath, folderPath);
+      } else if (folderPath.startsWith('Product/')) {
+        // 当路径以Product/开头时，直接使用
+        fullPath = path.join(this.serverPath, folderPath);
+      } else {
+        // 其他情况，添加Product/前缀
+        fullPath = path.join(this.serverPath, `Product/${folderPath}`);
+      }
       console.log('完整路径:', fullPath);
       
       // 检查文件夹是否存在
