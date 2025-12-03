@@ -113,6 +113,13 @@ const onClose = () => {
   width: 1000px;
 }
 
+/* Tailwind-like responsive width classes */
+@media (min-width: 1024px) {
+  [class*="lg:max-w-2xl"] {
+    width: 520px;
+  }
+}
+
 /* 模态框内容 */
 .modal-content {
   display: flex;

@@ -45,6 +45,28 @@
       }
     },
     {
+      "id": 3,
+      "name": "Cobi18_v1_副本1",
+      "folderName": "Cobi18_v1_副本1",
+      "category": "general",
+      "description": "Product model: Cobi18_v1_副本1",
+      "path": "Product/Cobi18_v1_副本1/",
+      "folder": "Product/Cobi18_v1_副本1/",
+      "mainImage": "/Product/Cobi18_v1_副本1/image_00.webp",
+      "totalSize": 8726708,
+      "fileCount": 135,
+      "views": {
+        "view1": "/Product/Cobi18_v1_副本1/view1/",
+        "view2": "/Product/Cobi18_v1_副本1/view2/",
+        "view3": "/Product/Cobi18_v1_副本1/view3/",
+        "view4": "/Product/Cobi18_v1_副本1/view4/"
+      },
+      "additionalImages": {
+        "sixViews": "/Product/Cobi18_v1_副本1/images_6Views/",
+        "other": "/Product/Cobi18_v1_副本1/images_other/"
+      }
+    },
+    {
       "id": 4,
       "name": "I20YT-OB",
       "folderName": "I20YT-OB",
@@ -241,9 +263,32 @@
         "sixViews": "/Product/RS32Y-OB/images_6Views/",
         "other": "/Product/RS32Y-OB/images_other/"
       }
+    },
+    {
+      "id": 1,
+      "name": "111",
+      "folderName": "111",
+      "model": "111",
+      "category": "general",
+      "description": "Product model: 111",
+      "path": "Product/111",
+      "folder": "Product/111/",
+      "totalSize": 0,
+      "fileCount": 0,
+      "mainImage": "/Product/111/image_00.webp",
+      "views": {
+        "view1": "/Product/111/view1/",
+        "view2": "/Product/111/view2/",
+        "view3": "/Product/111/view3/",
+        "view4": "/Product/111/view4/"
+      },
+      "additionalImages": {
+        "sixViews": "/Product/111/images_6Views/",
+        "other": "/Product/111/images_other/"
+      }
     }
   ],
-  "totalProducts": 11,
-  "lastUpdated": "2025-12-03T05:06:08.821Z",
+  "totalProducts": 13,
+  "lastUpdated": "2025-12-03T07:14:26.097Z",
   "version": "2.0"
 }

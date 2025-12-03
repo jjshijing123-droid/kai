@@ -91,35 +91,34 @@
       </Alert>
     </div>
 
-    <!-- 上传按钮 -->
-    <div v-if="selectedFile && !uploading" class="upload-actions">
-      <Button
-              variant="primary"
-              :disabled="!canUpload || disabled"
-              @click="startUpload"
-              class="upload-button"
-            >
-              <LucideIcon name="Upload" class="h-4 w-4" />
-              {{ t('common_startUpload') }}
-            </Button>
-      
-      <Button
-        @click="resetUpload"
-        :disabled="disabled"
-      >
-        {{ t('common_cancel') }}
-      </Button>
-    </div>
+    <!-- 移除内部按钮，改为通过emit让父组件在Modal footer中处理 -->
 
     <!-- 提示信息 -->
     <div class="upload-hint">
-      <p><strong>{{ t('common_usageInstructions') }}</strong></p>
-      <ul>
-        <li>{{ t('common_uploadZipInstructions') }}</li>
-        <li>{{ t('common_rootFolderRequirement') }}</li>
-        <li>{{ t('common_folderNameConflict') }}</li>
-        <li>{{ t('common_maxFileSize') }}</li>
-      </ul>
+      <div class="hint-header">
+        <div class="hint-icon">
+          <LucideIcon name="Info" class="h-4 w-4" />
+        </div>
+        <h4>{{ t('common_usageInstructions') }}</h4>
+      </div>
+      <div class="hint-content">
+        <div class="hint-item">
+          <LucideIcon name="FileArchive" class="h-4 w-4" />
+          <span>{{ t('common_uploadZipInstructions') }}</span>
+        </div>
+        <div class="hint-item">
+          <LucideIcon name="FolderTree" class="h-4 w-4" />
+          <span>{{ t('common_rootFolderRequirement') }}</span>
+        </div>
+        <div class="hint-item">
+          <LucideIcon name="AlertCircle" class="h-4 w-4" />
+          <span>{{ t('common_folderNameConflict') }}</span>
+        </div>
+        <div class="hint-item">
+          <LucideIcon name="HardDrive" class="h-4 w-4" />
+          <span>{{ t('common_maxFileSize') }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -143,7 +142,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['upload-start', 'upload-complete'])
+const emit = defineEmits(['upload-start', 'upload-complete', 'cancel', 'ok'])
 
 // 响应式数据
 const fileInput = ref(null)
@@ -386,7 +385,9 @@ onUnmounted(() => {
 
 // 暴露方法给父组件
 defineExpose({
-  resetUpload
+  resetUpload,
+  startUpload,
+  canUpload
 })
 </script>
 
@@ -399,7 +400,7 @@ defineExpose({
 .upload-area {
   border: 2px dashed #d9d9d9;
   border-radius: 8px;
-  padding: 40px 20px;
+  padding: 20px 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -430,7 +431,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
 }
 
 .upload-icon {
@@ -537,7 +538,7 @@ defineExpose({
   display: flex;
   gap: 12px;
   margin-top: 20px;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 .upload-button {
@@ -558,23 +559,53 @@ defineExpose({
   background: #f0f8ff;
   border: 1px solid #91d5ff;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   color: #595959;
 }
 
-.upload-hint p {
-  margin: 0 0 8px 0;
-  font-weight: 500;
+.hint-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.upload-hint ul {
+.hint-header .hint-icon {
+  color: #1890ff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hint-header h4 {
   margin: 0;
-  padding-left: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #262626;
 }
 
-.upload-hint li {
-  margin-bottom: 4px;
-  line-height: 1.4;
+.hint-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.hint-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.hint-item .icon {
+  font-size: 16px;
+  color: #1890ff;
+  flex-shrink: 0;
+}
+
+.hint-item span {
+  line-height: 1.5;
 }
 
 /* 响应式设计 */

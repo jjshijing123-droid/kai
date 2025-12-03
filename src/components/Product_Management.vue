@@ -90,7 +90,7 @@
             <div class="upload-content">
               <LucideIcon name="Folder" class="h-10 w-10 text-primary" />
               <p class="upload-title">{{ t('productManagement_uploadFolder') }}</p>
-              <p class="upload-hint">{{ t('productManagement_dragDropHint') }}</p>
+              <p class="upload-hint">上传单个完整的产品文件夹压缩包</p>
             </div>
           </div>
           
@@ -99,7 +99,7 @@
             <div class="upload-content">
               <LucideIcon name="FileUp" class="h-10 w-10 text-primary" />
               <p class="upload-title">{{ t('productManagement_uploadFiles') }}</p>
-              <p class="upload-hint">{{ t('productManagement_dragDropFilesHint') }}</p>
+              <p class="upload-hint">上传文件到当前文件夹</p>
             </div>
           </div>
         </div>
@@ -276,10 +276,24 @@
       @close="closeUploadFolderModal"
     >
       <ProductFolderUploader
+        ref="folderUploaderRef"
         :disabled="uploading"
         @upload-start="handleUploadStart"
         @upload-complete="handleUploadComplete"
       />
+      <template #footer>
+        <Button @click="closeUploadFolderModal" variant="secondary">
+          {{ t('common_cancel') }}
+        </Button>
+        <Button
+          @click="handleFolderUploadConfirm"
+          variant="primary"
+          :loading="uploading"
+        >
+          <LucideIcon name="Upload" class="h-4 w-4" />
+          {{ t('common_startUpload') }}
+        </Button>
+      </template>
     </Modal>
     
     <!-- 上传文件模态框 -->
@@ -290,11 +304,25 @@
       @close="closeUploadFileModal"
     >
       <ProductFileUploader
+        ref="fileUploaderRef"
         :disabled="uploading"
         :current-path="currentPath.join('/')"
         @upload-start="handleUploadStart"
         @upload-complete="handleUploadComplete"
       />
+      <template #footer>
+        <Button @click="closeUploadFileModal" variant="secondary">
+          {{ t('common_cancel') }}
+        </Button>
+        <Button
+          @click="handleFileUploadConfirm"
+          variant="primary"
+          :loading="uploading"
+        >
+          <LucideIcon name="Upload" class="h-4 w-4" />
+          {{ t('common_startUpload') }}
+        </Button>
+      </template>
     </Modal>
 
     <!-- 批量上传模态框 -->
@@ -490,6 +518,8 @@ const showDeleteConfirm = ref(false)
 const creatingFolder = ref(false)
 const renamingFolder = ref(false)
 const uploading = ref(false)
+const fileUploaderRef = ref(null)
+const folderUploaderRef = ref(null)
 const newFolderName = ref('')
 const renameFolderName = ref('')
 const folderToDelete = ref('')
@@ -1135,8 +1165,19 @@ const handleUploadComplete = (result) => {
     // 上传成功，重新获取产品列表
     fetchProducts()
     closeUploadFolderModal()
+    closeUploadFileModal()
   }
   console.log('上传完成:', result)
+}
+
+const handleFileUploadConfirm = () => {
+  // 调用上传组件的开始上传方法
+  fileUploaderRef.value?.startUpload()
+}
+
+const handleFolderUploadConfirm = () => {
+  // 调用上传组件的开始上传方法
+  folderUploaderRef.value?.startUpload()
 }
 
 const cancelDelete = () => {
@@ -2107,7 +2148,7 @@ const handleLoginSuccess = () => {
 .upload-title {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 0px;
   color: #262626;
   display: flex;
   align-items: center;

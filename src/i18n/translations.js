@@ -195,6 +195,14 @@ const baseTranslations = {
 
     // FileUploader组件扩展
     "fileUploader_placeholderImage": "Loading product image...",  // 重复使用之前的键
+    "common_uploadFiles": "Upload Files",
+    "common_clickOrDragFiles": "Click or drag files here to upload",
+    "common_selectMultipleFiles": "Support multiple file selection",
+    "common_supportedFileTypes": "Supports various file types including images, documents, and videos",
+    "common_fileSizeLimit": "Maximum file size: 100MB per file",
+    "common_uploadToCurrentFolder": "Files will be uploaded to the current folder",
+    "common_selectedFiles": "Selected Files",
+    "common_clearAll": "Clear All",
 
     // ProductManagement组件新增翻译键
     "productManagement_backToHome": "Back to Home",
@@ -698,6 +706,14 @@ const baseTranslations = {
     "common_networkError": "网络错误，请检查网络连接",
     "common_serverError": "服务器错误",
     "common_detectedFolderNameConflict": "检测到文件夹名称冲突，将重命名为",
+    "common_uploadFiles": "上传文件",
+    "common_clickOrDragFiles": "点击或拖拽文件到此处上传",
+    "common_selectMultipleFiles": "支持多选文件",
+    "common_supportedFileTypes": "支持多种文件类型，包括图片、文档和视频",
+    "common_fileSizeLimit": "单个文件大小限制：100MB",
+    "common_uploadToCurrentFolder": "文件将上传到当前文件夹",
+    "common_selectedFiles": "已选择文件",
+    "common_clearAll": "清空所有",
 
     // ProductManagement组件新增翻译键
     "productManagement_backToHome": "返回首页",
