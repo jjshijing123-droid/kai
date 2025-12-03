@@ -221,7 +221,7 @@ const removeZipFile = (index) => {
 
 <style scoped>
 .zip-upload-zone-section {
-  padding: 20px;
+  padding: 10px;
 }
 
 /* 拖拽上传区域样式 */
@@ -372,6 +372,11 @@ const removeZipFile = (index) => {
   justify-content: center;
   font-size: 13px;
 }
+
+.validation-success span {
+margin-left: 4px;
+}
+
 
 .validation-error {
   background: #fff2f0;

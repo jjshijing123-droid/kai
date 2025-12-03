@@ -1819,7 +1819,7 @@ const handleLoginSuccess = () => {
 .file-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   flex: 1;
 }
 

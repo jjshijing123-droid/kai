@@ -4,10 +4,7 @@
       <div class="error-handler-header">
         <h3>{{ $t('errorHandler.title') }}</h3>
         <button class="error-handler-close" @click="close">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <LucideIcon name="X" size="20" />
         </button>
       </div>
       
@@ -160,6 +157,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useErrorMonitoring } from '../../composables/useErrorMonitoring'
 import { useNotifications } from '../../composables/useNotifications'
+import LucideIcon from './LucideIcon.vue'
 
 // Props
 const props = defineProps({

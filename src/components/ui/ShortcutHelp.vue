@@ -4,10 +4,7 @@
       <div class="shortcut-help-header">
         <h3>{{ $t('shortcut.help.title') }}</h3>
         <button class="shortcut-help-close" @click="close">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <LucideIcon name="X" size="20" />
         </button>
       </div>
       
@@ -59,11 +56,7 @@
       
       <div class="shortcut-help-footer">
         <div class="shortcut-help-tip">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
+          <LucideIcon name="Info" size="16" />
           <span>{{ $t('shortcut.help.tip') }}</span>
         </div>
       </div>
@@ -74,6 +67,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useKeyboardShortcuts, createShortcutRegistry } from '../../composables/useKeyboardShortcuts'
+import LucideIcon from './LucideIcon.vue'
 
 // Props
 const props = defineProps({
