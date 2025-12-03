@@ -46,28 +46,6 @@
     },
     {
       "id": 3,
-      "name": "Cobi18_v1_副本1",
-      "folderName": "Cobi18_v1_副本1",
-      "category": "general",
-      "description": "Product model: Cobi18_v1_副本1",
-      "path": "Product/Cobi18_v1_副本1/",
-      "folder": "Product/Cobi18_v1_副本1/",
-      "mainImage": "/Product/Cobi18_v1_副本1/image_00.webp",
-      "totalSize": 8726708,
-      "fileCount": 135,
-      "views": {
-        "view1": "/Product/Cobi18_v1_副本1/view1/",
-        "view2": "/Product/Cobi18_v1_副本1/view2/",
-        "view3": "/Product/Cobi18_v1_副本1/view3/",
-        "view4": "/Product/Cobi18_v1_副本1/view4/"
-      },
-      "additionalImages": {
-        "sixViews": "/Product/Cobi18_v1_副本1/images_6Views/",
-        "other": "/Product/Cobi18_v1_副本1/images_other/"
-      }
-    },
-    {
-      "id": 4,
       "name": "I20YT-OB",
       "folderName": "I20YT-OB",
       "category": "general",
@@ -89,7 +67,7 @@
       }
     },
     {
-      "id": 5,
+      "id": 4,
       "name": "I20Y_I20YT",
       "folderName": "I20Y_I20YT",
       "category": "general",
@@ -111,7 +89,7 @@
       }
     },
     {
-      "id": 6,
+      "id": 5,
       "name": "I24YT",
       "folderName": "I24YT",
       "category": "general",
@@ -133,7 +111,7 @@
       }
     },
     {
-      "id": 7,
+      "id": 6,
       "name": "IS1800",
       "folderName": "IS1800",
       "category": "general",
@@ -155,7 +133,7 @@
       }
     },
     {
-      "id": 8,
+      "id": 7,
       "name": "RS20_v2",
       "folderName": "RS20_v2",
       "category": "general",
@@ -177,7 +155,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 8,
       "name": "RS26Y",
       "folderName": "RS26Y",
       "category": "general",
@@ -199,7 +177,7 @@
       }
     },
     {
-      "id": 10,
+      "id": 9,
       "name": "RS28Y",
       "folderName": "RS28Y",
       "category": "general",
@@ -221,7 +199,7 @@
       }
     },
     {
-      "id": 11,
+      "id": 10,
       "name": "RS32Y",
       "folderName": "RS32Y",
       "category": "general",
@@ -243,7 +221,7 @@
       }
     },
     {
-      "id": 12,
+      "id": 11,
       "name": "RS32Y-OB",
       "folderName": "RS32Y-OB",
       "category": "general",
@@ -263,32 +241,9 @@
         "sixViews": "/Product/RS32Y-OB/images_6Views/",
         "other": "/Product/RS32Y-OB/images_other/"
       }
-    },
-    {
-      "id": 1,
-      "name": "111",
-      "folderName": "111",
-      "model": "111",
-      "category": "general",
-      "description": "Product model: 111",
-      "path": "Product/111",
-      "folder": "Product/111/",
-      "totalSize": 0,
-      "fileCount": 0,
-      "mainImage": "/Product/111/image_00.webp",
-      "views": {
-        "view1": "/Product/111/view1/",
-        "view2": "/Product/111/view2/",
-        "view3": "/Product/111/view3/",
-        "view4": "/Product/111/view4/"
-      },
-      "additionalImages": {
-        "sixViews": "/Product/111/images_6Views/",
-        "other": "/Product/111/images_other/"
-      }
     }
   ],
-  "totalProducts": 13,
-  "lastUpdated": "2025-12-03T07:14:26.097Z",
+  "totalProducts": 11,
+  "lastUpdated": "2025-12-03T10:39:43.871Z",
   "version": "2.0"
 }

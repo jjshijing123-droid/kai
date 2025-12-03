@@ -121,7 +121,10 @@
                 <div class="folder-info">
                   <span class="folder-name">{{ product.name }}</span>
                 </div>
-                <div class="folder-size">{{ formatFileSize(product.totalSize || 0) }}</div>
+                <div class="folder-meta">
+                  <span class="folder-file-count">{{ product.fileCount || 0 }} {{ t('productManagement_filesUnit') }}</span>
+                  <span class="folder-size">{{ formatFileSize(product.totalSize || 0) }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1518,8 +1521,8 @@ const handleLoginSuccess = () => {
 /* 上传区域容器 */
 .upload-section-container {
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 20px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -1571,8 +1574,8 @@ const handleLoginSuccess = () => {
 }
 
 .upload-content svg {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
 }
 
 /* 文件夹网格 */
@@ -1793,6 +1796,21 @@ const handleLoginSuccess = () => {
   white-space: nowrap;
   width: 100%;
   max-width: 100%;
+}
+
+.folder-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.folder-file-count {
+  font-size: 12px;
+  color: #626262;
+  margin: 0;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  line-height: 1.1;
+  letter-spacing: 0;
 }
 
 .folder-size {

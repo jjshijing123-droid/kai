@@ -26,7 +26,7 @@
       
       <!-- 通用抽屉菜单按钮（在所有屏幕尺寸下显示） -->
       <Button variant="text" @click="toggleMenu" class="menu-button">
-        <LucideIcon name="Menu" class="h-5 w-5" />
+       <Menu style="width: 20px !important; height: 20px !important; min-width: 20px !important; min-height: 20px !important; max-width: 20px !important; max-height: 20px !important;" />
       </Button>
     </div>
     
@@ -40,6 +40,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { Menu } from 'lucide-vue-next'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter, useRoute } from 'vue-router'
 import Drawer from './Drawer.vue'

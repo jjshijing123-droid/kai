@@ -256,9 +256,9 @@ const removeZipFile = (index) => {
   gap: 10px;
 }
 
-.upload-icon {
-  width: 42px;
-  height: 42px;
+.upload-icon svg{
+  width: 40px;
+  height: 40px;
   color: #00a0d9;
 }
 

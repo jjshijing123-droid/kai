@@ -434,9 +434,10 @@ defineExpose({
   gap: 10px;
 }
 
-.upload-icon {
-  font-size: 48px;
-  color: #1890ff;
+.upload-icon svg{
+  width: 44px;
+  height: 44px;
+  color: #00a0d9;
 }
 
 .upload-text {
