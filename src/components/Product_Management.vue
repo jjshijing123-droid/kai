@@ -1773,41 +1773,15 @@ const handleLoginSuccess = () => {
   font-weight: 700;
 }
 
-/* 移除旧的样式 */
-.autoWrapper,
-.autoWrapper2 {
-  display: none !important;
-}
 
 /* 文件列表样式 */
 .file-list {
   width: 100%;
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 12x;
 }
 
-.file-item {
-  background: #ffffff;
-  border-bottom: 1px solid #e8e8e8;
-  border-radius: 0;
-  padding: 16px 20px;
-  margin-bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: auto;
-  min-height: 64px;
-  box-sizing: border-box;
-  transition: all 0.2s ease;
-}
 
-.file-item:last-child {
-
-}
-
-.file-item:hover {
-  background: #f5f5f5;
-}
 
 .file-content {
   display: flex;
@@ -2257,7 +2231,7 @@ const handleLoginSuccess = () => {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   background: #fafafa;
   border: 1px solid #e8e8e8;
   border-radius: 6px;
