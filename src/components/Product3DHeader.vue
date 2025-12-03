@@ -5,8 +5,9 @@
       variant="text"
       @click="handleBack" 
       class="back-button"
+      size="icon"
     >
-      <LucideIcon name="ArrowLeft" size="18" class="icon" />
+      <LucideIcon name="ChevronLeft" size="16" />
     </Button>
     
     <!-- 右边：下载按钮和抽屉按钮 -->
@@ -17,7 +18,7 @@
         @click="handleDownload" 
         class="download-button"
       >
-        <LucideIcon name="Download" size="18" class="icon" />
+        <LucideIcon name="Download" size="16" />
         {{ t('product3dHeader_downloadAllImages') }}
       </Button>
       
@@ -26,8 +27,9 @@
         variant="text"
         @click="toggleDrawer" 
         class="drawer-button"
+        size="icon"
       >
-        <LucideIcon name="Menu" size="18" class="icon" />
+        <LucideIcon name="Menu" size="16" />
       </Button>
     </div>
   </div>
@@ -86,7 +88,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 16px;
   height: 64px;
   background-color: transparent;
   position: fixed;
@@ -98,51 +100,18 @@ onUnmounted(() => {
 
 .right-buttons {
   display: flex;
-  gap: 8px;
-}
-
-.back-button,
-.drawer-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  color: #4d4d4d;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.back-button:hover,
-.drawer-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #4d4d4d;
-  transform: scale(1.05);
+  gap: 6px;
 }
 
 .download-button {
   display: flex;
   align-items: center;
-  justify-content: center;
-  height: 40px;
-  color: #4d4d4d;
+  gap: 6px;
   font-weight: 500;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: 6px;
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.download-button:hover {
-  background: rgba(255, 255, 255, 0.2);
   color: #4d4d4d;
-  transform: scale(1.02);
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
 }
 
 .back-button:hover,
@@ -151,9 +120,7 @@ onUnmounted(() => {
   color: #4d4d4d;
 }
 
-.icon {
-  font-size: 18px;
-}
+
 
 /* 响应式设计 */
 @media (max-width: 768px) {
@@ -161,20 +128,14 @@ onUnmounted(() => {
     padding: 0 16px;
   }
   
-  .back-button,
-  .drawer-button {
-    width: 36px;
-    height: 36px;
-  }
+
   
   .download-button {
     height: 36px;
     font-size: 14px;
   }
   
-  .icon {
-    font-size: 16px;
-  }
+
 }
 
 @media (max-width: 480px) {
@@ -182,11 +143,7 @@ onUnmounted(() => {
     padding: 0 12px;
   }
   
-  .back-button,
-  .drawer-button {
-    width: 32px;
-    height: 32px;
-  }
+
   
   .download-button {
     height: 32px;
@@ -198,8 +155,6 @@ onUnmounted(() => {
     font-size: 14px;
   }
   
-  .icon {
-    font-size: 14px;
-  }
+
 }
 </style>

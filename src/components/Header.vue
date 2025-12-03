@@ -25,8 +25,8 @@
       </div>
       
       <!-- 通用抽屉菜单按钮（在所有屏幕尺寸下显示） -->
-      <Button variant="text" @click="toggleMenu" class="menu-button">
-       <Menu style="width: 20px !important; height: 20px !important; min-width: 20px !important; min-height: 20px !important; max-width: 20px !important; max-height: 20px !important;" />
+      <Button variant="text" @click="toggleMenu" size="icon">
+         <LucideIcon name="Menu" size="16" />
       </Button>
     </div>
     
@@ -105,7 +105,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 16px;
   height: 64px;
   background-color: #fff;
   border-bottom: 1px solid #f0f0f0;
@@ -136,7 +136,7 @@ onUnmounted(() => {
 .nav-buttons {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0px;
 }
 
 /* 桌面端专用导航按钮（在小屏幕上隐藏） */
@@ -179,24 +179,9 @@ onUnmounted(() => {
   font-size: 16px;
 }
 
-/* 菜单按钮（在所有屏幕尺寸下都显示） */
-.menu-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-}
 
-.menu-button:hover {
-  background: #f5f5f5;
-}
 
-/* 3D查看器页面专用样式 */
-.header-3d-view {
-  border-bottom: none !important;
-}
+
 
 /* 响应式设计 */
 @media (max-width: 768px) {

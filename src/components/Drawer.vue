@@ -5,7 +5,7 @@
       <div class="drawer-panel" @click.stop>
         <div class="drawer-header">
           <h3 class="drawer-title"></h3>
-          <button class="drawer-close-btn" @click="closeDrawer">
+          <button class="drawer-close-btn" @click="closeDrawer" size="icon">
             <LucideIcon name="X" size="20" />
           </button>
         </div>
@@ -266,7 +266,8 @@ const switchLanguage = async (lang) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: 0 16px;
+  height: 64px;
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -282,8 +283,8 @@ const switchLanguage = async (lang) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border: none;
   background: transparent;
   border-radius: 4px;
@@ -487,7 +488,7 @@ const switchLanguage = async (lang) => {
   }
   
   .drawer-header {
-    padding: 12px 16px;
+    padding: 0 16px;
   }
   
   .admin-section,
