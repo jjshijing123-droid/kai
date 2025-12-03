@@ -13,6 +13,30 @@ class FolderService {
   }
 
   /**
+   * 递归计算文件夹大小
+   */
+  calculateFolderSize(folderPath) {
+    let totalSize = 0;
+    
+    const items = fs.readdirSync(folderPath, { withFileTypes: true });
+    
+    for (const item of items) {
+      const itemPath = path.join(folderPath, item.name);
+      
+      if (item.isDirectory()) {
+        // 递归计算子文件夹大小
+        totalSize += this.calculateFolderSize(itemPath);
+      } else if (item.isFile()) {
+        // 添加文件大小
+        const stats = fs.statSync(itemPath);
+        totalSize += stats.size;
+      }
+    }
+    
+    return totalSize;
+  }
+
+  /**
    * 获取文件夹详情
    */
   async getFolderDetails(folderPath) {
@@ -49,10 +73,13 @@ class FolderService {
           const subFolderPath = path.join(fullPath, item.name);
           const subItems = fs.readdirSync(subFolderPath, { withFileTypes: true });
           
+          // 计算子文件夹的总大小
+          const subFolderTotalSize = this.calculateFolderSize(subFolderPath);
+          
           folders[item.name] = {
             path: path.join(folderPath, item.name),
             fileCount: subItems.filter(subItem => subItem.isFile()).length,
-            totalSize: 0 // 简化实现
+            totalSize: subFolderTotalSize
           };
         } else if (item.isFile()) {
           const filePath = path.join(fullPath, item.name);
