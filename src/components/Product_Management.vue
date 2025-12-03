@@ -493,7 +493,6 @@ import Modal from './ui/modal.vue'
 import Progress from './ui/progress.vue'
 import LucideIcon from './ui/LucideIcon.vue'
 import SearchInput from './ui/search-input.vue'
-import JSZip from 'jszip'
 import ProductFolderUploader from './ProductFolderUploader.vue'
 import ProductFileUploader from './ProductFileUploader.vue'
 import ZipUploadZone from './ZipUploadZone.vue'
@@ -504,7 +503,6 @@ const { isAdminLoggedIn } = useAdminAuth()
 
 // 响应式数据
 const products = ref([])
-const currentFolderContent = ref([])
 const currentPath = ref(['Product'])
 const loading = ref(true)
 const error = ref(null)
@@ -529,31 +527,16 @@ const renameFolderNameError = ref('')
 const showContextMenu = ref(false)
 const contextMenuPosition = ref({ x: 0, y: 0 })
 const contextMenuProduct = ref(null)
-const selectedFiles = ref([])
-const currentUploadIndex = ref(0)
-const fileInput = ref(null)
 const selectedZipFiles = ref([])
-const zipFileInput = ref(null)
 const zipUploadZoneRef = ref(null)
 const uploadStatus = ref('')
 const uploadProgress = ref(0)
 
-// 新增：创建文件夹相关的响应式数据
 const folderNameInput = ref(null)
-const folderNameExamples = ref([
-  '新产品系列',
-  '2024年度产品',
-  '移动应用',
-  'Web应用',
-  '桌面软件'
-])
-const isValidatingName = ref(false)
-const nameValidationTimeout = ref(null)
 
-// 拖拽上传相关数据
-const isDragOver = ref(false)
+// 拖拽上传相关数据（如果未使用可以删除）
+// const isDragOver = ref(false)
 
-// 新增：多步骤批量上传相关数据
 const currentUploadStep = ref(1)
 const uploadSteps = ref([
   {
@@ -570,9 +553,7 @@ const uploadSteps = ref([
 
 // ZIP文件验证和预览相关数据
 const zipFileValid = ref(false)
-const zipFileValidationChecked = ref(false)
 const zipFileValidationMessage = ref('')
-const zipFileStructure = ref(null)
 
 // 进度跟踪相关数据
 const processedFiles = ref(0)
@@ -627,107 +608,66 @@ const formatFileSize = (bytes) => {
 }
 
 const validateFolderName = () => {
-  // 清除之前的验证超时
-  if (nameValidationTimeout.value) {
-    clearTimeout(nameValidationTimeout.value)
+  if (!newFolderName.value || newFolderName.value.trim() === '') {
+    folderNameError.value = ''
+    return
   }
   
-  isValidatingName.value = true
+  const name = newFolderName.value.trim()
   
-  // 模拟异步验证，延迟验证以避免频繁调用
-  nameValidationTimeout.value = setTimeout(async () => {
-    try {
-      if (!newFolderName.value || newFolderName.value.trim() === '') {
-        folderNameError.value = ''
-        isValidatingName.value = false
-        return
-      }
-      
-      const name = newFolderName.value.trim()
-      
-      // 基本格式验证
-      if (name.length < 2) {
-        folderNameError.value = t('productManagement_folderNameTooShort')
-        isValidatingName.value = false
-        return
-      }
-      
-      if (name.length > 50) {
-        folderNameError.value = t('productManagement_folderNameTooLong')
-        isValidatingName.value = false
-        return
-      }
-      
-      const invalidChars = /[<>:/\\|?*\x00-\x1F]/
-      if (invalidChars.test(name)) {
-        folderNameError.value = t('productManagement_folderNameContainsInvalid')
-        isValidatingName.value = false
-        return
-      }
-      
-      // 检查是否以空格开头或结尾
-      if (newFolderName.value !== name) {
-        folderNameError.value = t('productManagement_folderNameNoLeadingTrailingSpaces')
-        isValidatingName.value = false
-        return
-      }
-      
-      // 检查重复名称（客户端验证）
-      if (products.value.some(p => p.name === name)) {
-        folderNameError.value = t('productManagement_folderNameExists')
-        isValidatingName.value = false
-        return
-      }
-      
-      // 特殊字符检查
-      if (name.includes('..') || name.includes('//') || name.includes('\\\\')) {
-        folderNameError.value = t('productManagement_folderNameContainsInvalidSequence')
-        isValidatingName.value = false
-        return
-      }
-      
-      folderNameError.value = ''
-    } catch (error) {
-      console.error('验证文件夹名称时出错:', error)
-      folderNameError.value = t('productManagement_validationError')
-    } finally {
-      isValidatingName.value = false
-    }
-  }, 300)
+  // 基本格式验证
+  if (name.length < 2) {
+    folderNameError.value = t('productManagement_folderNameTooShort')
+    return
+  }
+  
+  if (name.length > 50) {
+    folderNameError.value = t('productManagement_folderNameTooLong')
+    return
+  }
+  
+  const invalidChars = /[<>:/\\|?*\x00-\x1F]/
+  if (invalidChars.test(name)) {
+    folderNameError.value = t('productManagement_folderNameContainsInvalid')
+    return
+  }
+  
+  // 检查是否以空格开头或结尾
+  if (newFolderName.value !== name) {
+    folderNameError.value = t('productManagement_folderNameNoLeadingTrailingSpaces')
+    return
+  }
+  
+  // 检查重复名称（客户端验证）
+  if (products.value.some(p => p.name === name)) {
+    folderNameError.value = t('productManagement_folderNameExists')
+    return
+  }
+  
+  // 特殊字符检查
+  if (name.includes('..') || name.includes('//') || name.includes('\\\\')) {
+    folderNameError.value = t('productManagement_folderNameContainsInvalidSequence')
+    return
+  }
+  
+  folderNameError.value = ''
 }
 
 // 键盘事件处理
 const handleKeyDown = (event) => {
-  // Enter键创建文件夹
+  // Enter键创建文件夹，Escape键关闭弹窗
   if (event.key === 'Enter') {
     event.preventDefault()
     if (newFolderName.value && !folderNameError.value && !creatingFolder.value) {
       createFolder()
     }
-  }
-  
-  // Escape键关闭弹窗
-  if (event.key === 'Escape') {
+  } else if (event.key === 'Escape') {
     event.preventDefault()
     closeCreateFolderModal()
   }
 }
 
-// 应用示例名称
-const applyExampleName = (exampleName) => {
-  if (creatingFolder.value) return
-  
-  newFolderName.value = exampleName
-  // 手动触发验证
-  setTimeout(() => {
-    validateFolderName()
-    // 自动聚焦到输入框
-    folderNameInput.value?.focus()
-    // 选中所有文本
-    folderNameInput.value?.select()
-  }, 50)
-}
-
+// 清理后的函数
 const validateRenameFolderName = () => {
   if (!renameFolderName.value) {
     renameFolderNameError.value = ''
@@ -962,13 +902,6 @@ const closeCreateFolderModal = () => {
   newFolderName.value = ''
   folderNameError.value = ''
   creatingFolder.value = false
-  isValidatingName.value = false
-  
-  // 清除验证超时
-  if (nameValidationTimeout.value) {
-    clearTimeout(nameValidationTimeout.value)
-    nameValidationTimeout.value = null
-  }
 }
 
 // 打开创建文件夹模态框时自动聚焦
@@ -999,8 +932,6 @@ const closeUploadFileModal = () => {
 
 const closeBatchUploadModal = () => {
   showBatchUploadModal.value = false
-  selectedFiles.value = []
-  currentUploadIndex.value = 0
   selectedZipFiles.value = []
   uploadStatus.value = ''
   uploadProgress.value = 0
@@ -1012,14 +943,12 @@ const closeBatchUploadModal = () => {
 const resetMultiStepUpload = () => {
   currentUploadStep.value = 1
   zipFileValid.value = false
-  zipFileValidationChecked.value = false
   zipFileValidationMessage.value = ''
   processedFiles.value = 0
   totalFiles.value = 0
   processedFolders.value = 0
   totalFolders.value = 0
   currentStageText.value = ''
-  isDragOver.value = false
 }
 
 // 处理ZIP文件选择
@@ -1030,7 +959,6 @@ const handleZipFileSelected = (files) => {
 // 处理ZIP文件验证
 const handleZipFileValidated = (validationResult) => {
   zipFileValid.value = validationResult.valid
-  zipFileValidationChecked.value = true
   if (!validationResult.valid) {
     zipFileValidationMessage.value = validationResult.message
   } else {
@@ -1360,10 +1288,8 @@ const handleLoginSuccess = () => {
 
 /* Frame 330 - 搜索和操作区域 */
 .frame330 {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  align-self: stretch;
+  display: grid;
+    grid-template-columns: 2fr max-content;
   gap: 20px;
   width: 100%;
   box-sizing: border-box;
@@ -1592,7 +1518,7 @@ const handleLoginSuccess = () => {
 /* 上传区域容器 */
 .upload-section-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 2fr;
   gap: 20px;
   width: 100%;
   box-sizing: border-box;
@@ -1649,47 +1575,12 @@ const handleLoginSuccess = () => {
   height: 42px;
 }
 
-/* Frame 340 - 文件夹列表 */
-.frame340 {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  align-self: stretch;
-  justify-content: center;
-  padding-right: 1px;
-}
-
 /* 文件夹网格 */
 .folder-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  height: auto;
-  min-height: auto;
-}
-
-.folder-item {
-  background: #ffffff;
-  border: 1px solid #e8e8e8;
-  border-radius: 12px;
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  height: auto;
-  box-sizing: border-box;
-  min-height: 80px;
-}
-
-.folder-item:hover {
-  background: #f5f5f5;
-  border-color: #00a0d9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* 面包屑和统计信息容器 */
@@ -1720,7 +1611,7 @@ const handleLoginSuccess = () => {
 }
 
 .breadcrumb-item {
-  display:block;
+  display: flex;
   align-items: center;
   line-height: 18px;
   height: 18px;
@@ -1778,10 +1669,8 @@ const handleLoginSuccess = () => {
 .file-list {
   width: 100%;
   background: #ffffff;
-  border-radius: 12x;
+  border-radius: 12px;
 }
-
-
 
 .file-content {
   display: flex;
@@ -1833,29 +1722,6 @@ const handleLoginSuccess = () => {
 
 .file-actions button:hover {
   background: #e0e0e0;
-}
-
-.file-type {
-  font-size: 12px;
-  color: #626262;
-  margin-left: 4px;
-}
-
-/* 文件夹自动包装容器 */
-.autoWrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  align-self: stretch;
-  gap: 12px;
-}
-
-.autoWrapper2 {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  align-self: stretch;
-  gap: 12px;
 }
 
 /* 文件夹项 - 精准还原Figma设计稿 */
@@ -2000,6 +1866,13 @@ const handleLoginSuccess = () => {
     padding: 16px;
   }
   
+  /* Frame 330 - 搜索和操作区域 */
+  .frame330 {
+  display: grid;
+    grid-template-columns: repeat(1, 1fr);
+  gap: 20px;
+  }
+
   .header-top {
     flex-direction: column;
     align-items: flex-start;
@@ -2017,6 +1890,11 @@ const handleLoginSuccess = () => {
   
   .action-buttons {
     justify-content: space-between;
+  }
+
+    .action-buttons button {
+    width: 100%;
+    justify-content: center;
   }
   
   .folder-grid {
@@ -2088,18 +1966,6 @@ const handleLoginSuccess = () => {
   color: #262626;
 }
 
-/* 传统表单样式兼容性 */
-.form-content .form-item {
-  margin-bottom: 16px;
-}
-
-.form-content .form-item label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #262626;
-}
-
 .error-text {
   color: #ff4d4f;
   font-size: 12px;
@@ -2111,42 +1977,7 @@ const handleLoginSuccess = () => {
   margin: 16px 0;
 }
 
-.upload-section {
-  padding: 20px;
-}
-
-.upload-info {
-  margin-bottom: 16px;
-}
-
-.upload-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 0px;
-  color: #262626;
-  display: flex;
-  align-items: center;
-}
-
-.upload-description {
-  color: #8c8c8c;
-  margin-bottom: 12px;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.warning-section {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: #fff7e6;
-  border: 1px solid #ffd591;
-  border-radius: 6px;
-  margin-bottom: 20px;
-  color: #d46b08;
-  font-size: 13px;
-}
+/* 重复的样式已被删除，保留主要的样式定义 */
 
 /* 拖拽上传区域样式 */
 .zip-upload-zone {
@@ -2167,6 +1998,7 @@ const handleLoginSuccess = () => {
   box-shadow: 0 4px 12px rgba(0, 160, 217, 0.15);
 }
 
+/* 拖拽覆盖状态的样式 */
 .zip-upload-zone.drag-over {
   border-color: #00a0d9;
   background: #e6f7ff;
@@ -2234,7 +2066,7 @@ const handleLoginSuccess = () => {
   margin-bottom: 8px;
   background: #fafafa;
   border: 1px solid #e8e8e8;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 13px;
   color: #262626;
   transition: all 0.2s ease;
@@ -2499,288 +2331,11 @@ const handleLoginSuccess = () => {
   font-style: italic;
 }
 
-.preview-loading {
-  text-align: center;
-  padding: 40px 20px;
-  color: #8c8c8c;
-}
+/* 未使用的验证状态样式已被清理 */
 
-.loading-spinner {
-  margin-bottom: 16px;
-}
-
-/* 文件验证状态 */
-.validation-status {
-  margin-top: 12px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.validation-success {
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
-  color: #389e0d;
-}
-
-.validation-error {
-  background: #fff2f0;
-  border: 1px solid #ffccc7;
-  color: #cf1322;
-}
-
-.file-validation {
-  margin-left: auto;
-}
-
-.file-validation.valid {
-  color: #52c41a;
-}
-
-.file-validation.invalid {
-  color: #ff4d4f;
-}
-
-/* 警告区域 */
-.warning-section {
-  margin: 16px 0;
-}
-
-.warning-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.warning-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #ff4d4f;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.warning-description {
-  color: #8c8c8c;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.warning-content {
-  background: #fff7e6;
-  border: 1px solid #ffd591;
-  border-radius: 8px;
-  padding: 20px;
-}
-
-.warning-list {
-  margin-bottom: 20px;
-}
-
-.warning-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 12px;
-  padding: 8px 0;
-  font-size: 14px;
-  color: #8c8c8c;
-}
-
-.warning-item:last-child {
-  margin-bottom: 0;
-}
-
-/* 确认输入 */
-.confirmation-input {
-  margin-bottom: 20px;
-}
-
-.confirmation-input label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #262626;
-  font-size: 14px;
-}
-
-/* 风险评估 */
-.risk-assessment h5 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #262626;
-  margin-bottom: 12px;
-}
-
-.risk-level {
-  border: 1px solid;
-  border-radius: 6px;
-  padding: 12px;
-  background: white;
-}
-
-.risk-level.risk-high {
-  border-color: #ffccc7;
-  background: #fff7f7;
-}
-
-.risk-level.risk-medium {
-  border-color: #ffe58f;
-  background: #fffbe6;
-}
-
-.risk-level.risk-low {
-  border-color: #b7eb8f;
-  background: #f6ffed;
-}
-
-.risk-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.risk-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.risk-level.risk-high .risk-dot {
-  background: #ff4d4f;
-}
-
-.risk-level.risk-medium .risk-dot {
-  background: #faad14;
-}
-
-.risk-level.risk-low .risk-dot {
-  background: #52c41a;
-}
-
-.risk-label {
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.risk-level.risk-high .risk-label {
-  color: #ff4d4f;
-}
-
-.risk-level.risk-medium .risk-label {
-  color: #faad14;
-}
-
-.risk-level.risk-low .risk-label {
-  color: #52c41a;
-}
-
-.risk-description {
-  font-size: 12px;
-  color: #8c8c8c;
-  line-height: 1.4;
-  margin: 0;
-}
+/* 未使用的样式已被清理 */
 
 /* 进度区域 */
-.progress-section {
-  margin: 16px 0;
-}
-
-.progress-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.progress-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #262626;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.upload-progress {
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
-  border-radius: 8px;
-  padding: 20px;
-}
-
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.progress-status {
-  font-weight: 600;
-  color: #389e0d;
-  font-size: 14px;
-}
-
-.progress-percentage {
-  font-weight: 600;
-  color: #52c41a;
-  font-size: 16px;
-}
-
-.progress-details {
-  background: white;
-  border-radius: 6px;
-  padding: 16px;
-  border: 1px solid #d9d9d9;
-}
-
-.progress-stage {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.stage-label {
-  font-size: 13px;
-  color: #8c8c8c;
-}
-
-.stage-value {
-  font-weight: 600;
-  color: #00a0d9;
-  font-size: 13px;
-}
-
-.progress-stats {
-  display: flex;
-  gap: 20px;
-}
-
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-}
-
-.stat-label {
-  color: #8c8c8c;
-}
-
-.stat-value {
-  font-weight: 600;
-  color: #00a0d9;
-}
-
 /* 导航按钮 */
 .next-step-button,
 .prev-step-button {
@@ -2816,6 +2371,11 @@ const handleLoginSuccess = () => {
     gap: 12px;
   }
   
+  .upload-section-container {
+  grid-template-columns: repeat(1, 1fr);
+  gap: 10px;
+  }
+
   .progress-stats {
     flex-direction: column;
     gap: 8px;
