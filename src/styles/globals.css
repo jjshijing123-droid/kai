@@ -1,157 +1,182 @@
+/* 导入 Tailwind CSS 基础样式 */
 @tailwind base;
+/* 导入 Tailwind CSS 组件样式 */
 @tailwind components;
+/* 导入 Tailwind CSS 工具样式 */
 @tailwind utilities;
 
+/* 定义基础层样式 */
 @layer base {
+  /* 根元素样式变量（浅色主题） */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --background: 0 0% 100%; /* 背景色：白色 */
+    --foreground: 222.2 84% 4.9%; /* 前景色：深灰蓝色 */
+    --card: 0 0% 100%; /* 卡片背景色：白色 */
+    --card-foreground: 222.2 84% 4.9%; /* 卡片前景色：深灰蓝色 */
+    --popover: 0 0% 100%; /* 弹出框背景色：白色 */
+    --popover-foreground: 222.2 84% 4.9%; /* 弹出框前景色：深灰蓝色 */
+    --primary: 222.2 47.4% 11.2%; /* 主色调：深蓝黑色 */
+    --primary-foreground: 210 40% 98%; /* 主色调前景色：浅灰色 */
+    --secondary: 210 40% 96%; /* 次要色调：浅灰色 */
+    --secondary-foreground: 222.2 84% 4.9%; /* 次要色调前景色：深灰蓝色 */
+    --muted: 210 40% 96%; /* 辅助色调：浅灰色 */
+    --muted-foreground: 215.4 16.3% 46.9%; /* 辅助色调前景色：中灰色 */
+    --accent: 210 40% 96%; /* 强调色：浅灰色 */
+    --accent-foreground: 222.2 84% 4.9%; /* 强调色前景色：深灰蓝色 */
+    --destructive: 0 84.2% 60.2%; /* 破坏性颜色：红色 */
+    --destructive-foreground: 210 40% 98%; /* 破坏性颜色前景色：浅灰色 */
+    --border: 214.3 31.8% 91.4%; /* 边框颜色：浅灰色 */
+    --input: 214.3 31.8% 91.4%; /* 输入框颜色：浅灰色 */
+    --ring: 222.2 84% 4.9%; /* 环形颜色：深灰蓝色 */
+    --radius: 0.5rem; /* 边框半径：0.5rem */
+    --custom: 142.1 76.2% 36.3%; /* 自定义颜色：绿色 */
+    --custom-foreground: 355.7 100% 97.3%; /* 自定义颜色前景色：白色 */
   }
 
+  /* 深色主题样式变量 */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --background: 222.2 84% 4.9%; /* 背景色：深蓝黑色 */
+    --foreground: 210 40% 98%; /* 前景色：浅灰色 */
+    --card: 222.2 84% 4.9%; /* 卡片背景色：深蓝黑色 */
+    --card-foreground: 210 40% 98%; /* 卡片前景色：浅灰色 */
+    --popover: 222.2 84% 4.9%; /* 弹出框背景色：深蓝黑色 */
+    --popover-foreground: 210 40% 98%; /* 弹出框前景色：浅灰色 */
+    --primary: 210 40% 98%; /* 主色调：浅灰色 */
+    --primary-foreground: 222.2 47.4% 11.2%; /* 主色调前景色：深蓝黑色 */
+    --secondary: 217.2 32.6% 17.5%; /* 次要色调：深灰色 */
+    --secondary-foreground: 210 40% 98%; /* 次要色调前景色：浅灰色 */
+    --muted: 217.2 32.6% 17.5%; /* 辅助色调：深灰色 */
+    --muted-foreground: 215 20.2% 65.1%; /* 辅助色调前景色：中灰色 */
+    --accent: 217.2 32.6% 17.5%; /* 强调色：深灰色 */
+    --accent-foreground: 210 40% 98%; /* 强调色前景色：浅灰色 */
+    --destructive: 0 62.8% 30.6%; /* 破坏性颜色：深红色 */
+    --destructive-foreground: 210 40% 98%; /* 破坏性颜色前景色：浅灰色 */
+    --border: 217.2 32.6% 17.5%; /* 边框颜色：深灰色 */
+    --input: 217.2 32.6% 17.5%; /* 输入框颜色：深灰色 */
+    --ring: 212.7 26.8% 83.9%; /* 环形颜色：浅蓝灰色 */
+    --custom: 142.1 70.6% 45.3%; /* 深色主题自定义颜色：浅绿色 */
+    --custom-foreground: 144.9 80.4% 10%; /* 深色主题自定义颜色前景色：深绿色 */
   }
 }
 
+/* 定义基础元素样式 */
 @layer base {
+  /* 全局样式：为所有元素添加边框颜色 */
   * {
     @apply border-border;
   }
+  /* 车身样式：设置背景色和文本颜色 */
   body {
     @apply bg-background text-foreground;
   }
 }
 
 /* 保留原有的自定义样式 */
+/* 全局 HTML 和 body 样式 */
 html, body {
-  height: 100%;
-  overflow-x: hidden;
+  height: 100%; /* 高度占满整个视口 */
+  overflow-x: hidden; /* 隐藏水平滚动条 */
+  /* 字体族：系统字体优先，确保跨平台一致性 */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6; /* 行高：1.6 */
+  -webkit-font-smoothing: antialiased; /* 平滑字体渲染（WebKit） */
+  -moz-osx-font-smoothing: grayscale; /* 平滑字体渲染（Firefox） */
 }
 
 /* 滚动条样式 */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 6px; /* 滚动条宽度 */
+  height: 6px; /* 滚动条高度 */
 }
 
+/* 滚动条轨道样式 */
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+  background: #f1f1f1; /* 轨道背景色：浅灰色 */
+  border-radius: 3px; /* 轨道边框半径：3px */
 }
 
+/* 滚动条滑块样式 */
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: #c1c1c1; /* 滑块背景色：中灰色 */
+  border-radius: 3px; /* 滑块边框半径：3px */
 }
 
+/* 滚动条滑块悬停样式 */
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #a8a8a8; /* 悬停时滑块背景色：深灰色 */
 }
 
 /* 链接样式 */
 a {
-  color: hsl(var(--primary));
-  text-decoration: none;
-  transition: color 0.3s ease;
+  color: hsl(var(--primary)); /* 链接颜色：主色调 */
+  text-decoration: none; /* 去除下划线 */
+  transition: color 0.3s ease; /* 颜色过渡效果：0.3秒，ease 缓动 */
 }
 
+/* 链接悬停样式 */
 a:hover {
-  color: hsl(var(--primary)) / 0.8;
+  color: hsl(var(--primary)) / 0.8; /* 悬停时链接颜色：主色调，透明度 0.8 */
 }
 
 /* 表单元素样式 */
 input, textarea, select {
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+  font-family: inherit; /* 继承父元素字体 */
+  font-size: inherit; /* 继承父元素字体大小 */
+  line-height: inherit; /* 继承父元素行高 */
 }
 
+/* 表单元素焦点样式 */
 input:focus, textarea:focus, select:focus {
-  outline: none;
+  outline: none; /* 去除默认焦点轮廓 */
 }
 
 /* 容器样式 */
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
+  max-width: 1200px; /* 最大宽度：1200px */
+  margin: 0 auto; /* 水平居中 */
+  padding: 0 24px; /* 内边距：0 24px */
 }
 
+/* 流体容器样式 */
 .container-fluid {
-  width: 100%;
-  padding: 0 24px;
+  width: 100%; /* 宽度：100% */
+  padding: 0 24px; /* 内边距：0 24px */
 }
 
-/* 响应式断点 */
+/* 响应式断点 - 大屏设备（小于 1200px） */
 @media (max-width: 1200px) {
   .container {
-    max-width: 992px;
+    max-width: 992px; /* 最大宽度：992px */
   }
 }
 
+/* 响应式断点 - 中屏设备（小于 992px） */
 @media (max-width: 992px) {
   .container {
-    max-width: 768px;
-    padding: 0 20px;
+    max-width: 768px; /* 最大宽度：768px */
+    padding: 0 20px; /* 内边距：0 20px */
   }
 }
 
+/* 响应式断点 - 小屏设备（小于 768px） */
 @media (max-width: 768px) {
   .container {
-    max-width: 576px;
-    padding: 0 16px;
+    max-width: 576px; /* 最大宽度：576px */
+    padding: 0 16px; /* 内边距：0 16px */
   }
 }
 
+/* 响应式断点 - 超小屏设备（小于 576px） */
 @media (max-width: 576px) {
   .container {
-    max-width: 100%;
-    padding: 0 12px;
+    max-width: 100%; /* 最大宽度：100% */
+    padding: 0 12px; /* 内边距：0 12px */
   }
 }
 
 /* 打印样式 */
 @media print {
+  /* 打印时隐藏带有 .no-print 类的元素 */
   .no-print {
     display: none !important;
   }

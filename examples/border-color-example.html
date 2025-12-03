@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主题边框颜色示例</title>
+    <!-- 假设已经引入了全局样式 -->
+    <link rel="stylesheet" href="/src/styles/globals.css">
+</head>
+<body class="p-8">
+    <h1 class="text-2xl font-bold mb-6">主题边框颜色示例</h1>
+    
+    <!-- 示例1：基本边框 -->
+    <div class="border border-border p-4 mb-4 rounded-md">
+        这是一个带有主题边框颜色的div
+    </div>
+    
+    <!-- 示例2：不同边框宽度 -->
+    <div class="border-2 border-border p-4 mb-4 rounded-md">
+        这是一个带有2px宽主题边框的div
+    </div>
+    
+    <!-- 示例3：仅底部边框 -->
+    <div class="border-b border-border p-4 mb-4">
+        这是一个仅底部带有主题边框的div
+    </div>
+    
+    <!-- 示例4：卡片样式 -->
+    <div class="border border-border rounded-lg overflow-hidden mb-4">
+        <div class="p-4 bg-card">
+            <h3 class="font-medium mb-2">卡片标题</h3>
+            <p class="text-muted-foreground">这是一个带有主题边框的卡片示例</p>
+        </div>
+    </div>
+    
+    <!-- 示例5：表单元素 -->
+    <div class="mb-4">
+        <label class="block text-sm font-medium mb-1">输入框</label>
+        <input type="text" placeholder="带有主题边框的输入框" 
+               class="border border-border rounded-md px-3 py-2 w-full bg-input text-foreground">
+    </div>
+    
+    <!-- 示例6：主题切换按钮 -->
+    <button onclick="toggleTheme()" 
+            class="px-4 py-2 border border-border rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+        切换主题
+    </button>
+    
+    <script>
+        // 主题切换功能
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
+    </script>
+</body>
+</html>

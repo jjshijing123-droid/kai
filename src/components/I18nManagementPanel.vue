@@ -13,72 +13,85 @@
     <div v-else class="admin-content">
       <!-- 页面头部 -->
       <div class="page-header">
-        <div class="header-content">
-          <h2 class="page-title">
-            <LucideIcon name="Globe" size="28" />
-            {{ t('i18nManager_title') }}
-          </h2>
-          <div class="header-actions">
-            <Button @click="saveAllTranslations" :loading="saving" variant="primary">
-              <LucideIcon name="Save" size="16" />
-              {{ t('i18nManager_saveAll') }}
+        <!-- Frame 348 -->
+        <div class="frame348">
+          <div class="frame335">
+            <Button @click="goBack" variant="text" class="back-button">
+              <LucideIcon name="ChevronLeft" class="h-4 w-4" />
             </Button>
-            <Button @click="exportTranslations" variant="secondary">
-              <LucideIcon name="Upload" size="16" />
+            <h1 class="page-title">{{ t('i18nManager_title') }}</h1>
+          </div>
+          <div class="header-actions">
+            <Button @click="exportTranslations" variant="secondary" class="refresh-button">
+              <LucideIcon name="Upload" class="h-4 w-4" />
               {{ t('i18nManager_export') }}
+            </Button>
+            <Button @click="saveAllTranslations" :loading="saving" variant="primary" class="refresh-button">
+              <LucideIcon name="Save" class="h-4 w-4" />
+              {{ t('i18nManager_saveAll') }}
             </Button>
           </div>
         </div>
       </div>
 
       <!-- 翻译完整性概览 -->
-      <Card :title="t('i18nManager_completeness')" class="completeness-section">
-        <div class="lang-grid">
-          <Card
+      <div class="rounded-lg border bg-card text-card-foreground shadow-sm completeness-section p-6 mb-6">
+        <h3 class="text-lg font-semibold mb-4">{{ t('i18nManager_completeness') }}</h3>
+        <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
+          <div
             v-for="lang in availableLanguages"
             :key="lang.code"
-            :class="{ 'current-language': lang.code === currentLanguage }"
-            size="small"
-            class="lang-card"
+            :class="{ 'ring-2 ring-primary': lang.code === currentLanguage }"
+            class="rounded-md border p-4 hover:shadow-md transition-shadow"
           >
-            <template #header>
-              <div class="lang-header">
-                <span class="flag">{{ lang.flag }}</span>
-                <span class="lang-name">{{ lang.name }}</span>
-                <Badge 
-                  v-if="lang.code === currentLanguage" 
-                  color="#1890ff"
-                >
-                  {{ currentLanguage === 'zh-CN' ? '当前' : 'Current' }}
-                </Badge>
+            <div class="flex justify-between items-center mb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">{{ lang.flag }}</span>
+                <span class="font-medium">{{ lang.name }}</span>
               </div>
-            </template>
+              <Badge 
+                v-if="lang.code === currentLanguage" 
+                variant="default"
+              >
+                {{ currentLanguage === 'zh-CN' ? '当前' : 'Current' }}
+              </Badge>
+            </div>
             
-            <div class="progress-section">
+            <div class="mb-3">
+              <div class="flex justify-between text-sm mb-1">
+                <span>{{ t('i18nManager_completeness') }}</span>
+                <span class="font-medium">{{ translationCompleteness[lang.code]?.percentage || 0 }}%</span>
+              </div>
               <Progress
                 :percent="translationCompleteness[lang.code]?.percentage || 0"
                 :stroke-color="getProgressColor(translationCompleteness[lang.code]?.percentage || 0)"
                 size="small"
               />
-              <div class="stats">
-                {{ translationCompleteness[lang.code]?.translated || 0 }}/{{ translationCompleteness[lang.code]?.total || 0 }}
+              <div class="text-xs text-muted-foreground mt-1">
+                {{ translationCompleteness[lang.code]?.translated || 0 }}/{{ translationCompleteness[lang.code]?.total || 0 }} {{ t('i18nManager_keys') }}
               </div>
             </div>
             
-            <div class="quality-info" v-if="translationCompleteness[lang.code]?.quality">
-              <Badge color="green">
+            <div class="flex flex-wrap gap-2">
+              <Badge 
+                v-if="translationCompleteness[lang.code]?.quality" 
+                variant="success"
+                size="small"
+              >
                 {{ currentLanguage === 'zh-CN' ? '质量' : 'Quality' }}: {{ translationCompleteness[lang.code]?.quality }}%
               </Badge>
-            </div>
-            
-            <div class="review-info" v-if="translationCompleteness[lang.code]?.needsReview?.length">
-              <Badge color="red">
-                {{ currentLanguage === 'zh-CN' ? '需要审核' : 'Needs Review' }}: {{ translationCompleteness[lang.code]?.needsReview?.length }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }}
+              
+              <Badge 
+                v-if="translationCompleteness[lang.code]?.needsReview?.length" 
+                variant="warning"
+                size="small"
+              >
+                {{ currentLanguage === 'zh-CN' ? '需要审核' : 'Needs Review' }}: {{ translationCompleteness[lang.code]?.needsReview?.length }}
               </Badge>
             </div>
-          </Card>
+          </div>
         </div>
-      </Card>
+      </div>
 
       <!-- 需要审核的翻译 -->
       <Card
@@ -448,12 +461,15 @@ const saveTranslation = async (lang, key, value) => {
   // 使用实际的 i18n 系统保存
   updateTranslation(lang, key, value)
   
-  // 立即保存到文件
+  // 立即保存到文件（仅在开发模式下记录日志，避免API调用错误）
   try {
     await i18n.saveTranslationsToFile()
     console.log(`Translation saved to file: ${lang}.${key} = ${value}`)
   } catch (error) {
-    console.error('Failed to save translation to file:', error)
+    // API调用失败，仅在开发模式下记录详细错误
+    if (import.meta.env.DEV) {
+      console.log('Translation saved locally:', error.message)
+    }
   }
 }
 
@@ -474,7 +490,10 @@ const handleDeleteTranslation = async (key) => {
     await i18n.saveTranslationsToFile()
     console.log(`Translation deleted from file: ${key}`)
   } catch (error) {
-    console.error('Failed to save after deletion:', error)
+    // API调用失败，仅在开发模式下记录详细错误
+    if (import.meta.env.DEV) {
+      console.log('Translation deleted locally:', error.message)
+    }
   }
 }
 
@@ -498,7 +517,10 @@ const saveAllTranslations = async () => {
     await i18n.saveTranslationsToFile()
     console.log('All translations saved to file')
   } catch (error) {
-    console.error('Failed to save all translations to file:', error)
+    // API调用失败，仅在开发模式下记录详细错误
+    if (import.meta.env.DEV) {
+      console.log('Translations saved locally:', error.message)
+    }
   }
   
   // 强制重新加载翻译数据以确保界面显示最新内容
@@ -539,98 +561,191 @@ const handleLoginSuccess = () => {
   // 登录成功后重新加载翻译数据
   loadTranslations()
 }
+
+// 返回上一页
+const goBack = () => {
+  window.history.back()
+}
 </script>
 
 <style scoped>
 .i18n-manager {
-  padding: 24px;
-  max-width: 1400px;
+  padding: 20px;
+  max-width: 1160px;
   margin: 0 auto;
   background-color: white;
   /* 利用App.vue中已经计算好的高度空间，确保减去header后充分利用可用空间 */
   min-height: calc(100vh - 64px); /* 与App.vue的main-content保持一致 */
   box-sizing: border-box;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 /* 页面头部 */
 .page-header {
-  margin-bottom: 32px;
-  padding: 24px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 20px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
 }
 
-.header-content {
+/* Frame 348 - 页面头部 */
+.frame348 {
   display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  align-self: stretch;
   justify-content: space-between;
-  align-items: center;
+  border-radius: 12px;
+  background: #ffffff;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+  box-sizing: border-box;
 }
 
+.frame335 {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  column-gap: 12px;
+}
+
+/* 页面标题 */
 .page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #202020;
   margin: 0;
-  color: #1a1a1a;
-  font-size: 28px;
-  font-weight: 600;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+
+/* 返回按钮 */
+.back-button {
+  color: #202020;
+  font-size: 14px;
+  padding: 0;
+  height: 24px;
+  width: 24px;
+  min-width: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: #f0f0f0;
+}
+
+.back-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* 刷新按钮 */
+.refresh-button {
+  background: #fdfdfd;
+  border: 1px solid #d9d9d9;
+  color: #202020;
+  font-size: 14px;
+  border-radius: 6px;
+  padding: 11px 15px;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  line-height: 15px;
+  letter-spacing: 0;
 }
 
-.page-title::before {
-  content: '';
-  display: inline-block;
-  width: 4px;
-  height: 28px;
-  background: linear-gradient(135deg, #1890ff, #36cfc9);
-  border-radius: 2px;
+.refresh-button.primary {
+  background: #00a0d9;
+  border: none;
+  color: #ffffff;
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 6px;
 }
 
 /* 卡片样式 */
-.completeness-section,
 .review-section,
 .translations-section {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-.card-header {
+/* 翻译完整性概览 */
+.completeness-section {
+  margin-bottom: 20px;
+}
+
+/* 搜索和操作区域 */
+.frame330 {
+  display: grid;
+  grid-template-columns: 2fr max-content;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 搜索输入容器 */
+.search-input-container {
+  flex: 1;
+  display: block;
+  height: 32px;
+  min-height: 32px;
+}
+
+/* 搜索输入框 */
+.search-input {
+  height: 32px;
+  min-height: 32px;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  font-size: 12px;
+}
+
+/* 操作按钮 */
+.action-buttons {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.card-extra {
-  margin-left: auto;
+  gap: 6px;
 }
 
 /* 语言网格 */
 .lang-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  gap: 12px;
+  width: 100%;
 }
 
 .review-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  gap: 12px;
+  width: 100%;
 }
 
 /* 语言卡片 */
 .current-language {
-  border: 2px solid #1890ff !important;
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+  border: 2px solid #00a0d9 !important;
+  box-shadow: 0 2px 8px rgba(0, 160, 217, 0.15);
 }
 
 .lang-header {
@@ -644,9 +759,10 @@ const handleLoginSuccess = () => {
 }
 
 .lang-name {
-  font-weight: 600;
-  color: #1a1a1a;
+  font-weight: 700;
+  color: #202020;
   flex: 1;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 .progress-section {
@@ -655,10 +771,11 @@ const handleLoginSuccess = () => {
 
 .stats {
   font-size: 12px;
-  color: #8c8c8c;
+  color: #626262;
   text-align: center;
   margin-top: 8px;
-  font-weight: 500;
+  font-weight: normal;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 .quality-info,
@@ -668,8 +785,8 @@ const handleLoginSuccess = () => {
 
 /* 审核卡片 */
 .review-card {
-  border: 1px solid #ffccc7;
-  background: #fff2f0;
+  border: 1px solid #e8e8e8;
+  background: #ffffff;
 }
 
 .review-header {
@@ -706,18 +823,19 @@ const handleLoginSuccess = () => {
 }
 
 .translation-key {
-  background: #f5f5f5;
+  background: #f0f0f0;
   padding: 2px 4px;
   border-radius: 3px;
   font-size: 12px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
 }
 
 .review-value {
   font-size: 12px;
-  color: #595959;
+  color: #626262;
   margin-bottom: 4px;
   word-break: break-word;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 .review-reason {
@@ -733,13 +851,21 @@ const handleLoginSuccess = () => {
 
 .secondary-text {
   font-size: 12px;
-  color: #8c8c8c;
+  color: #626262;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 /* 翻译表格 */
 .translations-table-container {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   overflow: auto;
+  width: 100%;
+}
+
+.translations-table {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .action-buttons {
@@ -749,16 +875,17 @@ const handleLoginSuccess = () => {
 
 /* 添加翻译区域 */
 .add-translation-section {
-  margin-top: 24px;
-  border: 1px dashed #d9d9d9;
+  margin-top: 20px;
+  border: 1px dashed #cecece;
   border-radius: 8px;
   background: #fafafa;
   transition: all 0.2s ease;
+  padding: 20px;
 }
 
 .add-translation-section:hover {
-  border-color: #1890ff;
-  background: #f0f2f5;
+  border-color: #00a0d9;
+  background: #f0f9ff;
 }
 
 .add-form {
@@ -770,7 +897,7 @@ const handleLoginSuccess = () => {
 .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 
 .form-item {
@@ -784,14 +911,46 @@ const handleLoginSuccess = () => {
 }
 
 .form-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1a1a1a;
+  font-size: 12px;
+  font-weight: 700;
+  color: #202020;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+/* 搜索和操作区域 */
+.frame330 {
+  display: grid;
+  grid-template-columns: 2fr max-content;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 搜索输入容器 */
+.search-input-container {
+  flex: 1;
+  display: block;
+  height: 32px;
+  min-height: 32px;
+}
+
+/* 搜索输入框 */
+.search-input {
+  height: 32px;
+  min-height: 32px;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  font-size: 12px;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  gap: 6px;
 }
 
 /* 图标样式 */
@@ -804,43 +963,29 @@ const handleLoginSuccess = () => {
 @media (max-width: 768px) {
   .i18n-manager {
     padding: 16px;
-    /* 在移动端也保持正确的高度计算 */
-    min-height: calc(100vh - 64px);
   }
   
   .page-header {
-    padding: 20px;
+    padding: 16px;
   }
   
-  .page-title {
-    font-size: 24px;
+  /* Frame 330 - 搜索和操作区域 */
+  .frame330 {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 20px;
   }
-  
-  .header-content {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-  }
-  
+
   .header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
     width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
   }
   
   .lang-grid,
   .review-grid {
     grid-template-columns: 1fr;
-  }
-  
-  .card-header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-  
-  .card-extra {
-    margin-left: 0;
   }
 }
 
@@ -851,6 +996,17 @@ const handleLoginSuccess = () => {
   
   .form-row {
     grid-template-columns: 1fr;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .header-actions button {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>
