@@ -20,14 +20,24 @@ import { cn } from "../../lib/utils"
 // 使用cva定义按钮的样式变体
 const buttonVariants = cva(
   // 基础样式类：所有变体共有的样式
-  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background",
+    "  transition-all duration-300 ease inline-flex items-center justify-center rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background",
+
   {
     // 定义样式变体
     variants: {
       // 按钮类型变体
       variant: {
+        // 填充32
+        fill: "bg-[var(--primary-opacity-9)] text-white hover:bg-[var(--primary-opacity-8)] active:bg-[var(--primary-opacity-7)] active:text-[#FFFFFFE5]" ,
+        // 描边32
+        line: "border-[var(--neutral-opacity-6)] text-[var(--neutral-opacity-12)] border-[1px] hover:bg-[var(--neutral-opacity-1)] hover:border-[var(--neutral-opacity-7)] active:border-[var(--neutral-opacity-5)] active:text-[var(--neutral-opacity-11)]",
+        // 幽灵
+        no: "text-[var(--neutral-opacity-12)] hover:bg-[var(--neutral-opacity-3)] active:bg-[var(--neutral-opacity-1)] active:text-[var(--neutral-opacity-11)]",
+
+
         // 默认主要按钮样式
         default: "bg-[var(--primary-9)] text-[#ffffff] hover:bg-[var(--primary-9)]/90 active:bg-[var(--primary-10)]",
+
         // 危险/删除按钮样式
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80", 
         // 描边按钮样式
@@ -35,7 +45,7 @@ const buttonVariants = cva(
         // 次要按钮样式
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70", 
         // 幽灵按钮样式（无背景）
-        ghost: "hover:bg-[var(--primary-2)] hover:text-accent-foreground active:bg-accent/80", 
+         ghost: "hover:bg-[var(--primary-2)] hover:text-accent-foreground active:bg-accent/80", 
         // 纯文本按钮样式
         text: "bg-transparent hover:bg-gray-100 text-gray-700 active:bg-gray-200", 
         // 链接样式按钮
@@ -47,14 +57,17 @@ const buttonVariants = cva(
         sm: "h-9 px-3 rounded-md", // 小尺寸
         lg: "h-11 px-8 rounded-md", // 大尺寸
         icon: "h-10 w-10", // 图标按钮（40x40px）
+        small: "h-8 px-2 text-sm", // 自定义小尺寸
         icon32: "h-8 w-8", // 小图标按钮（32x32px）
-        small: "h-8 px-2 text-sm" // 自定义小尺寸
+        icon40: "h-10 w-10", // 小图标按钮（32x32px）
+        32: "h-8 px-2.5 text-[12px] leading-[16px] font-[400] gap-1.5", // 自定义小尺寸
+        40: "h-10 px-3.5 text-[15px] leading-[18px] font-[400] gap-2"
       },
     },
     // 默认变体值
     defaultVariants: {
-      variant: "default", // 默认使用主要按钮样式
-      size: "default", // 默认使用默认尺寸
+      variant: "fill", // 默认使用主要按钮样式
+      size: "32", // 默认使用默认尺寸
     },
   }
 )

@@ -1,175 +1,291 @@
+
 /**
- * Shadcn-Vue 主题配置
- * 统一项目的主题样式和全局配置，基于CSS变量系统
+ * Shadcn-Vue 主题配置文件
+ *
+ * 这个文件定义了完整的UI主题系统，基于CSS变量和Tailwind CSS设计规范。
+ * 主要功能包括：
+ * - 支持亮色/暗色主题动态切换
+ * - 完整的品牌色彩体系（primary, gray, success, warning, error）
+ * - 响应式设计断点（移动端优先）
+ * - 统一的字体、间距、阴影等设计元素
+ * - 流畅的动画效果（手风琴展开/收起等交互动画）
+ *
+ * 使用方法：
+ * 1. 在Vue应用中导入使用：import theme from '@/theme'
+ * 2. 通过CSS变量系统注入主题：将配置注入到:root选择器
+ * 3. 支持运行时动态切换主题：通过class切换实现
+ * 4. 组件中使用：使用CSS变量或通过Tailwind CSS类名使用
+ *
+ * 注意事项：
+ * - 该配置文件使用ES6模块导出，支持Tree Shaking
+ * - 颜色值遵循Tailwind CSS标准色阶
+ * - 支持响应式设计和深色模式
+ * - 可与shadcn-vue组件库完美配合使用
+ *
+ * @author shadcn-vue 主题系统
+ * @version 1.0.0
+ * @since 2024
  */
 
+// =====================================
 // CSS变量主题配置
+// =====================================
+
+/**
+ * CSS变量配置对象
+ * 用于生成CSS变量并注入到应用的:root选择器中
+ * 支持动态主题切换（亮色模式 vs 暗色模式）
+ *
+ * 这些变量会自动注入到CSS中，组件可以通过CSS自定义属性使用
+ * 例如：background-color: var(--background-color)
+ *
+ * @property {Object} colors - 亮色主题颜色配置
+ * @property {Object} dark - 暗色主题颜色配置
+ * @property {Object} gray - 中性灰色系列
+ * @property {Object} primary - 主要品牌色系列
+ * @property {Object} success - 成功状态绿色系列
+ * @property {Object} warning - 警告状态黄色系列
+ * @property {Object} error - 错误状态红色系列
+ */
 export const cssVariables = {
-  // 颜色变量 (使用hsl格式，便于CSS使用)
+  /**
+   * 亮色主题（默认主题）
+   * 适用于白天使用或有充足光线的环境
+   * 使用白色为背景基调，配合深色文字保证可读性
+   * 遵循WCAG 2.1 AA级无障碍标准，确保足够的颜色对比度
+   */
   colors: {
-    background: '#ffffff',
-    foreground: '#020817',
-    card: '#ffffff',
-    'card-foreground': '#020817',
-    popover: '#ffffff',
-    'popover-foreground': '#020817',
-    primary: '#0f172a',
-    'primary-foreground': '#f8fafc',
-    secondary: '#f1f5f9',
-    'secondary-foreground': '#020817',
-    muted: '#f1f5f9',
-    'muted-foreground': '#64748b',
-    accent: '#f1f5f9',
-    'accent-foreground': '#020817',
-    destructive: '#ef4444',
-    'destructive-foreground': '#f8fafc',
-    border: '#e2e8f0',
-    input: '#e2e8f0',
-    ring: '#020817',
-    radius: '0.5rem',
+    background: '#ffffff',        // 页面主背景色 - 纯白色，提供干净的基础
+    foreground: '#020817',        // 主要文字颜色 - 深蓝黑色，与背景形成高对比度
+    
+    card: '#ffffff',              // 卡片组件背景色 - 与页面背景保持一致，营造层次感
+    'card-foreground': '#020817', // 卡片文字颜色 - 使用深色文字，保证可读性
+    
+    popover: '#ffffff',           // 弹出层/下拉菜单背景色 - 纯白背景
+    'popover-foreground': '#020817', // 弹出层文字颜色 - 深色文字
+    
+    primary: '#0f172a',           // 主要操作按钮/链接颜色 - 深蓝色，传达权威感
+    'primary-foreground': '#f8fafc', // 主要操作文字颜色 - 白色文字，与主色形成对比
+    
+    secondary: '#f1f5f9',         // 次要操作/辅助元素背景色 - 浅灰蓝色
+    'secondary-foreground': '#020817', // 次要操作文字颜色 - 深色文字
+    
+    muted: '#f1f5f9',             // 静音色（弱化背景） - 非常浅的灰蓝色，用于降低视觉权重
+    'muted-foreground': '#64748b', // 静音色文字 - 中等灰色，不会完全隐藏但降低重要性
+    
+    accent: '#f1f5f9',            // 强调色背景 - 与静音色保持一致，用于突出显示
+    'accent-foreground': '#020817', // 强调色文字 - 深色文字
+    
+    destructive: '#ef4444',       // 危险操作/错误状态颜色 - 红色，表示警告和危险操作
+    'destructive-foreground': '#f8fafc', // 危险操作文字颜色 - 白色文字
+    
+    border: '#e2e8f0',            // 边框颜色 - 浅灰色，用于分隔不同的UI元素
+    input: '#e2e8f0',             // 输入框边框颜色 - 与边框色保持一致
+    
+    ring: '#020817',              // 焦点环颜色 - 深色，高对比度，用于键盘导航指示
+    
+    radius: '0.5rem',             // 默认圆角半径 - 8px，创造现代温和的设计风格
   },
   
-  // 暗色主题
-  'dark': {
-    background: '#020817',
-    foreground: '#f8fafc',
-    card: '#020817',
-    'card-foreground': '#f8fafc',
-    popover: '#020817',
-    'popover-foreground': '#f8fafc',
-    primary: '#f8fafc',
-    'primary-foreground': '#0f172a',
-    secondary: '#1e293b',
-    'secondary-foreground': '#f8fafc',
-    muted: '#1e293b',
-    'muted-foreground': '#94a3b8',
-    accent: '#1e293b',
-    'accent-foreground': '#f8fafc',
-    destructive: '#7f1d1d',
-    'destructive-foreground': '#f8fafc',
-    border: '#1e293b',
-    input: '#1e293b',
-    ring: '#cbd5e1',
+  /**
+   * 暗色主题
+   * 适用于夜间使用或在低光环境下使用，减少眼部疲劳
+   * 使用深色为背景基调，配合浅色文字保证可读性
+   * 遵循深色模式的最佳实践，遵循WCAG标准
+   */
+  dark: {
+    background: '#020817',        // 暗色页面背景 - 深蓝黑色，类似夜空色
+    foreground: '#f8fafc',        // 暗色文字颜色 - 近白色，保证良好的对比度
+    
+    card: '#020817',              // 暗色卡片背景 - 与页面背景保持一致
+    'card-foreground': '#f8fafc', // 暗色卡片文字 - 浅色文字
+    
+    popover: '#020817',           // 暗色弹出层背景 - 深色背景
+    'popover-foreground': '#f8fafc', // 暗色弹出层文字 - 浅色文字
+    
+    primary: '#f8fafc',           // 暗色主要操作颜色 - 浅色，在深色背景中突出
+    'primary-foreground': '#0f172a', // 暗色主要操作文字 - 深色文字配浅色背景
+    
+    secondary: '#1e293b',         // 暗色次要操作背景 - 中等深度的蓝色
+    'secondary-foreground': '#f8fafc', // 暗色次要操作文字 - 浅色文字
+    
+    muted: '#1e293b',             // 暗色静音色背景 - 深色背景用于降低视觉权重
+    'muted-foreground': '#94a3b8', // 暗色静音色文字 - 中等亮度灰色
+    
+    accent: '#1e293b',            // 暗色强调色背景 - 与静音色保持一致
+    'accent-foreground': '#f8fafc', // 暗色强调色文字 - 浅色文字
+    
+    destructive: '#7f1d1d',       // 暗色危险色 - 更深的红色，适合暗色背景
+    'destructive-foreground': '#f8fafc', // 暗色危险色文字 - 浅色文字
+    
+    border: '#1e293b',            // 暗色边框 - 深色边框，在深色背景中可见
+    input: '#1e293b',             // 暗色输入框边框 - 与边框色一致
+    
+    ring: '#cbd5e1',              // 暗色焦点环 - 浅色，在深色背景中清晰可见
   }
 }
 
-// 品牌色彩配置
+/**
+ * 品牌色彩系统
+ * 定义完整的品牌调色板，包含各种颜色从浅到深的完整色阶
+ * 遵循Tailwind CSS颜色命名规范，提供从50（最浅）到900（最深）的完整色阶
+ * 用于在不同场景下使用合适深度的颜色，如背景、边框、文字、装饰等
+ */
 export const brandColors = {
+  /**
+   * 主要品牌色 - 天蓝色系
+   * 传达专业、现代、可靠的品牌形象
+   * 适用于主要按钮、链接、重要信息等需要突出显示的元素
+   */
   primary: {
-    50: '#f0f9ff',
-    100: '#e0f2fe',
-    200: '#bae6fd',
-    300: '#7dd3fc',
-    400: '#38bdf8',
-    500: '#0ea5e9',
-    600: '#0284c7',
-    700: '#0369a1',
-    800: '#075985',
-    900: '#0c4a6e',
+    50: '#f0f9ff',   // 最浅色，用作大面积背景或浅色装饰
+    100: '#e0f2fe',  // 浅色背景，适合卡片或容器的浅色变体
+    200: '#bae6fd',  // 更浅的背景，用于悬停状态或选中状态
+    300: '#7dd3fc',  // 浅色边框或分割线
+    400: '#38bdf8',  // 浅色强调，用于图标或小面积强调
+    500: '#0ea5e9',  // 默认主色，用于主要按钮和链接
+    600: '#0284c7',  // 悬停状态，比默认色稍深
+    700: '#0369a1',  // 激活状态或选中状态
+    800: '#075985',  // 深色背景，用于深色主题的主要元素
+    900: '#0c4a6e',  // 最深色，主要用于深色背景上的白色文字
   },
+  
+  /**
+   * 中性灰色系列
+   * 提供完整的中性色阶，用于文字、边框、背景等
+   * 遵循现代设计中的灰色梯度，确保良好的层次感和可读性
+   */
   gray: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827',
+    50: '#f9fafb',   // 最浅灰，用作页面或卡片的最浅背景
+    100: '#f3f4f6',  // 浅灰背景，用于分隔不同的内容区域
+    200: '#e5e7eb',  // 边框颜色，用于分割线或边框
+    300: '#d1d5db',  // 禁用状态的背景或边框
+    400: '#9ca3af',  // 次要文字，提示信息
+    500: '#6b7280',  // 默认文字颜色，主体内容
+    600: '#4b5563',  // 深色文字，标题或重要信息
+    700: '#374151',  // 强调文字，最重要的文字信息
+    800: '#1f2937',  // 深色背景，用于深色主题
+    900: '#111827',  // 最深色，用于最深层的背景或最亮的文字
   },
+  
+  /**
+   * 成功/正确状态 - 绿色系列
+   * 用于表示成功、操作完成、正确状态等正面反馈
+   * 绿色传达积极、成功、安全的信息
+   */
   success: {
-    50: '#f0fdf4',
-    100: '#dcfce7',
-    200: '#bbf7d0',
-    300: '#86efac',
-    400: '#4ade80',
-    500: '#22c55e',
-    600: '#16a34a',
-    700: '#15803d',
-    800: '#166534',
-    900: '#14532d',
+    50: '#f0fdf4',   // 浅绿背景，用于成功消息的背景
+    100: '#dcfce7',  // 成功提示背景，比50稍深
+    200: '#bbf7d0',  // 浅绿边框，用于成功状态的边框
+    300: '#86efac',  // 浅绿强调，用于图标或装饰
+    400: '#4ade80',  // 浅成功色，用于浅色按钮
+    500: '#22c55e',  // 默认成功色，用于成功按钮或状态指示
+    600: '#16a34a',  // 深成功色，悬停状态
+    700: '#15803d',  // 激活成功色，按钮按下状态
+    800: '#166534',  // 深绿背景，用于深色主题的成功元素
+    900: '#14532d',  // 最深绿，用于最深的成功状态背景
   },
+  
+  /**
+   * 警告状态 - 黄色系列
+   * 用于表示警告、注意、需要用户关注的信息
+   * 黄色传达注意、警告、待处理的状态信息
+   */
   warning: {
-    50: '#fffbeb',
-    100: '#fef3c7',
-    200: '#fde68a',
-    300: '#fcd34d',
-    400: '#fbbf24',
-    500: '#f59e0b',
-    600: '#d97706',
-    700: '#b45309',
-    800: '#92400e',
-    900: '#78350f',
+    50: '#fffbeb',   // 浅黄背景，用于警告消息背景
+    100: '#fef3c7',  // 警告提示背景，比50稍深
+    200: '#fde68a',  // 浅黄边框，警告状态边框
+    300: '#fcd34d',  // 浅黄强调，用于警告图标
+    400: '#fbbf24',  // 浅警告色，用于浅色警告按钮
+    500: '#f59e0b',  // 默认警告色，用于警告按钮或状态
+    600: '#d97706',  // 深警告色，悬停状态
+    700: '#b45309',  // 激活警告色，按钮按下状态
+    800: '#92400e',  // 深黄背景，深色主题警告元素
+    900: '#78350f',  // 最深黄，最深的警告状态
   },
+  
+  /**
+   * 错误状态 - 红色系列
+   * 用于表示错误、失败、危险操作等负面状态
+   * 红色传达错误、危险、禁止的强烈信息
+   */
   error: {
-    50: '#fef2f2',
-    100: '#fee2e2',
-    200: '#fecaca',
-    300: '#fca5a5',
-    400: '#f87171',
-    500: '#ef4444',
-    600: '#dc2626',
-    700: '#b91c1c',
-    800: '#991b1b',
-    900: '#7f1d1d',
+    50: '#fef2f2',   // 浅红背景，错误消息背景
+    100: '#fee2e2',  // 错误提示背景，比50稍深
+    200: '#fecaca',  // 浅红边框，错误状态边框
+    300: '#fca5a5',  // 浅红强调，错误图标颜色
+    400: '#f87171',  // 浅错误色，浅色错误按钮
+    500: '#ef4444',  // 默认错误色，错误按钮或状态指示
+    600: '#dc2626',  // 深错误色，悬停状态
+    700: '#b91c1c',  // 激活错误色，按钮按下状态
+    800: '#991b1b',  // 深红背景，深色主题错误元素
+    900: '#7f1d1d',  // 最深红，最严重的错误状态
   }
 }
 
-// 响应式断点配置
+ // =====================================
+ // 响应式断点配置
+ // =====================================
+ // 定义移动端优先的响应式断点，遵循Tailwind CSS标准
+ // 用于在不同屏幕尺寸下应用不同的样式
+// 响应式断点配置 - 定义应用中的响应式设计断点
+// 这些断点用于在不同屏幕尺寸下调整布局和组件样式
 export const breakpoints = {
-  sm: '640px',
-  md: '768px',
-  lg: '1024px',
-  xl: '1280px',
-  '2xl': '1536px',
+  sm: '640px',      // 小型设备（手机横屏）
+  md: '768px',      // 中型设备（小平板）
+  lg: '1024px',     // 大型设备（大平板/小型笔记本）
+  xl: '1280px',     // 超大型设备（桌面显示器）
+  '2xl': '1536px',  // 2K显示器及以上
 }
 
 // 字体配置
 export const typography = {
+  // 字体家族 - 定义应用中使用的字体栈
   fontFamily: {
     sans: [
-      'Inter',
-      'ui-sans-serif',
-      'system-ui',
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-      '"Segoe UI Symbol"',
+      'Inter',                   // 主要字体
+      'ui-sans-serif',           // UI无衬线字体
+      'system-ui',               // 系统UI字体
+      '-apple-system',           // Apple系统字体
+      'BlinkMacSystemFont',      // macOS系统字体
+      '"Segoe UI"',             // Windows系统字体
+      'Roboto',                  // Android系统字体
+      '"Helvetica Neue"',       // 通用无衬线字体
+      'Arial',                   // 备用无衬线字体
+      'sans-serif',              // 浏览器默认无衬线字体
+      '"Apple Color Emoji"',    // Apple彩色表情符号
+      '"Segoe UI Emoji"',       // Windows彩色表情符号
+      '"Segoe UI Symbol"',      // Windows符号字体
     ]
   },
+  // 字体大小 - 定义各种文本尺寸和对应的行高
   fontSize: {
-    xs: ['0.75rem', { lineHeight: '1rem' }],
-    sm: ['0.875rem', { lineHeight: '1.25rem' }],
-    base: ['1rem', { lineHeight: '1.5rem' }],
-    lg: ['1.125rem', { lineHeight: '1.75rem' }],
-    xl: ['1.25rem', { lineHeight: '1.75rem' }],
-    '2xl': ['1.5rem', { lineHeight: '2rem' }],
-    '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
-    '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
-    '5xl': ['3rem', { lineHeight: '1' }],
+    xs: ['0.75rem', { lineHeight: '1rem' }],      // 极小文本 (12px)
+    sm: ['0.875rem', { lineHeight: '1.25rem' }],  // 小文本 (14px)
+    base: ['1rem', { lineHeight: '1.5rem' }],     // 基础文本 (16px)
+    lg: ['1.125rem', { lineHeight: '1.75rem' }],  // 大文本 (18px)
+    xl: ['1.25rem', { lineHeight: '1.75rem' }],   // 超大文本 (20px)
+    '2xl': ['1.5rem', { lineHeight: '2rem' }],    // 2倍大文本 (24px)
+    '3xl': ['1.875rem', { lineHeight: '2.25rem' }], // 3倍大文本 (30px)
+    '4xl': ['2.25rem', { lineHeight: '2.5rem' }], // 4倍大文本 (36px)
+    '5xl': ['3rem', { lineHeight: '1' }],         // 5倍大文本 (48px)
   },
+  // 字重 - 定义文本的粗细程度
   fontWeight: {
-    light: '300',
-    normal: '400',
-    medium: '500',
-    semibold: '600',
-    bold: '700',
+    light: '300',      // 细体
+    normal: '400',     // 正常体
+    medium: '500',     // 中等粗细
+    semibold: '600',   // 半粗体
+    bold: '700',       // 粗体
   },
+  // 字母间距 - 定义字符之间的间距
   letterSpacing: {
-    tighter: '-0.05em',
-    tight: '-0.025em',
-    normal: '0em',
-    wide: '0.025em',
-    wider: '0.05em',
-    widest: '0.1em',
+    tighter: '-0.05em',  // 更紧凑
+    tight: '-0.025em',   // 紧凑
+    normal: '0em',       // 正常
+    wide: '0.025em',     // 宽松
+    wider: '0.05em',     // 更宽松
+    widest: '0.1em',     // 最宽松
   },
 }
 
@@ -236,34 +352,48 @@ export const borderRadius = {
   full: '9999px',
 }
 
-// 动画配置
+ // =====================================
+ // 动画配置
+ // =====================================
+ // 定义UI动画效果，提升用户体验
+ // 包括手风琴展开/收起等交互动画
 export const animation = {
+  // 关键帧定义 - 描述动画的具体过程
   keyframes: {
+    // 手风琴向下展开动画
     'accordion-down': {
-      from: { height: '0' },
-      to: { height: 'var(--radix-accordion-content-height)' },
+      from: { height: '0' },                                         // 开始状态：高度为0
+      to: { height: 'var(--radix-accordion-content-height)' },       // 结束状态：展开到内容高度
     },
+    // 手风琴向上收起动画
     'accordion-up': {
-      from: { height: 'var(--radix-accordion-content-height)' },
-      to: { height: '0' },
+      from: { height: 'var(--radix-accordion-content-height)' },      // 开始状态：内容高度
+      to: { height: '0' },                                           // 结束状态：高度为0
     },
   },
+  
+  // 动画实例 - 将关键帧应用到具体的CSS动画
   animation: {
-    'accordion-down': 'accordion-down 0.2s ease-out',
-    'accordion-up': 'accordion-up 0.2s ease-out',
+    'accordion-down': 'accordion-down 0.2s ease-out',  // 手风琴展开：0.2秒缓出动画
+    'accordion-up': 'accordion-up 0.2s ease-out',      // 手风琴收起：0.2秒缓出动画
   },
 }
 
-// 导出所有配置
+ // =====================================
+ // 主题统一导出
+ // =====================================
+ // 将所有配置整合为一个统一的主题对象
+ // 便于在应用中进行统一的样式管理
 export const theme = {
-  cssVariables,
-  brandColors,
-  breakpoints,
-  typography,
-  spacing,
-  boxShadow,
-  borderRadius,
-  animation,
+  cssVariables,      // CSS变量配置（动态主题切换）
+  brandColors,       // 品牌色彩系统
+  breakpoints,       // 响应式断点
+  typography,        // 字体排版
+  spacing,           // 间距系统
+  boxShadow,         // 阴影系统
+  borderRadius,      // 圆角系统
+  animation,         // 动画效果
 }
 
+// 默认导出，提供便捷的引用方式
 export default theme

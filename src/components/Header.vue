@@ -8,29 +8,29 @@
     <div class="header-controls">
       <!-- 桌面端显示的导航按钮 -->
       <div class="nav-buttons desktop-only">
-        <Button variant="text" @click="goToI18nManager" class="nav-button" size="small">
+        <Button  @click="goToI18nManager" class="nav-button" variant="no" size="32">
           <LucideIcon name="Globe" size="16" />
           {{ t('header_i18nManager') }}
         </Button>
         
-        <Button variant="text" @click="goToProductManager" class="nav-button" size="small">
+        <Button @click="goToProductManager" class="nav-button"  variant="no" size="32">
           <LucideIcon name="Package" size="16" />
           {{ t('header_productManager') }}
         </Button>
         
-        <Button variant="text" @click="toggleLanguage" class="lang-button" size="small" >
+        <Button @click="toggleLanguage" class="lang-button"  variant="no" size="32">
           <LucideIcon name="RefreshCw" size="16" />
           {{ currentLanguage === 'zh-CN' ? t('common_english') : t('common_chinese') }}
         </Button>
         
-        <Button variant="text" @click="toggleTheme" class="theme-button" size="small" title="Toggle Theme">
-          <LucideIcon :name="currentTheme === 'light' ? 'Moon' : 'Sun'" size="16" />
+        <Button  @click="toggleTheme" class="theme-button"  variant="no" size="icon32" title="Toggle Theme">
+          <LucideIcon :name="currentTheme === 'light' ? 'Moon' : 'Sun'" size="16"/>
         </Button>
       </div>
       
       <!-- 通用抽屉菜单按钮（在所有屏幕尺寸下显示） -->
-      <Button variant="text" @click="toggleMenu" class="Menu-button" size="small" >
-         <LucideIcon name="Menu" size="16" />
+      <Button @click="toggleMenu" class="Menu-button" variant="no" size="icon32" >
+         <LucideIcon name="Menu" size="18" />
       </Button>
     </div>
     
@@ -184,25 +184,7 @@ onUnmounted(() => {
 
 
 
-.nav-button,
-.lang-button,
-.theme-button,
-.Menu-button{
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 500;
-  color: var(--neutral-12);
-  transition: all 0.3s ease;
-}
 
-.nav-button:hover,
-.lang-button:hover,
-.theme-button:hover,
-.Menu-button:hover{
-  background: var(--neutral-4);
-  color: var(--neutral-12);
-}
 
 
 

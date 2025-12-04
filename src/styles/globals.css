@@ -346,6 +346,14 @@
   /* 全局样式：为所有元素添加边框颜色 */
   * {
     @apply border-border;
+
+    /* transition: all 0.2s ease; */
+
+    /* .btn, .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  } */
+
+
   }
   /* 车身样式：设置背景色和文本颜色 */
   body {
@@ -357,7 +365,7 @@
 @layer components {
   /* 页面标题样式 */
   .page-title {
-    @apply text-2xl md:text-3xl font-bold text-foreground mb-6;
+    @apply text-[12px] md:text-3xl font-bold text-neutral-12 mb-6;
   }
 }
 

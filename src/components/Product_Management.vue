@@ -15,12 +15,15 @@
       <!-- Frame 348 -->
       <div class="frame348">
         <div class="frame335">
-          <Button @click="goBack" variant="text" class="back-button" size="icon32">
-            <LucideIcon name="ChevronLeft" :size="18" />
+          <Button @click="goBack" variant="no" size="icon40">
+            <!-- class="back-button" -->
+            <LucideIcon name="ChevronLeft" />
+            <!-- <LucideIcon name="ChevronLeft" :size="18" /> -->
           </Button>
           <h1 class="page-title">{{ t('productManagement_title') }}</h1>
         </div>
-        <Button @click="refreshProducts" :loading="loading" variant="secondary" class="refresh-button">
+        <Button @click="refreshProducts" :loading="loading" variant="line" size="40" >
+            <!-- class="refresh-button" -->
           <LucideIcon name="RefreshCw" class="h-4 w-4" />
           {{ t('productManagement_refresh') }}
         </Button>
@@ -38,11 +41,13 @@
             />
           </div>
           <div class="action-buttons">
-            <Button @click="showCreateFolderModalEnhanced" variant="primary" class="create-folder-button">
+            <Button @click="showCreateFolderModalEnhanced"  variant="line" size="32" >
+               <!-- class="create-folder-button" -->
               <LucideIcon name="FolderPlus" class="h-4 w-4" />
               {{ t('productManagement_createFolder') }}
             </Button>
-            <Button @click="showBatchUploadModal = true" variant="primary" class="batch-upload-button">
+            <Button @click="showBatchUploadModal = true" variant="fill" size="32" >  
+              <!-- class="batch-upload-button" -->
               {{ t('productManagement_batchUpload') }}
             </Button>
           </div>
@@ -1148,8 +1153,6 @@ const handleLoginSuccess = () => {
   align-self: stretch;
   justify-content: space-between;
   border-radius: 12px;
-  padding-top: 20px;
-  padding-bottom: 20px;
   width: 100%;
   height: auto;
   margin-bottom: 20px;
@@ -1243,39 +1246,9 @@ const handleLoginSuccess = () => {
 /* 返回按钮 */
 
 
-.back-button{
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 500;
-  color: var(--neutral-12);
-  transition: all 0.3s ease;
-  /* 调整图标按钮的尺寸，使用!important确保覆盖默认样式 */
-  /* width: 24px !important;
-  height: 24px !important; */
-}
 
-.back-button:hover{
-  background: var(--neutral-4);
-  color: var(--neutral-12);
-}
 
-/* 刷新按钮 */
-.refresh-button {
-  background: var(--neutral-1);
-  border: 1px solid var(--neutral-6);
-  color: var(--neutral-12);
-  font-size: 14px;
-  border-radius: 6px;
-  padding: 11px 15px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  line-height: 15px;
-  letter-spacing: 0;
-}
+
 
 /* Frame 330 - 搜索和操作区域 */
 .frame330 {
@@ -1299,14 +1272,7 @@ const handleLoginSuccess = () => {
   overflow: hidden;
 }
 
-.text3 {
-  flex-grow: 1;
-  line-height: 13px;
-  letter-spacing: 0;
-  color: var(--8C8C8C-11, #626262);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  font-size: 12px;
-}
+
 
 /* 操作按钮容器 */
 .frame331 {
@@ -1316,57 +1282,13 @@ const handleLoginSuccess = () => {
   column-gap: 6px;
 }
 
-/* 新建文件夹按钮 */
-.instance2 {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  column-gap: 4px;
-  border: 1px solid var(--8C8C8C-6, #d9d9d9);
-  border-radius: 6px;
-  padding: 11px;
-  height: 32px;
-}
 
-.text4 {
-  flex-shrink: 0;
-  line-height: 13px;
-  letter-spacing: 0;
-  color: var(--8C8C8C-12, #202020);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  font-size: 12px;
-}
 
-/* 批量上传按钮 */
-.instance3 {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  column-gap: 4px;
-  border-radius: 6px;
-  background: var(--00A0D9-9, #00a0d9);
-  padding: 12px;
-  height: 32px;
-}
 
-.text5 {
-  flex-shrink: 0;
-  line-height: 13px;
-  letter-spacing: 0;
-  color: var(--background);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  font-size: 12px;
-}
 
-/* 搜索和操作区域 */
-.search-input-container {
-  flex: 1;
-  display: block;
-  height: 32px;
-  min-height: 32px;
-}
+
+
+
 
 /* 操作按钮 */
 .action-buttons {
@@ -1374,41 +1296,6 @@ const handleLoginSuccess = () => {
   gap: 6px;
 }
 
-.create-folder-button {
-  background: var(--background);
-  border: 1px solid var(--neutral-6);
-  color: var(--neutral-12);
-  font-size: 12px;
-  border-radius: 6px;
-  padding: 11px;
-  height: 32px;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  line-height: 13px;
-  letter-spacing: 0;
-  min-width: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.batch-upload-button {
-  background: var(--primary-9);
-  border: none;
-  color: var(--background);
-  font-size: 12px;
-  border-radius: 6px;
-  padding: 12px;
-  height: 32px;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  line-height: 13px;
-  letter-spacing: 0;
-  min-width: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
 
 /* Frame 333 - 统计信息 */
 .frame333 {
@@ -1429,15 +1316,7 @@ const handleLoginSuccess = () => {
   column-gap: 6px;
 }
 
-.text6 {
-  flex-shrink: 0;
-  line-height: 13px;
-  letter-spacing: 0;
-  color: var(--8C8C8C-12, #202020);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-}
+
 
 .frame336 {
   display: inline-flex;
@@ -1446,23 +1325,6 @@ const handleLoginSuccess = () => {
   column-gap: 6px;
 }
 
-.text7 {
-  flex-shrink: 0;
-  line-height: 13px;
-  letter-spacing: 0;
-  color: var(--8C8C8C-11, #626262);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  font-size: 12px;
-}
-
-.text8 {
-  flex-shrink: 0;
-  line-height: 13px;
-  letter-spacing: 0;
-  color: var(--00A0D9-11, #007ab1);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  font-size: 12px;
-}
 
 /* 统计信息 */
 .stats-section {
