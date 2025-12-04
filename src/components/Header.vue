@@ -1,5 +1,5 @@
 <template>
-  <div class="header" :class="{ 'header-3d-view': is3DViewerPage }">
+  <div class="header">
     <div class="logo" @click="goToHome">
       <img src="../images/Logo.png" alt="Logo" class="logo-image">
     </div>
@@ -8,28 +8,28 @@
     <div class="header-controls">
       <!-- 桌面端显示的导航按钮 -->
       <div class="nav-buttons desktop-only">
-        <Button variant="text" @click="goToI18nManager" class="nav-button">
+        <Button variant="text" @click="goToI18nManager" class="nav-button" size="small">
           <LucideIcon name="Globe" size="16" />
           {{ t('header_i18nManager') }}
         </Button>
         
-        <Button variant="text" @click="goToProductManager" class="nav-button">
+        <Button variant="text" @click="goToProductManager" class="nav-button" size="small">
           <LucideIcon name="Package" size="16" />
           {{ t('header_productManager') }}
         </Button>
         
-        <Button variant="text" @click="toggleLanguage" class="lang-button">
+        <Button variant="text" @click="toggleLanguage" class="lang-button" size="small" >
           <LucideIcon name="RefreshCw" size="16" />
           {{ currentLanguage === 'zh-CN' ? t('common_english') : t('common_chinese') }}
         </Button>
         
-        <Button variant="text" @click="toggleTheme" class="theme-button" title="Toggle Theme">
+        <Button variant="text" @click="toggleTheme" class="theme-button" size="small" title="Toggle Theme">
           <LucideIcon :name="currentTheme === 'light' ? 'Moon' : 'Sun'" size="16" />
         </Button>
       </div>
       
       <!-- 通用抽屉菜单按钮（在所有屏幕尺寸下显示） -->
-      <Button variant="text" @click="toggleMenu" size="icon">
+      <Button variant="text" @click="toggleMenu" class="Menu-button" size="small" >
          <LucideIcon name="Menu" size="16" />
       </Button>
     </div>
@@ -95,10 +95,7 @@ const toggleTheme = () => {
   applyTheme(newTheme)
 }
 
-// 检测是否为3D查看器页面
-const is3DViewerPage = computed(() => {
-  return route.path.startsWith('/product-3d/')
-})
+
 
 const goToHome = () => {
   router.push('/')
@@ -151,8 +148,8 @@ onUnmounted(() => {
   align-items: center;
   padding: 0 16px;
   height: 64px;
-  background-color: #fff;
-  border-bottom: 1px solid #f0f0f0;
+  background-color: var(--neutral-1);
+  border-bottom: 1px solid var(--neutral-6);
   position: relative;
 }
 
@@ -180,51 +177,34 @@ onUnmounted(() => {
 .nav-buttons {
   display: flex;
   align-items: center;
-  gap: 0px;
+  gap: 6px;
 }
 
-/* 桌面端专用导航按钮（在小屏幕上隐藏） */
-.desktop-only {
-  display: flex;
-}
 
-@media (max-width: 1024px) {
-  .desktop-only {
-    display: none;
-  }
-}
 
-@media (max-width: 768px) {
-  .desktop-only {
-    display: none;
-  }
-}
+
 
 .nav-button,
 .lang-button,
-.theme-button {
+.theme-button,
+.Menu-button{
   display: flex;
   align-items: center;
   gap: 6px;
   font-weight: 500;
-  color: #4d4d4d;
-  padding: 8px 12px;
-  border-radius: 6px;
+  color: var(--neutral-12);
   transition: all 0.3s ease;
 }
 
 .nav-button:hover,
 .lang-button:hover,
-.theme-button:hover {
-  background: #f5f5f5;
-  color: #4d4d4d;
+.theme-button:hover,
+.Menu-button:hover{
+  background: var(--neutral-4);
+  color: var(--neutral-12);
 }
 
-.nav-button .icon,
-.lang-button .icon,
-.theme-button .icon {
-  font-size: 16px;
-}
+
 
 
 
