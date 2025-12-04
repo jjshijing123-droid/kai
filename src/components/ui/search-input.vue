@@ -64,7 +64,7 @@ const handleBlur = (event) => {
   display: flex;
   align-items: center;
   gap: 5px;
-  background: #f0f0f0;
+  background: var(--neutral-3);
   padding: 6px 10px;
   border-radius: 6px;
   box-sizing: border-box;
@@ -80,7 +80,7 @@ const handleBlur = (event) => {
   border: none;
   outline: none;
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 13px;
   letter-spacing: 0;
@@ -91,7 +91,7 @@ const handleBlur = (event) => {
 }
 
 .search-input-field::placeholder {
-  color: #626262;
+  color: var(--neutral-11);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   font-size: 12px;
   line-height: 13px;
@@ -105,7 +105,7 @@ const handleBlur = (event) => {
 .search-icon {
   width: 14px;
   height: 14px;
-  color: #626262;
+  color: var(--neutral-11);
   flex-shrink: 0;
 }
 

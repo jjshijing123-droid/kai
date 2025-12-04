@@ -241,9 +241,32 @@
         "sixViews": "/Product/RS32Y-OB/images_6Views/",
         "other": "/Product/RS32Y-OB/images_other/"
       }
+    },
+    {
+      "id": 1,
+      "name": "555",
+      "folderName": "555",
+      "model": "555",
+      "category": "general",
+      "description": "Product model: 555",
+      "path": "Product/555",
+      "folder": "Product/555/",
+      "totalSize": 0,
+      "fileCount": 0,
+      "mainImage": "/Product/555/image_00.webp",
+      "views": {
+        "view1": "/Product/555/view1/",
+        "view2": "/Product/555/view2/",
+        "view3": "/Product/555/view3/",
+        "view4": "/Product/555/view4/"
+      },
+      "additionalImages": {
+        "sixViews": "/Product/555/images_6Views/",
+        "other": "/Product/555/images_other/"
+      }
     }
   ],
-  "totalProducts": 11,
-  "lastUpdated": "2025-12-03T10:39:43.871Z",
+  "totalProducts": 12,
+  "lastUpdated": "2025-12-04T16:50:13.900Z",
   "version": "2.0"
 }

@@ -16,14 +16,11 @@
       <div class="frame348">
         <div class="frame335">
           <Button @click="goBack" variant="no" size="icon40">
-            <!-- class="back-button" -->
             <LucideIcon name="ChevronLeft" />
-            <!-- <LucideIcon name="ChevronLeft" :size="18" /> -->
           </Button>
           <h1 class="page-title">{{ t('productManagement_title') }}</h1>
         </div>
-        <Button @click="refreshProducts" :loading="loading" variant="line" size="40" >
-            <!-- class="refresh-button" -->
+        <Button @click="refreshProducts" :loading="loading" variant="line" size="40">
           <LucideIcon name="RefreshCw" class="h-4 w-4" />
           {{ t('productManagement_refresh') }}
         </Button>
@@ -41,13 +38,11 @@
             />
           </div>
           <div class="action-buttons">
-            <Button @click="showCreateFolderModalEnhanced"  variant="line" size="32" >
-               <!-- class="create-folder-button" -->
+            <Button @click="showCreateFolderModalEnhanced" variant="line" size="32">
               <LucideIcon name="FolderPlus" class="h-4 w-4" />
               {{ t('productManagement_createFolder') }}
             </Button>
-            <Button @click="showBatchUploadModal = true" variant="fill" size="32" >  
-              <!-- class="batch-upload-button" -->
+            <Button @click="showBatchUploadModal = true" variant="fill" size="32">
               {{ t('productManagement_batchUpload') }}
             </Button>
           </div>
@@ -150,13 +145,13 @@
                 </div>
               </div>
               <div class="file-actions">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" :title="t('productManagement_view')">
                   <LucideIcon name="Eye" class="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" :title="t('productManagement_download')">
                   <LucideIcon name="Download" class="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" :title="t('productManagement_delete')">
                   <LucideIcon name="Trash2" class="h-4 w-4" />
                 </Button>
               </div>
@@ -308,21 +303,100 @@
       width="lg:max-w-2xl"
       @close="closeUploadFileModal"
     >
-      <ProductFileUploader
-        ref="fileUploaderRef"
-        :disabled="uploading"
-        :current-path="currentPath.join('/')"
-        @upload-start="handleUploadStart"
-        @upload-complete="handleUploadComplete"
-      />
+      <!-- 文件上传区域 -->
+      <div class="file-upload-section">
+        <div class="file-upload-area" @click="triggerFileInput">
+          <input
+            ref="fileInput"
+            type="file"
+            multiple
+            @change="handleFileSelect"
+            style="display: none;"
+          />
+          <div class="upload-content">
+            <LucideIcon name="FileUp" class="h-10 w-10 text-primary" />
+            <p class="upload-title">{{ t('common_uploadFiles') }}</p>
+            <p class="upload-hint">{{ t('common_clickOrDragFiles') }}</p>
+          </div>
+        </div>
+
+        <!-- 已选择文件列表 -->
+        <div v-if="selectedFiles.length > 0" class="selected-files-section">
+          <div class="section-header">
+            <h4>{{ t('common_selectedFiles') }} ({{ selectedFiles.length }})</h4>
+            <Button
+              @click="clearSelectedFiles"
+              variant="ghost"
+              size="sm"
+              :disabled="uploading"
+              :title="t('common_clearAll')"
+            >
+              <LucideIcon name="Trash2" class="h-4 w-4 mr-1" />
+              {{ t('common_clearAll') }}
+            </Button>
+          </div>
+          
+          <!-- 文件列表 -->
+          <div class="files-list">
+            <div
+              v-for="(file, index) in selectedFiles"
+              :key="`${file.name}-${file.size}-${index}`"
+              class="upload-file-item"
+              :class="{ 'file-uploading': uploading }"
+            >
+              <!-- 文件图标 -->
+              <div class="file-icon">
+                <LucideIcon :name="getFileIcon(file.name)" class="h-5 w-5" />
+              </div>
+              
+              <!-- 文件信息 -->
+              <div class="upload-file-info">
+                <div class="file-name-row">
+                  <span class="upload-file-name" :title="file.name">{{ file.name }}</span>
+                  <span v-if="uploading" class="upload-status">
+                    <LucideIcon name="Upload" class="h-3 w-3 mr-1" />
+                    {{ t('common_uploading') }}
+                  </span>
+                </div>
+                <div class="file-meta-row">
+                  <span class="upload-file-size">{{ formatFileSize(file.size) }}</span>
+                  <span class="file-type">{{ getFileType(file.name) }}</span>
+                  <span class="file-date">{{ new Date().toLocaleDateString() }}</span>
+                </div>
+              </div>
+              
+              <!-- 文件状态和操作 -->
+              <div class="upload-file-actions">
+                <!-- 文件验证状态 -->
+                <div v-if="!uploading" class="file-status">
+                  <LucideIcon name="CheckCircle" class="h-4 w-4 text-green-500" />
+                </div>
+                
+                <!-- 删除按钮 -->
+                <Button
+                  @click="removeFile(index)"
+                  variant="ghost"
+                  size="sm"
+                  :disabled="uploading"
+                  :title="t('common_removeFile')"
+                  class="remove-btn"
+                >
+                  <LucideIcon name="X" class="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <template #footer>
-        <Button @click="closeUploadFileModal" variant="secondary">
+        <Button @click="closeUploadFileModal" variant="secondary" :disabled="uploading">
           {{ t('common_cancel') }}
         </Button>
         <Button
           @click="handleFileUploadConfirm"
           variant="primary"
           :loading="uploading"
+          :disabled="selectedFiles.length === 0"
         >
           <LucideIcon name="Upload" class="h-4 w-4" />
           {{ t('common_startUpload') }}
@@ -331,128 +405,11 @@
     </Modal>
 
     <!-- 批量上传模态框 -->
-    <Modal
+    <BatchUploadModal
       :open="showBatchUploadModal"
-      :title="t('productManagement_batchUpload')"
-      width="w-[520px]"
       @close="closeBatchUploadModal"
-    >
-      <div class="batch-upload-content">
-        <!-- 操作步骤指示器 -->
-        <div class="step-indicator">
-          <div
-            v-for="(step, index) in uploadSteps"
-            :key="step.key"
-            class="step-item"
-            :class="{
-              'step-active': currentUploadStep === index + 1,
-              'step-completed': currentUploadStep > index + 1,
-              'step-pending': currentUploadStep < index + 1
-            }"
-          >
-            <div class="step-number">{{ index + 1 }}</div>
-            <div class="step-title">{{ step.title }}</div>
-            <div class="step-description">{{ step.description }}</div>
-          </div>
-        </div>
-
-        <!-- 第一步：选择压缩包 -->
-        <zip-upload-zone
-          v-if="currentUploadStep === 1"
-          ref="zipUploadZoneRef"
-          :disabled="uploading"
-          @file-selected="handleZipFileSelected"
-          @file-validated="handleZipFileValidated"
-          @file-removed="handleZipFileRemoved"
-        />
-
-        <!-- 第二步：上传进度 -->
-        <div v-if="currentUploadStep === 2" class="progress-section space-y-4">
-          <!-- 已选择的文件 -->
-          <div v-if="selectedZipFiles.length > 0" class="selected-files">
-            <h5 class="text-sm font-medium text-gray-700 mb-2">{{ t('productManagement_selectedZipFile') }}</h5>
-            <div class="space-y-2">
-              <div v-for="(file, index) in selectedZipFiles" :key="index" class="flex items-center gap-3 p-2 bg-gray-50 rounded-md">
-                <LucideIcon name="Archive" class="h-4 w-4 text-primary" />
-                <span class="text-sm text-gray-600 flex-1">{{ file.name }}</span>
-                <span class="text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 上传进度 -->
-          <div class="upload-progress p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div class="space-y-4">
-              <!-- 进度状态和百分比 -->
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-medium text-green-600">{{ uploadStatus }}</span>
-                <span class="text-sm font-semibold text-green-700">{{ Math.round(uploadProgress) }}%</span>
-              </div>
-              
-              <!-- 进度条 -->
-              <Progress :percent="uploadProgress" class="w-full h-2" />
-              
-              <!-- 详细的进度信息 -->
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-xs text-gray-500">{{ t('productManagement_currentStage') }}</span>
-                  <span class="text-xs font-medium text-gray-700">{{ currentStageText }}</span>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="flex justify-between items-center">
-                    <span class="text-xs text-gray-500">{{ t('productManagement_processedFiles') }}</span>
-                    <span class="text-xs font-semibold text-blue-600">{{ processedFiles }}/{{ totalFiles }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-xs text-gray-500">{{ t('productManagement_processedFolders') }}</span>
-                    <span class="text-xs font-semibold text-blue-600">{{ processedFolders }}/{{ totalFolders }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <template #footer>
-        <Button @click="closeBatchUploadModal" :disabled="uploading">
-          {{ t('productManagement_cancel') }}
-        </Button>
-        
-        <Button
-          v-if="currentUploadStep === 1"
-          @click="nextStep"
-          variant="primary"
-          :disabled="!zipFileValid || uploading"
-          class="next-step-button"
-        >
-          {{ t('productManagement_startUpload') }}
-          <LucideIcon name="ChevronRight" class="h-4 w-4 ml-2" />
-        </Button>
-        
-        <Button
-          v-if="currentUploadStep === 2"
-          @click="prevStep"
-          variant="secondary"
-          class="prev-step-button"
-        >
-          <LucideIcon name="ChevronLeft" class="h-4 w-4 mr-2" />
-          {{ t('productManagement_back') }}
-        </Button>
-        
-        <Button
-          v-if="currentUploadStep === 2"
-          @click="startBatchZipUpload"
-          variant="primary"
-          :disabled="uploading"
-          :loading="uploading"
-          class="upload-button"
-        >
-          <LucideIcon name="Upload" class="h-4 w-4 mr-2" />
-          {{ t('productManagement_startUpload') }}
-        </Button>
-      </template>
-    </Modal>
+      @upload-complete="handleBatchUploadComplete"
+    />
 
     <!-- 右键菜单 -->
     <div
@@ -495,12 +452,10 @@ import AdminAccessDenied from './AdminAccessDenied.vue'
 import Button from './ui/button.vue'
 import Input from './ui/input.vue'
 import Modal from './ui/modal.vue'
-import Progress from './ui/progress.vue'
 import LucideIcon from './ui/LucideIcon.vue'
 import SearchInput from './ui/search-input.vue'
 import ProductFolderUploader from './ProductFolderUploader.vue'
-import ProductFileUploader from './ProductFileUploader.vue'
-import ZipUploadZone from './ZipUploadZone.vue'
+import BatchUploadModal from './BatchUploadModal.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -523,6 +478,8 @@ const renamingFolder = ref(false)
 const uploading = ref(false)
 const fileUploaderRef = ref(null)
 const folderUploaderRef = ref(null)
+const fileInput = ref(null)
+const selectedFiles = ref([])
 const newFolderName = ref('')
 const renameFolderName = ref('')
 const folderToDelete = ref('')
@@ -532,45 +489,13 @@ const renameFolderNameError = ref('')
 const showContextMenu = ref(false)
 const contextMenuPosition = ref({ x: 0, y: 0 })
 const contextMenuProduct = ref(null)
-const selectedZipFiles = ref([])
-const zipUploadZoneRef = ref(null)
-const uploadStatus = ref('')
-const uploadProgress = ref(0)
 
 const folderNameInput = ref(null)
-
-// 拖拽上传相关数据（如果未使用可以删除）
-// const isDragOver = ref(false)
-
-const currentUploadStep = ref(1)
-const uploadSteps = ref([
-  {
-    key: 'select',
-    title: t('productManagement_step1_title'),
-    description: t('productManagement_step1_description')
-  },
-  {
-    key: 'upload',
-    title: t('productManagement_step3_title'),
-    description: t('productManagement_step3_description')
-  }
-])
-
-// ZIP文件验证和预览相关数据
-const zipFileValid = ref(false)
-const zipFileValidationMessage = ref('')
-
-// 进度跟踪相关数据
-const processedFiles = ref(0)
-const totalFiles = ref(0)
-const processedFolders = ref(0)
-const totalFolders = ref(0)
-const currentStageText = ref('')
 
 // 计算属性
 const filteredProducts = computed(() => {
   if (!searchQuery.value) return products.value
-  return products.value.filter(product => 
+  return products.value.filter(product =>
     product.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   )
 })
@@ -933,157 +858,22 @@ const closeUploadFolderModal = () => {
 
 const closeUploadFileModal = () => {
   showUploadFileModal.value = false
+  selectedFiles.value = []
 }
 
 const closeBatchUploadModal = () => {
   showBatchUploadModal.value = false
-  selectedZipFiles.value = []
-  uploadStatus.value = ''
-  uploadProgress.value = 0
-  
-  // 重置多步骤上传状态
-  resetMultiStepUpload()
 }
 
-const resetMultiStepUpload = () => {
-  currentUploadStep.value = 1
-  zipFileValid.value = false
-  zipFileValidationMessage.value = ''
-  processedFiles.value = 0
-  totalFiles.value = 0
-  processedFolders.value = 0
-  totalFolders.value = 0
-  currentStageText.value = ''
-}
-
-// 处理ZIP文件选择
-const handleZipFileSelected = (files) => {
-  selectedZipFiles.value = files
-}
-
-// 处理ZIP文件验证
-const handleZipFileValidated = (validationResult) => {
-  zipFileValid.value = validationResult.valid
-  if (!validationResult.valid) {
-    zipFileValidationMessage.value = validationResult.message
-  } else {
-    zipFileValidationMessage.value = ''
-  }
-}
-
-// 处理ZIP文件移除
-const handleZipFileRemoved = (index) => {
-  // 文件移除由ZipUploadZone组件内部处理
-  // 这里可以添加额外的清理逻辑
-}
-
-// 多步骤导航方法
-const nextStep = async () => {
-  if (currentUploadStep.value === 1) {
-    // 从第一步直接进入第二步（上传进度）
-    if (zipFileValid.value) {
-      currentUploadStep.value = 2
-    }
-  }
-}
-
-const prevStep = () => {
-  if (currentUploadStep.value > 1) {
-    currentUploadStep.value--
-  }
-}
-
-const startBatchZipUpload = async () => {
-  if (selectedZipFiles.value.length === 0) return
-  
-  // 切换到第二步：上传进度
-  currentUploadStep.value = 2
-  uploading.value = true
-  uploadProgress.value = 0
-  
-  try {
-    const zipFile = selectedZipFiles.value[0]
-    
-    // 阶段1: 准备上传
-    uploadStatus.value = t('productManagement_preparingUpload')
-    currentStageText.value = t('productManagement_stagePreparing')
-    uploadProgress.value = 10
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // 阶段2: 上传文件
-    uploadStatus.value = t('productManagement_uploadingFile')
-    currentStageText.value = t('productManagement_stageUploading')
-    uploadProgress.value = 30
-    
-    // 创建FormData并模拟上传进度
-    const formData = new FormData()
-    formData.append('zipFile', zipFile)
-    
-    // 模拟文件上传进度
-    for (let i = 30; i <= 60; i += 5) {
-      uploadProgress.value = i
-      await new Promise(resolve => setTimeout(resolve, 200))
-    }
-    
-    // 阶段3: 处理文件
-    uploadStatus.value = t('productManagement_processingFiles')
-    currentStageText.value = t('productManagement_stageProcessing')
-    uploadProgress.value = 65
-    
-    // 调用批量替换API
-    const response = await fetch('/api/batch-replace-products', {
-      method: 'POST',
-      body: formData
-    })
-    
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(`处理压缩包失败: ${zipFile.name} - ${errorData.message || response.status}`)
-    }
-    
-    const result = await response.json()
-    if (!result.success) {
-      throw new Error(`处理压缩包失败: ${zipFile.name} - ${result.message}`)
-    }
-    
-    // 更新处理统计
-    processedFiles.value = result.fileCount || 0
-    totalFiles.value = result.fileCount || 0
-    processedFolders.value = result.folderCount || 0
-    totalFolders.value = result.folderCount || 0
-    
-    // 阶段4: 完成
-    uploadStatus.value = t('productManagement_completingUpload')
-    currentStageText.value = t('productManagement_stageCompleting')
-    uploadProgress.value = 90
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
+const handleBatchUploadComplete = async (result) => {
+  if (result.success) {
     // 刷新产品列表
-    uploadStatus.value = t('productManagement_refreshingList')
-    currentStageText.value = t('productManagement_stageRefreshing')
     await fetchProducts()
-    
-    uploadProgress.value = 100
-    uploadStatus.value = t('productManagement_uploadComplete')
-    currentStageText.value = t('productManagement_stageComplete')
-    
-    // 显示成功消息
-    setTimeout(() => {
-      closeBatchUploadModal()
-      // 显示成功通知
-      console.log('批量上传成功完成!')
-    }, 1500)
-    
-  } catch (err) {
-    console.error('批量压缩包上传错误:', err)
-    uploadStatus.value = t('productManagement_uploadFailed') + ': ' + err.message
-    currentStageText.value = t('productManagement_stageFailed')
-    uploadProgress.value = 0
-    
+    console.log('批量上传成功完成!')
+  } else {
+    console.error('批量上传失败:', result.error)
     // 刷新产品列表以显示当前状态
     await fetchProducts()
-  } finally {
-    uploading.value = false
   }
 }
 
@@ -1103,14 +893,184 @@ const handleUploadComplete = (result) => {
   console.log('上传完成:', result)
 }
 
-const handleFileUploadConfirm = () => {
-  // 调用上传组件的开始上传方法
-  fileUploaderRef.value?.startUpload()
+// 触发文件选择
+const triggerFileInput = () => {
+  fileInput.value?.click()
 }
 
+// 处理文件选择
+const handleFileSelect = (event) => {
+  const files = Array.from(event.target.files)
+  if (files.length > 0) {
+    // 验证文件
+    const validFiles = []
+    const invalidFiles = []
+    
+    files.forEach(file => {
+      // 验证文件大小（100MB）
+      const maxSize = 100 * 1024 * 1024
+      if (file.size > maxSize) {
+        invalidFiles.push(file)
+        return
+      }
+      
+      // 检查是否已存在相同文件
+      const existingIndex = selectedFiles.value.findIndex(f => f.name === file.name && f.size === file.size)
+      if (existingIndex === -1) {
+        validFiles.push(file)
+      }
+    })
+    
+    // 添加有效文件
+    if (validFiles.length > 0) {
+      selectedFiles.value.push(...validFiles)
+    }
+    
+    // 显示无效文件信息
+    if (invalidFiles.length > 0) {
+      alert(`${invalidFiles.length} 个文件大小超过限制（100MB）`)
+    }
+  }
+}
+
+// 移除文件
+const removeFile = (index) => {
+  selectedFiles.value.splice(index, 1)
+}
+
+// 清空所有文件
+const clearSelectedFiles = () => {
+  selectedFiles.value = []
+}
+
+// 处理文件上传确认
+const handleFileUploadConfirm = () => {
+  if (selectedFiles.value.length === 0) return
+  handleFileUpload()
+}
+
+// 处理文件夹上传确认
 const handleFolderUploadConfirm = () => {
   // 调用上传组件的开始上传方法
   folderUploaderRef.value?.startUpload()
+}
+
+// 文件上传
+const handleFileUpload = async () => {
+  if (selectedFiles.value.length === 0) return
+  
+  uploading.value = true
+  try {
+    let successCount = 0
+    let failCount = 0
+    
+    // 逐个上传文件
+    for (const file of selectedFiles.value) {
+      try {
+        await uploadSingleFile(file)
+        successCount++
+        console.log('文件上传成功:', file.name)
+      } catch (error) {
+        failCount++
+        console.error('文件上传失败:', file.name, error)
+      }
+    }
+    
+    if (successCount > 0) {
+      // 重新获取产品列表
+      await fetchProducts()
+      closeUploadFileModal()
+      console.log(`上传完成: ${successCount} 个成功, ${failCount} 个失败`)
+    }
+    
+  } catch (error) {
+    console.error('文件上传失败:', error)
+    alert('文件上传失败: ' + error.message)
+  } finally {
+    uploading.value = false
+  }
+}
+
+// 单个文件上传
+const uploadSingleFile = async (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('folderPath', currentPath.value.join('/'))
+  
+  const response = await fetch('/api/upload-files', {
+    method: 'POST',
+    body: formData
+  })
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.error || `上传失败: ${response.status}`)
+  }
+  
+  const result = await response.json()
+  if (!result.success) {
+    throw new Error(result.error || '上传失败')
+  }
+  
+  return result
+}
+
+// 获取文件图标
+const getFileIcon = (fileName) => {
+  const extension = fileName.split('.').pop()?.toLowerCase()
+  const iconMap = {
+    'jpg': 'Image',
+    'jpeg': 'Image',
+    'png': 'Image',
+    'gif': 'Image',
+    'svg': 'Image',
+    'webp': 'Image',
+    'pdf': 'FileText',
+    'doc': 'FileText',
+    'docx': 'FileText',
+    'txt': 'FileText',
+    'zip': 'Archive',
+    'rar': 'Archive',
+    '7z': 'Archive',
+    'mp4': 'Video',
+    'avi': 'Video',
+    'mov': 'Video',
+    'mp3': 'Music',
+    'wav': 'Music',
+    'xls': 'Sheet',
+    'xlsx': 'Sheet',
+    'ppt': 'Presentation',
+    'pptx': 'Presentation'
+  }
+  return iconMap[extension] || 'File'
+}
+
+// 获取文件类型描述
+const getFileType = (fileName) => {
+  const extension = fileName.split('.').pop()?.toLowerCase()
+  const typeMap = {
+    'jpg': 'JPEG图像',
+    'jpeg': 'JPEG图像',
+    'png': 'PNG图像',
+    'gif': 'GIF图像',
+    'svg': '矢量图像',
+    'webp': 'WebP图像',
+    'pdf': 'PDF文档',
+    'doc': 'Word文档',
+    'docx': 'Word文档',
+    'txt': '文本文件',
+    'zip': 'ZIP压缩包',
+    'rar': 'RAR压缩包',
+    '7z': '7Z压缩包',
+    'mp4': 'MP4视频',
+    'avi': 'AVI视频',
+    'mp3': 'MP3音频',
+    'xls': 'Excel表格',
+    'xlsx': 'Excel表格',
+    'ppt': 'PowerPoint',
+    'pptx': 'PowerPoint'
+  }
+  return typeMap[extension] || '文件'
 }
 
 const cancelDelete = () => {
@@ -1166,46 +1126,6 @@ const handleLoginSuccess = () => {
   column-gap: 12px;
 }
 
-.frame {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  overflow: hidden;
-}
-
-.text {
-  flex-shrink: 0;
-  line-height: 24px;
-  letter-spacing: 0;
-  color: var(--8C8C8C-12, #202020);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-}
-
-/* Frame 348 - 刷新按钮 */
-.instance {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  column-gap: 4px;
-  border: 1px solid var(--8C8C8C-6, #d9d9d9);
-  border-radius: 6px;
-  background: var(--8C8C8C-1, #fdfdfd);
-  padding: 11px 15px;
-  height: 32px;
-}
-
-.text2 {
-  flex-shrink: 0;
-  line-height: 15px;
-  letter-spacing: 0;
-  color: var(--8C8C8C-12, #202020);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  font-size: 14px;
-}
-
 /* Frame 347 - 容器 */
 .frame347 {
   display: flex;
@@ -1243,88 +1163,20 @@ const handleLoginSuccess = () => {
   letter-spacing: 0;
 }
 
-/* 返回按钮 */
-
-
-
-
-
-
 /* Frame 330 - 搜索和操作区域 */
 .frame330 {
   display: grid;
-    grid-template-columns: 2fr max-content;
+  grid-template-columns: 2fr max-content;
   gap: 20px;
   width: 100%;
   box-sizing: border-box;
 }
-
-/* 输入框 */
-.input {
-  display: flex;
-  flex-grow: 1;
-  align-items: center;
-  column-gap: 5px;
-  border-radius: 6px;
-  background: var(--8C8C8C-3, #f0f0f0);
-  padding: 6px 10px;
-  height: 32px;
-  overflow: hidden;
-}
-
-
-
-/* 操作按钮容器 */
-.frame331 {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  column-gap: 6px;
-}
-
-
-
-
-
-
-
-
 
 /* 操作按钮 */
 .action-buttons {
   display: flex;
   gap: 6px;
 }
-
-
-/* Frame 333 - 统计信息 */
-.frame333 {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  align-self: stretch;
-  justify-content: space-between;
-  border-radius: 12px;
-  padding: 20px 4px;
-  height: 32px;
-}
-
-.frame328 {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  column-gap: 6px;
-}
-
-
-
-.frame336 {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  column-gap: 6px;
-}
-
 
 /* 统计信息 */
 .stats-section {
@@ -1355,19 +1207,6 @@ const handleLoginSuccess = () => {
   letter-spacing: 0;
 }
 
-/* Frame 317 - 上传区域 */
-.frame317 {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  align-items: center;
-  align-self: stretch;
-  border: 1px dashed var(--8C8C8C-7, #cecece);
-  border-radius: 8px;
-  padding: 29px;
-  row-gap: 10px;
-}
-
 /* 上传区域容器 */
 .upload-section-container {
   display: grid;
@@ -1375,6 +1214,233 @@ const handleLoginSuccess = () => {
   gap: 20px;
   width: 100%;
   box-sizing: border-box;
+}
+
+/* 弹窗内的文件上传区域 */
+.file-upload-section {
+  margin: 16px 0;
+}
+
+.file-upload-area {
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  margin-bottom: 20px;
+}
+
+.file-upload-area:hover {
+  border-color: #1890ff;
+  background: #f0f8ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+}
+
+/* 已选择文件列表 */
+.selected-files-section {
+  background: var(--neutral-2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  max-height: 400px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--neutral-12);
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  line-height: 1.1;
+}
+
+/* 文件列表容器 */
+.files-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+/* 自定义滚动条 */
+.files-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.files-list::-webkit-scrollbar-track {
+  background: var(--neutral-3);
+  border-radius: 3px;
+}
+
+.files-list::-webkit-scrollbar-thumb {
+  background: var(--neutral-6);
+  border-radius: 3px;
+}
+
+.files-list::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-8);
+}
+
+/* 文件项 */
+.upload-file-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 12px;
+  height: auto;
+  min-height: 55px;
+  gap: 16px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.upload-file-item:hover {
+  background: var(--neutral-3);
+  border-color: var(--primary-9);
+  box-shadow: 0 2px 8px rgba(0, 160, 217, 0.15);
+}
+
+.upload-file-item.file-uploading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* 文件图标 */
+.file-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-9);
+}
+
+/* 文件信息 */
+.upload-file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.upload-file-name {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--neutral-12);
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.upload-status {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: var(--primary-9);
+  font-weight: 500;
+}
+
+.file-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--neutral-11);
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  line-height: 1.1;
+}
+
+.upload-file-size {
+  white-space: nowrap;
+}
+
+.file-type {
+  color: var(--primary-9);
+  font-weight: 500;
+}
+
+.file-date {
+  color: var(--neutral-10);
+}
+
+/* 文件操作区域 */
+.upload-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.file-status {
+  display: flex;
+  align-items: center;
+}
+
+.remove-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  height: 24px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  color: var(--neutral-10);
+}
+
+.remove-btn:hover {
+  background: var(--red-3);
+  color: var(--red-9);
+  transform: scale(1.05);
+}
+
+.remove-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 上传统计 */
+.upload-summary {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--neutral-4);
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 /* 上传区域 */
@@ -1426,6 +1492,7 @@ const handleLoginSuccess = () => {
 .upload-content svg {
   width: 42px;
   height: 42px;
+  color: var(--primary-9);
 }
 
 /* 文件夹网格 */
@@ -1517,11 +1584,27 @@ const handleLoginSuccess = () => {
   font-weight: 700;
 }
 
-
-/* 文件列表样式 */
+/* 文件列表样式 - 参考Figma设计 */
 .file-list {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.file-item {
+  background: var(--neutral-2);
   border-radius: 12px;
+  padding: 20px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  background: var(--neutral-3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .file-content {
@@ -1534,28 +1617,35 @@ const handleLoginSuccess = () => {
 .file-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   flex: 1;
 }
 
 .file-name {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--neutral-12);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .file-meta {
   display: flex;
-  gap: 12px;
+  gap: 6px;
   font-size: 12px;
   color: var(--neutral-11);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .file-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .file-actions button {
@@ -1563,17 +1653,24 @@ const handleLoginSuccess = () => {
   border: none;
   cursor: pointer;
   padding: 0;
-  height: 20px;
-  width: 20px;
+  height: 14px;
+  width: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 4px;
   transition: all 0.2s ease;
+  color: var(--neutral-12);
 }
 
 .file-actions button:hover {
-  background: var(--neutral-5);
+  background: var(--neutral-4);
+  transform: translateY(-1px);
+}
+
+.file-actions button svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* 文件夹项 - 精准还原Figma设计稿 */
@@ -1657,127 +1754,9 @@ const handleLoginSuccess = () => {
 }
 
 /* 状态样式 */
-.loading-spin {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-}
-
 .spinner {
   font-size: 16px;
   color: var(--primary-9);
-}
-
-.error-state {
-  padding: 60px 20px;
-  text-align: center;
-}
-
-.error-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-
-.error-content h3 {
-  margin-bottom: 8px;
-  color: var(--neutral-12);
-}
-
-.error-content p {
-  margin-bottom: 16px;
-  color: var(--neutral-9);
-}
-
-.empty-state {
-  padding: 60px 20px;
-  text-align: center;
-}
-
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-
-.empty-content p {
-  color: var(--neutral-9);
-  margin: 0;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .file-manager {
-    padding: 16px;
-  }
-  
-  .page-header {
-    padding: 16px;
-  }
-  
-  /* Frame 330 - 搜索和操作区域 */
-  .frame330 {
-  display: grid;
-    grid-template-columns: repeat(1, 1fr);
-  gap: 20px;
-  }
-
-  .header-top {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .search-and-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .search-input-container {
-    max-width: none;
-  }
-  
-  .action-buttons {
-    justify-content: space-between;
-  }
-
-    .action-buttons button {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .folder-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 10px;
-  }
-  
-  .folder-item {
-    padding: 12px 15px;
-    height: auto;
-  }
-}
-
-@media (max-width: 576px) {
-  .page-title {
-    font-size: 18px;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .action-buttons button {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .folder-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  }
 }
 
 /* 右键菜单 */
@@ -1824,419 +1803,79 @@ const handleLoginSuccess = () => {
   margin-top: 4px;
 }
 
-/* 批量上传样式 */
-.batch-upload-content {
-  margin: 16px 0;
-}
-
-/* 重复的样式已被删除，保留主要的样式定义 */
-
-/* 拖拽上传区域样式 */
-.zip-upload-zone {
-  border: 2px dashed var(--neutral-7);
-  border-radius: 8px;
-  padding: 30px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: var(--neutral-1);
-  margin-bottom: 20px;
-}
-
-.zip-upload-zone:hover {
-  border-color: var(--primary-9);
-  background: var(--primary-3);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 160, 217, 0.15);
-}
-
-/* 拖拽覆盖状态的样式 */
-.zip-upload-zone.drag-over {
-  border-color: var(--primary-9);
-  background: var(--primary-2);
-  box-shadow: 0 0 0 4px rgba(0, 160, 217, 0.1);
-}
-
-.upload-zone-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.upload-icon {
-  width: 42px;
-  height: 42px;
-  color: var(--primary-9);
-}
-
-.upload-zone-title {
-  font-size: 14px;
-  color: var(--neutral-12);
-  margin: 0;
-  font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  line-height: 21px;
-  letter-spacing: 0;
-  font-weight: 400;
-}
-
-.upload-zone-hint {
-  font-size: 12px;
-  color: var(--neutral-11);
-  margin: 0;
-  font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  line-height: 21px;
-  letter-spacing: 0;
-}
-
-.selected-files {
-  margin-top: 20px;
-}
-
-.selected-files h5 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--neutral-12);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-}
-
-.files-list {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid var(--neutral-3);
-  border-radius: 6px;
-  padding: 8px;
-}
-
-.file-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  background: var(--neutral-1);
-  border: 1px solid var(--neutral-4);
-  border-radius: 12px;
-  font-size: 13px;
-  color: var(--neutral-12);
-  transition: all 0.2s ease;
-  height: auto;
-}
-
-.file-item:hover {
-  background: var(--primary-3);
-  border-color: var(--primary-6);
-}
-
-.file-item:last-child {
-  margin-bottom: 0;
-}
-
-.file-name {
-  flex: 1;
-  font-weight: 500;
-  color: var(--neutral-12);
-}
-
-.file-size {
-  color: var(--neutral-9);
-  font-size: 12px;
-  font-family: monospace;
-}
-
-.remove-file-btn {
-  color: var(--neutral-9);
-  padding: 4px;
-}
-
-.remove-file-btn:hover {
-  color: var(--red-9);
-  background: var(--red-2);
-}
-
-.upload-button {
-  background: var(--primary-9) !important;
-  border: none !important;
-  color: white !important;
-}
-
-.upload-button:hover {
-  background: var(--primary-11) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 160, 217, 0.3) !important;
-}
-
-.upload-button:disabled {
-  background: var(--neutral-6) !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-/* 多步骤批量上传样式 */
-
-/* 步骤指示器 */
-.step-indicator {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  padding: 16px;
-  background: var(--neutral-2);
-  border-radius: 8px;
-  border: 1px solid var(--neutral-4);
-}
-
-.step-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  position: relative;
-  padding: 8px;
-  transition: all 0.3s ease;
-}
-
-.step-item:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 20px;
-  right: -50%;
-  width: 100%;
-  height: 2px;
-  background: var(--neutral-5);
-  z-index: 1;
-}
-
-.step-item.step-completed:not(:last-child)::after {
-  background: var(--primary-9);
-}
-
-.step-number {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 8px;
-  z-index: 2;
-  position: relative;
-  background: var(--neutral-2);
-  border: 2px solid var(--neutral-5);
-  color: var(--neutral-10);
-  transition: all 0.3s ease;
-}
-
-.step-item.step-active .step-number {
-  background: var(--primary-9);
-  border-color: var(--primary-9);
-  color: var(--background);
-  box-shadow: 0 0 0 4px rgba(0, 160, 217, 0.2);
-}
-
-.step-item.step-completed .step-number {
-  background: var(--green-9);
-  border-color: var(--green-9);
-  color: var(--background);
-}
-
-.step-title {
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
-  margin-bottom: 4px;
-  color: var(--neutral-11);
-}
-
-.step-item.step-active .step-title {
-  color: var(--primary-9);
-}
-
-.step-description {
-  font-size: 11px;
-  text-align: center;
-  color: var(--neutral-10);
-  line-height: 1.3;
-}
-
-/* 预览区域 */
-.preview-section {
-  margin: 16px 0;
-}
-
-.preview-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.preview-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--neutral-12);
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-description {
-  color: var(--neutral-9);
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-/* 文件结构 */
-.file-structure {
-  background: var(--neutral-1);
-  border: 1px solid var(--neutral-4);
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.structure-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--neutral-4);
-}
-
-.stat-item {
-  text-align: center;
-}
-
-.stat-label {
-  display: block;
-  font-size: 12px;
-  color: var(--neutral-9);
-  margin-bottom: 4px;
-}
-
-.stat-value {
-  display: block;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--primary-9);
-}
-
-.structure-tree {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.folder-preview {
-  background: white;
-  border: 1px solid var(--neutral-4);
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
-
-.folder-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.folder-name {
-  flex: 1;
-  color: var(--neutral-12);
-}
-
-.folder-count {
-  font-size: 12px;
-  color: var(--neutral-9);
-}
-
-.folder-files {
-  padding-left: 20px;
-}
-
-.folder-files .file-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  font-size: 12px;
-  color: var(--neutral-10);
-}
-
-.folder-files .file-name {
-  flex: 1;
-}
-
-.folder-files .file-size {
-  font-family: monospace;
-  color: var(--neutral-9);
-}
-
-.more-files {
-  padding: 8px 0;
-  font-size: 12px;
-  color: var(--neutral-9);
-  font-style: italic;
-}
-
-/* 未使用的验证状态样式已被清理 */
-
-/* 未使用的样式已被清理 */
-
-/* 进度区域 */
-/* 导航按钮 */
-.next-step-button,
-.prev-step-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.danger.upload-button {
+.danger {
   background: var(--red-9) !important;
   border: none !important;
   color: white !important;
 }
 
-.danger.upload-button:hover {
+.danger:hover {
   background: var(--red-11) !important;
   box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3) !important;
 }
 
-/* 响应式设计优化 */
+/* 响应式设计 */
 @media (max-width: 768px) {
-  .step-indicator {
-    flex-direction: column;
-    gap: 16px;
+  .file-manager {
+    padding: 16px;
   }
   
-  .step-item:not(:last-child)::after {
-    display: none;
+  .page-header {
+    padding: 16px;
   }
   
-  .structure-stats {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .upload-section-container {
-  grid-template-columns: repeat(1, 1fr);
-  gap: 10px;
+  /* Frame 330 - 搜索和操作区域 */
+  .frame330 {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 20px;
   }
 
-  .progress-stats {
+  .search-input-container {
+    max-width: none;
+  }
+  
+  .action-buttons {
+    justify-content: space-between;
+  }
+
+  .action-buttons button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .folder-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  
+  .folder-item {
+    padding: 12px 15px;
+    height: auto;
+  }
+
+  .upload-section-container {
+    grid-template-columns: repeat(1, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .page-title {
+    font-size: 18px;
+  }
+  
+  .action-buttons {
     flex-direction: column;
     gap: 8px;
   }
   
-  .warning-content {
-    padding: 16px;
+  .action-buttons button {
+    width: 100%;
+    justify-content: center;
   }
-
-  /* 移除不需要的响应式样式 */
+  
+  .folder-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
 }
 </style>
