@@ -517,7 +517,6 @@ onMounted(() => {
 <style scoped>
 .product-list {
   width: 100%;
-  background: #ffffff;
   padding-top: 20px;
 }
 
@@ -653,7 +652,6 @@ onMounted(() => {
 
 /* ===== 产品卡片样式 ===== */
 .product-card {
-  background: #ffffff;
   border-radius: 32px;
   transition: all 0.2s ease;
   cursor: pointer;
@@ -674,14 +672,11 @@ onMounted(() => {
   left: 50%;
   width: 97%;
   height: 75%;
-  background-color: rgb(255, 255, 255);
-  border: 10px solid #e6e6e6;
+  background-color: var(--neutral-3);
   border-radius: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: bold;
   z-index: 0;
   transform: translateX(-50%);
 }
@@ -803,7 +798,7 @@ onMounted(() => {
   border-radius: 8px;
   flex-direction: column;
   justify-content: center;
-  background-color: #4b4b4b;
+  background-color: #626262;
   opacity: 1;
   transition: opacity 0.3s ease;
 }
@@ -836,7 +831,7 @@ onMounted(() => {
 
   .ditu {
     border-radius: 20px;
-    border: 2.5px solid #f0f0f0;
+    border: 2.5px solid var(--neutral-9);
   }
 }
 
@@ -855,7 +850,7 @@ onMounted(() => {
 
   .ditu {
     border-radius: 24px;
-    border: 2.5px solid #f0f0f0;
+    border: 2.5px solid var(--neutral-9);
   }
 }
 
@@ -874,7 +869,6 @@ onMounted(() => {
 
   .ditu {
     border-radius: 28px;
-    border: 3px solid #f0f0f0;
   }
 }
 
@@ -893,7 +887,6 @@ onMounted(() => {
 
   .ditu {
     border-radius: 30px;
-    border: 3px solid #f0f0f0;
   }
 }
 </style>

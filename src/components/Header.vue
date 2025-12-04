@@ -148,7 +148,7 @@ onUnmounted(() => {
   align-items: center;
   padding: 0 16px;
   height: 64px;
-  background-color: var(--neutral-1);
+  background-color: var(--background);
   border-bottom: 1px solid var(--neutral-6);
   position: relative;
 }

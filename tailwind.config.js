@@ -22,14 +22,14 @@ export default {
     extend: {
       // 颜色配置，使用 CSS 变量实现主题切换
         colors: {
-          border: "hsl(var(--border))", // 边框颜色
-          input: "hsl(var(--input))", // 输入框颜色
-          ring: "hsl(var(--ring))", // 环形颜色（用于焦点状态等）
-          background: "hsl(var(--background))", // 背景颜色
-          foreground: "hsl(var(--foreground))", // 前景色（文本等）
+          border: "var(--border)", // 边框颜色
+          input: "var(--input)", // 输入框颜色
+          ring: "var(--ring)", // 环形颜色（用于焦点状态等）
+          background: "var(--background)", // 背景颜色
+          foreground: "var(--foreground)", // 前景色（文本等）
           primary: {
-            DEFAULT: "hsl(var(--primary))", // 主色调
-            foreground: "hsl(var(--primary-foreground))", // 主色调前景色
+            DEFAULT: "var(--primary)", // 主色调
+            foreground: "var(--primary-foreground)", // 主色调前景色
             // Figma 主色（蓝色）
             1: "var(--primary-1)",
             2: "var(--primary-2)",
@@ -57,32 +57,32 @@ export default {
             opacity12: "var(--primary-opacity-12)",
           },
           secondary: {
-            DEFAULT: "hsl(var(--secondary))", // 次要色调
-            foreground: "hsl(var(--secondary-foreground))", // 次要色调前景色
+            DEFAULT: "var(--secondary)", // 次要色调
+            foreground: "var(--secondary-foreground)", // 次要色调前景色
           },
           destructive: {
-            DEFAULT: "hsl(var(--destructive))", // 破坏性颜色（错误等）
-            foreground: "hsl(var(--destructive-foreground))", // 破坏性颜色前景色
+            DEFAULT: "var(--destructive)", // 破坏性颜色（错误等）
+            foreground: "var(--destructive-foreground)", // 破坏性颜色前景色
           },
           muted: {
-            DEFAULT: "hsl(var(--muted))", //  muted 颜色（辅助文本等）
-            foreground: "hsl(var(--muted-foreground))", // muted 颜色前景色
+            DEFAULT: "var(--muted)", //  muted 颜色（辅助文本等）
+            foreground: "var(--muted-foreground)", // muted 颜色前景色
           },
           accent: {
-            DEFAULT: "hsl(var(--accent))", // 强调色
-            foreground: "hsl(var(--accent-foreground))", // 强调色前景色
+            DEFAULT: "var(--accent)", // 强调色
+            foreground: "var(--accent-foreground)", // 强调色前景色
           },
           popover: {
-            DEFAULT: "hsl(var(--popover))", // 弹出框背景色
-            foreground: "hsl(var(--popover-foreground))", // 弹出框前景色
+            DEFAULT: "var(--popover)", // 弹出框背景色
+            foreground: "var(--popover-foreground)", // 弹出框前景色
           },
           card: {
-            DEFAULT: "hsl(var(--card))", // 卡片背景色
-            foreground: "hsl(var(--card-foreground))", // 卡片前景色
+            DEFAULT: "var(--card)", // 卡片背景色
+            foreground: "var(--card-foreground)", // 卡片前景色
           },
           custom: {
-            DEFAULT: "hsl(var(--custom))", // 自定义颜色
-            foreground: "hsl(var(--custom-foreground))", // 自定义颜色前景色
+            DEFAULT: "var(--custom)", // 自定义颜色
+            foreground: "var(--custom-foreground)", // 自定义颜色前景色
           },
           // Figma 中性色
           neutral: {

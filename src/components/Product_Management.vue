@@ -15,8 +15,8 @@
       <!-- Frame 348 -->
       <div class="frame348">
         <div class="frame335">
-          <Button @click="goBack" variant="text" class="back-button">
-            <LucideIcon name="ChevronLeft" class="h-4 w-4" />
+          <Button @click="goBack" variant="text" class="back-button" size="icon32">
+            <LucideIcon name="ChevronLeft" :size="18" />
           </Button>
           <h1 class="page-title">{{ t('productManagement_title') }}</h1>
         </div>
@@ -1137,7 +1137,6 @@ const handleLoginSuccess = () => {
   padding: 20px;
   max-width: 1160px;
   margin: 0 auto;
-  background-color: white;
   width: 100%;
 }
 
@@ -1149,7 +1148,6 @@ const handleLoginSuccess = () => {
   align-self: stretch;
   justify-content: space-between;
   border-radius: 12px;
-  background: #ffffff;
   padding-top: 20px;
   padding-bottom: 20px;
   width: 100%;
@@ -1235,7 +1233,7 @@ const handleLoginSuccess = () => {
 .page-title {
   font-size: 22px;
   font-weight: 700;
-  color: #202020;
+  color: var(--8C8C8C-12);
   margin: 0;
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 24px;
@@ -1243,30 +1241,23 @@ const handleLoginSuccess = () => {
 }
 
 /* 返回按钮 */
-.back-button {
-  color: #202020;
-  font-size: 14px;
-  padding: 0;
-  height: 24px;
-  width: 24px;
-  min-width: auto;
+
+
+.back-button{
   display: flex;
-  justify-content: center;
   align-items: center;
-  border-radius: 6px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--neutral-12);
+  transition: all 0.3s ease;
+  /* 调整图标按钮的尺寸，使用!important确保覆盖默认样式 */
+  /* width: 24px !important;
+  height: 24px !important; */
 }
 
-.back-button:hover {
-  background: #f0f0f0;
-}
-
-.back-button svg {
-  width: 24px;
-  height: 24px;
+.back-button:hover{
+  background: var(--neutral-4);
+  color: var(--neutral-12);
 }
 
 /* 刷新按钮 */
@@ -1656,11 +1647,11 @@ const handleLoginSuccess = () => {
   align-items: center;
   justify-content: center;
   vertical-align: middle;
-  color: #00a0d9;
+  color: var(--neutral-12);
 }
 
 .breadcrumb-item:last-child .breadcrumb-link {
-  color: #202020;
+  color: var(--neutral-12);
   font-weight: 700;
 }
 
@@ -1668,7 +1659,6 @@ const handleLoginSuccess = () => {
 /* 文件列表样式 */
 .file-list {
   width: 100%;
-  background: #ffffff;
   border-radius: 12px;
 }
 
