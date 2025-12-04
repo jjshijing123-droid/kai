@@ -9,9 +9,14 @@ import Product_Management from '../components/Product_Management.vue'
 
 import i18n from '../i18n/index.js'
 
+
+
 // 定义应用的路由配置数组
 // 每个路由对象包含路径、名称和对应的组件
 const routes = [
+
+
+  
   {
     path: '/',                    // 根路径
     name: 'Home',                 // 路由名称

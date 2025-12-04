@@ -495,18 +495,18 @@ const startBatchZipUpload = async () => {
 }
 
 .upload-area {
-  border: 2px dashed #d9d9d9;
+  border: 2px dashed var(--neutral-6);
   border-radius: 8px;
   padding: 30px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #fafafa;
+  background: var(--neutral-2);
 }
 
 .upload-area:hover {
-  border-color: #00a0d9;
-  background: #f0f9ff;
+  border-color: var(--primary-9);
+  background: var(--primary-3);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 160, 217, 0.15);
 }
@@ -521,12 +521,12 @@ const startBatchZipUpload = async () => {
 .upload-icon svg {
   width: 40px;
   height: 40px;
-  color: #00a0d9;
+  color: var(--primary-9);
 }
 
 .upload-zone-title {
   font-size: 14px;
-  color: #202020;
+  color: var(--neutral-12);
   margin: 0;
   font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
@@ -536,7 +536,7 @@ const startBatchZipUpload = async () => {
 
 .upload-zone-hint {
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
   margin: 0;
   font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;

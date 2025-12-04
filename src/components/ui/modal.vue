@@ -82,7 +82,7 @@ const onClose = () => {
 
 /* 模态框容器 */
 .modal-container {
-  background: white;
+  background: var(--background);
   border-radius: 8px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   max-height: 90vh;
@@ -133,7 +133,8 @@ const onClose = () => {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px 24px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--neutral-3);
+  ;
 }
 
 .modal-title {
@@ -178,7 +179,7 @@ const onClose = () => {
 /* 底部 */
 .modal-footer {
   padding: 16px 24px 20px 24px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--neutral-3);
   display: flex;
   align-items: center;
   justify-content: flex-end;

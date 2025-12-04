@@ -1222,21 +1222,21 @@ const handleLoginSuccess = () => {
 }
 
 .file-upload-area {
-  border: 2px dashed #d9d9d9;
+  border: 2px dashed var(--neutral-6);
   border-radius: 8px;
   padding: 30px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #fafafa;
+  background: var(--neutral-2);
   margin-bottom: 20px;
 }
 
 .file-upload-area:hover {
-  border-color: #1890ff;
-  background: #f0f8ff;
+  border-color: var(--primary-9);
+  background: var(--primary-3);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 160, 217, 0.15);
 }
 
 /* 已选择文件列表 */
