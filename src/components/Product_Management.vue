@@ -1210,7 +1210,7 @@ const handleLoginSuccess = () => {
   flex-shrink: 0;
   align-items: flex-start;
   align-self: stretch;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--neutral-4);
   border-radius: 12px;
   padding: 20px;
   gap: 20px;
@@ -1262,9 +1262,9 @@ const handleLoginSuccess = () => {
 
 /* 刷新按钮 */
 .refresh-button {
-  background: #fdfdfd;
-  border: 1px solid #d9d9d9;
-  color: #202020;
+  background: var(--neutral-1);
+  border: 1px solid var(--neutral-6);
+  color: var(--neutral-12);
   font-size: 14px;
   border-radius: 6px;
   padding: 11px 15px;
@@ -1355,7 +1355,7 @@ const handleLoginSuccess = () => {
   flex-shrink: 0;
   line-height: 13px;
   letter-spacing: 0;
-  color: #ffffff;
+  color: var(--background);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   font-size: 12px;
 }
@@ -1375,9 +1375,9 @@ const handleLoginSuccess = () => {
 }
 
 .create-folder-button {
-  background: #ffffff;
-  border: 1px solid #d9d9d9;
-  color: #202020;
+  background: var(--background);
+  border: 1px solid var(--neutral-6);
+  color: var(--neutral-12);
   font-size: 12px;
   border-radius: 6px;
   padding: 11px;
@@ -1393,9 +1393,9 @@ const handleLoginSuccess = () => {
 }
 
 .batch-upload-button {
-  background: #00a0d9;
+  background: var(--primary-9);
   border: none;
-  color: #ffffff;
+  color: var(--background);
   font-size: 12px;
   border-radius: 6px;
   padding: 12px;
@@ -1480,14 +1480,14 @@ const handleLoginSuccess = () => {
 
 .stats-right {
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 13px;
   letter-spacing: 0;
 }
 
 .stats-right .highlight {
-  color: #007ab1;
+  color: var(--primary-11);
   font-weight: normal;
   line-height: 13px;
   letter-spacing: 0;
@@ -1521,7 +1521,7 @@ const handleLoginSuccess = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 1px dashed #cecece;
+  border: 1px dashed var(--neutral-7);
   border-radius: 8px;
   padding: 30px;
   cursor: pointer;
@@ -1532,8 +1532,8 @@ const handleLoginSuccess = () => {
 }
 
 .upload-section:hover {
-  border-color: #00a0d9;
-  background: #f0f9ff;
+  border-color: var(--primary-9);
+  background: var(--primary-3);
 }
 
 .upload-content {
@@ -1545,7 +1545,7 @@ const handleLoginSuccess = () => {
 
 .upload-title {
   font-size: 14px;
-  color: #202020;
+  color: var(--neutral-12);
   margin: 0;
   font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
@@ -1554,7 +1554,7 @@ const handleLoginSuccess = () => {
 
 .upload-hint {
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
   margin: 0;
   font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
@@ -1598,7 +1598,7 @@ const handleLoginSuccess = () => {
   height: auto;
   padding: 8px 0;
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
 }
 
 .breadcrumb-item {
@@ -1625,11 +1625,11 @@ const handleLoginSuccess = () => {
 }
 
 .breadcrumb-link:hover {
-  color: #00a0d9;
+  color: var(--primary-9);
 }
 
 .breadcrumb-separator {
-  color: #b3b3b3;
+  color: var(--neutral-8);
   font-size: 14px;
   font-family: inherit;
   margin: 0;
@@ -1679,7 +1679,7 @@ const handleLoginSuccess = () => {
 .file-name {
   font-size: 14px;
   font-weight: 700;
-  color: #202020;
+  color: var(--neutral-12);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
@@ -1687,7 +1687,7 @@ const handleLoginSuccess = () => {
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
@@ -1711,13 +1711,13 @@ const handleLoginSuccess = () => {
 }
 
 .file-actions button:hover {
-  background: #e0e0e0;
+  background: var(--neutral-5);
 }
 
 /* 文件夹项 - 精准还原Figma设计稿 */
 .folder-item {
-  background: #f9f9f9;
-  border: 1px solid #d9d9d9;
+  background: var(--neutral-2);
+  border: 1px solid var(--neutral-6);
   border-radius: 12px;
   padding: 16px 20px;
   cursor: pointer;
@@ -1733,7 +1733,7 @@ const handleLoginSuccess = () => {
 
 .folder-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-color: #00a0d9;
+  border-color: var(--primary-9);
   transform: translateY(-1px);
 }
 
@@ -1748,7 +1748,7 @@ const handleLoginSuccess = () => {
   flex-shrink: 0;
   width: 28px;
   height: 28px;
-  color: #00a0d9;
+  color: var(--primary-9);
 }
 
 .folder-icon svg {
@@ -1773,7 +1773,7 @@ const handleLoginSuccess = () => {
 .folder-name {
   font-size: 14px;
   font-weight: 700;
-  color: #202020;
+  color: var(--neutral-12);
   margin: 0;
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 1.1;
@@ -1787,7 +1787,7 @@ const handleLoginSuccess = () => {
 
 .folder-size {
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
   margin: 0;
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 1.1;
@@ -1804,7 +1804,7 @@ const handleLoginSuccess = () => {
 
 .spinner {
   font-size: 16px;
-  color: #00a0d9;
+  color: var(--primary-9);
 }
 
 .error-state {
@@ -1821,12 +1821,12 @@ const handleLoginSuccess = () => {
 
 .error-content h3 {
   margin-bottom: 8px;
-  color: #262626;
+  color: var(--neutral-12);
 }
 
 .error-content p {
   margin-bottom: 16px;
-  color: #8c8c8c;
+  color: var(--neutral-9);
 }
 
 .empty-state {
@@ -1842,7 +1842,7 @@ const handleLoginSuccess = () => {
 }
 
 .empty-content p {
-  color: #8c8c8c;
+  color: var(--neutral-9);
   margin: 0;
 }
 
@@ -1922,7 +1922,7 @@ const handleLoginSuccess = () => {
 .context-menu {
   position: fixed;
   background: white;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--neutral-3);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
@@ -1936,12 +1936,12 @@ const handleLoginSuccess = () => {
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #1a1a1a;
+  color: var(--neutral-12);
   transition: background-color 0.2s ease;
 }
 
 .context-menu-item:hover {
-  background: #f0f2f5;
+  background: var(--neutral-3);
 }
 
 /* 传统表单样式兼容性 */
@@ -1953,11 +1953,11 @@ const handleLoginSuccess = () => {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #262626;
+  color: var(--neutral-12);
 }
 
 .error-text {
-  color: #ff4d4f;
+  color: var(--red-9);
   font-size: 12px;
   margin-top: 4px;
 }
@@ -1971,27 +1971,27 @@ const handleLoginSuccess = () => {
 
 /* 拖拽上传区域样式 */
 .zip-upload-zone {
-  border: 2px dashed #cecece;
+  border: 2px dashed var(--neutral-7);
   border-radius: 8px;
   padding: 30px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #fafafa;
+  background: var(--neutral-1);
   margin-bottom: 20px;
 }
 
 .zip-upload-zone:hover {
-  border-color: #00a0d9;
-  background: #f0f9ff;
+  border-color: var(--primary-9);
+  background: var(--primary-3);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 160, 217, 0.15);
 }
 
 /* 拖拽覆盖状态的样式 */
 .zip-upload-zone.drag-over {
-  border-color: #00a0d9;
-  background: #e6f7ff;
+  border-color: var(--primary-9);
+  background: var(--primary-2);
   box-shadow: 0 0 0 4px rgba(0, 160, 217, 0.1);
 }
 
@@ -2005,12 +2005,12 @@ const handleLoginSuccess = () => {
 .upload-icon {
   width: 42px;
   height: 42px;
-  color: #00a0d9;
+  color: var(--primary-9);
 }
 
 .upload-zone-title {
   font-size: 14px;
-  color: #202020;
+  color: var(--neutral-12);
   margin: 0;
   font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
@@ -2020,7 +2020,7 @@ const handleLoginSuccess = () => {
 
 .upload-zone-hint {
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
   margin: 0;
   font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
@@ -2034,7 +2034,7 @@ const handleLoginSuccess = () => {
 .selected-files h5 {
   font-size: 14px;
   font-weight: 600;
-  color: #262626;
+  color: var(--neutral-12);
   margin-bottom: 12px;
   display: flex;
   align-items: center;
@@ -2043,7 +2043,7 @@ const handleLoginSuccess = () => {
 .files-list {
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--neutral-3);
   border-radius: 6px;
   padding: 8px;
 }
@@ -2054,18 +2054,18 @@ const handleLoginSuccess = () => {
   gap: 12px;
   padding: 10px 12px;
   margin-bottom: 8px;
-  background: #fafafa;
-  border: 1px solid #e8e8e8;
+  background: var(--neutral-1);
+  border: 1px solid var(--neutral-4);
   border-radius: 12px;
   font-size: 13px;
-  color: #262626;
+  color: var(--neutral-12);
   transition: all 0.2s ease;
   height: auto;
 }
 
 .file-item:hover {
-  background: #f0f9ff;
-  border-color: #91d5ff;
+  background: var(--primary-3);
+  border-color: var(--primary-6);
 }
 
 .file-item:last-child {
@@ -2075,39 +2075,39 @@ const handleLoginSuccess = () => {
 .file-name {
   flex: 1;
   font-weight: 500;
-  color: #262626;
+  color: var(--neutral-12);
 }
 
 .file-size {
-  color: #8c8c8c;
+  color: var(--neutral-9);
   font-size: 12px;
   font-family: monospace;
 }
 
 .remove-file-btn {
-  color: #8c8c8c;
+  color: var(--neutral-9);
   padding: 4px;
 }
 
 .remove-file-btn:hover {
-  color: #ff4d4f;
-  background: #fff2f0;
+  color: var(--red-9);
+  background: var(--red-2);
 }
 
 .upload-button {
-  background: #00a0d9 !important;
+  background: var(--primary-9) !important;
   border: none !important;
   color: white !important;
 }
 
 .upload-button:hover {
-  background: #007ab1 !important;
+  background: var(--primary-11) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 160, 217, 0.3) !important;
 }
 
 .upload-button:disabled {
-  background: #d9d9d9 !important;
+  background: var(--neutral-6) !important;
   transform: none !important;
   box-shadow: none !important;
 }
@@ -2120,9 +2120,9 @@ const handleLoginSuccess = () => {
   justify-content: space-between;
   margin-bottom: 24px;
   padding: 16px;
-  background: #f8f9fa;
+  background: var(--neutral-2);
   border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--neutral-4);
 }
 
 .step-item {
@@ -2142,12 +2142,12 @@ const handleLoginSuccess = () => {
   right: -50%;
   width: 100%;
   height: 2px;
-  background: #dee2e6;
+  background: var(--neutral-5);
   z-index: 1;
 }
 
 .step-item.step-completed:not(:last-child)::after {
-  background: #00a0d9;
+  background: var(--primary-9);
 }
 
 .step-number {
@@ -2162,23 +2162,23 @@ const handleLoginSuccess = () => {
   margin-bottom: 8px;
   z-index: 2;
   position: relative;
-  background: #f8f9fa;
-  border: 2px solid #dee2e6;
-  color: #6c757d;
+  background: var(--neutral-2);
+  border: 2px solid var(--neutral-5);
+  color: var(--neutral-10);
   transition: all 0.3s ease;
 }
 
 .step-item.step-active .step-number {
-  background: #00a0d9;
-  border-color: #00a0d9;
-  color: white;
+  background: var(--primary-9);
+  border-color: var(--primary-9);
+  color: var(--background);
   box-shadow: 0 0 0 4px rgba(0, 160, 217, 0.2);
 }
 
 .step-item.step-completed .step-number {
-  background: #28a745;
-  border-color: #28a745;
-  color: white;
+  background: var(--green-9);
+  border-color: var(--green-9);
+  color: var(--background);
 }
 
 .step-title {
@@ -2186,17 +2186,17 @@ const handleLoginSuccess = () => {
   font-weight: 600;
   text-align: center;
   margin-bottom: 4px;
-  color: #495057;
+  color: var(--neutral-11);
 }
 
 .step-item.step-active .step-title {
-  color: #00a0d9;
+  color: var(--primary-9);
 }
 
 .step-description {
   font-size: 11px;
   text-align: center;
-  color: #6c757d;
+  color: var(--neutral-10);
   line-height: 1.3;
 }
 
@@ -2213,7 +2213,7 @@ const handleLoginSuccess = () => {
 .preview-title {
   font-size: 18px;
   font-weight: 600;
-  color: #262626;
+  color: var(--neutral-12);
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -2221,15 +2221,15 @@ const handleLoginSuccess = () => {
 }
 
 .preview-description {
-  color: #8c8c8c;
+  color: var(--neutral-9);
   font-size: 14px;
   line-height: 1.4;
 }
 
 /* 文件结构 */
 .file-structure {
-  background: #fafafa;
-  border: 1px solid #e8e8e8;
+  background: var(--neutral-1);
+  border: 1px solid var(--neutral-4);
   border-radius: 8px;
   padding: 16px;
 }
@@ -2240,7 +2240,7 @@ const handleLoginSuccess = () => {
   gap: 16px;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--neutral-4);
 }
 
 .stat-item {
@@ -2250,7 +2250,7 @@ const handleLoginSuccess = () => {
 .stat-label {
   display: block;
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--neutral-9);
   margin-bottom: 4px;
 }
 
@@ -2258,7 +2258,7 @@ const handleLoginSuccess = () => {
   display: block;
   font-size: 16px;
   font-weight: 600;
-  color: #00a0d9;
+  color: var(--primary-9);
 }
 
 .structure-tree {
@@ -2268,7 +2268,7 @@ const handleLoginSuccess = () => {
 
 .folder-preview {
   background: white;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--neutral-4);
   border-radius: 6px;
   padding: 12px;
   margin-bottom: 12px;
@@ -2284,12 +2284,12 @@ const handleLoginSuccess = () => {
 
 .folder-name {
   flex: 1;
-  color: #262626;
+  color: var(--neutral-12);
 }
 
 .folder-count {
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--neutral-9);
 }
 
 .folder-files {
@@ -2302,7 +2302,7 @@ const handleLoginSuccess = () => {
   gap: 8px;
   padding: 4px 0;
   font-size: 12px;
-  color: #595959;
+  color: var(--neutral-10);
 }
 
 .folder-files .file-name {
@@ -2311,13 +2311,13 @@ const handleLoginSuccess = () => {
 
 .folder-files .file-size {
   font-family: monospace;
-  color: #8c8c8c;
+  color: var(--neutral-9);
 }
 
 .more-files {
   padding: 8px 0;
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--neutral-9);
   font-style: italic;
 }
 
@@ -2335,13 +2335,13 @@ const handleLoginSuccess = () => {
 }
 
 .danger.upload-button {
-  background: #ff4d4f !important;
+  background: var(--red-9) !important;
   border: none !important;
   color: white !important;
 }
 
 .danger.upload-button:hover {
-  background: #ff3333 !important;
+  background: var(--red-11) !important;
   box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3) !important;
 }
 
