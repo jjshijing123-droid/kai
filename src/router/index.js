@@ -6,8 +6,7 @@ import Product3DViewer from '../components/Product3DViewer.vue'
 import Product_Viewimages from '../components/Product_Viewimages.vue'
 import I18nManagementPanel from '../components/I18nManagementPanel.vue'
 import Product_Management from '../components/Product_Management.vue'
-import ProductDetailManagement from '../components/ProductDetailManagement.vue'
-import FolderManager from '../components/FolderManager.vue'
+
 import i18n from '../i18n/index.js'
 
 // 定义应用的路由配置数组
@@ -46,18 +45,7 @@ const routes = [
     name: 'ProductManagement',    // 路由名称
     component: Product_Management  // 产品管理组件
   },
-  {
-    path: '/product-management/:name',  // 产品详情管理页面路径
-    name: 'ProductDetailManagement',    // 路由名称
-    component: ProductDetailManagement, // 产品详情管理组件
-    props: true                         // 启用 props 传递路由参数
-  },
-  {
-    path: '/folder/:folderName',        // 文件夹管理页面路径
-    name: 'FolderManager',              // 路由名称
-    component: FolderManager,           // 文件夹管理组件
-    props: true                         // 启用 props 传递路由参数
-  }
+
 ]
 
 // 创建路由实例

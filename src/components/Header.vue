@@ -22,6 +22,10 @@
           <LucideIcon name="RefreshCw" size="16" />
           {{ currentLanguage === 'zh-CN' ? t('common_english') : t('common_chinese') }}
         </Button>
+        
+        <Button variant="text" @click="toggleTheme" class="theme-button" title="Toggle Theme">
+          <LucideIcon :name="currentTheme === 'light' ? 'Moon' : 'Sun'" size="16" />
+        </Button>
       </div>
       
       <!-- 通用抽屉菜单按钮（在所有屏幕尺寸下显示） -->
@@ -40,7 +44,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { Menu } from 'lucide-vue-next'
+import { Menu, Sun, Moon } from 'lucide-vue-next'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter, useRoute } from 'vue-router'
 import Drawer from './Drawer.vue'
@@ -52,6 +56,44 @@ const router = useRouter()
 const route = useRoute()
 
 const menuVisible = ref(false)
+
+// 主题切换相关
+const currentTheme = ref('light')
+
+// 初始化主题
+const initTheme = () => {
+  // 检查 localStorage 中是否有保存的主题
+  const savedTheme = localStorage.getItem('theme')
+  
+  // 检查系统偏好主题
+  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  
+  // 使用保存的主题或系统主题，但只使用light或dark
+  const initialTheme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : systemTheme
+  currentTheme.value = initialTheme
+  
+  // 应用主题
+  applyTheme(initialTheme)
+}
+
+// 应用主题
+const applyTheme = (theme) => {
+  const htmlElement = document.documentElement
+  
+  // 移除现有的主题类
+  htmlElement.classList.remove('light', 'dark')
+  
+  // 应用指定主题
+  htmlElement.classList.add(theme)
+}
+
+// 切换主题
+const toggleTheme = () => {
+  const newTheme = currentTheme.value === 'light' ? 'dark' : 'light'
+  currentTheme.value = newTheme
+  localStorage.setItem('theme', newTheme)
+  applyTheme(newTheme)
+}
 
 // 检测是否为3D查看器页面
 const is3DViewerPage = computed(() => {
@@ -92,6 +134,8 @@ const handleClickOutside = (event) => {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  // 初始化主题
+  initTheme()
 })
 
 onUnmounted(() => {
@@ -157,7 +201,8 @@ onUnmounted(() => {
 }
 
 .nav-button,
-.lang-button {
+.lang-button,
+.theme-button {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -169,13 +214,15 @@ onUnmounted(() => {
 }
 
 .nav-button:hover,
-.lang-button:hover {
+.lang-button:hover,
+.theme-button:hover {
   background: #f5f5f5;
   color: #4d4d4d;
 }
 
 .nav-button .icon,
-.lang-button .icon {
+.lang-button .icon,
+.theme-button .icon {
   font-size: 16px;
 }
 

@@ -91,6 +91,36 @@
               </div>
             </div>
           </div>
+          
+          <!-- 主题切换部分 -->
+          <div class="theme-section">
+            <h3 class="section-title">{{ t('common_theme') }}</h3>
+            <div class="theme-options">
+              <div
+                class="theme-option"
+                :class="{ active: currentTheme === 'light' }"
+                @click="toggleTheme('light')"
+              >
+                <span class="theme-icon">🌞</span>
+                <span class="theme-text">{{ t('common_lightTheme') }}</span>
+                <div class="theme-check" v-if="currentTheme === 'light'">
+                  <LucideIcon name="Check" size="14" />
+                </div>
+              </div>
+              
+              <div
+                class="theme-option"
+                :class="{ active: currentTheme === 'dark' }"
+                @click="toggleTheme('dark')"
+              >
+                <span class="theme-icon">🌙</span>
+                <span class="theme-text">{{ t('common_darkTheme') }}</span>
+                <div class="theme-check" v-if="currentTheme === 'dark'">
+                  <LucideIcon name="Check" size="14" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -105,7 +135,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter } from 'vue-router'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
@@ -163,6 +193,48 @@ const router = useRouter()
 const { isAdminLoggedIn, logout, checkPermission } = useAdminAuth()
 
 const showLoginModal = ref(false)
+
+// 主题切换相关
+const currentTheme = ref('light')
+
+// 初始化主题
+const initTheme = () => {
+  // 检查 localStorage 中是否有保存的主题
+  const savedTheme = localStorage.getItem('theme')
+  
+  // 检查系统偏好主题
+  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  
+  // 使用保存的主题或系统主题，但只使用light或dark
+  const initialTheme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : systemTheme
+  currentTheme.value = initialTheme
+  
+  // 应用主题
+  applyTheme(initialTheme)
+}
+
+// 应用主题
+const applyTheme = (theme) => {
+  const htmlElement = document.documentElement
+  
+  // 移除现有的主题类
+  htmlElement.classList.remove('light', 'dark')
+  
+  // 应用指定主题
+  htmlElement.classList.add(theme)
+}
+
+// 主题切换函数
+const toggleTheme = (theme) => {
+  currentTheme.value = theme
+  localStorage.setItem('theme', theme)
+  applyTheme(theme)
+}
+
+// 组件挂载时初始化主题
+onMounted(() => {
+  initTheme()
+})
 
 const props = defineProps({
   isOpen: {
@@ -473,6 +545,59 @@ const switchLanguage = async (lang) => {
 }
 
 .language-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: #6c757d;
+}
+
+/* 主题切换部分样式 */
+.theme-section {
+  padding: 16px;
+}
+
+.theme-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: 1px solid #e9ecef;
+  position: relative;
+  background: #ffffff;
+}
+
+.theme-option:hover {
+  background: #f8f9fa;
+}
+
+.theme-option.active {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.theme-icon {
+  font-size: 16px;
+  margin-right: 12px;
+}
+
+.theme-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #212529;
+  flex: 1;
+}
+
+.theme-check {
   display: flex;
   align-items: center;
   justify-content: center;

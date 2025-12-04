@@ -192,6 +192,10 @@ const baseTranslations = {
     "common_networkError": "Network error, please check connection",
     "common_serverError": "Server error",
     "common_detectedFolderNameConflict": "Folder name conflict detected, will be renamed to",
+    "common_theme": "Theme",
+    "common_lightTheme": "Light Theme",
+    "common_darkTheme": "Dark Theme",
+    "common_systemTheme": "System Theme",
 
     // FileUploader组件扩展
     "fileUploader_placeholderImage": "Loading product image...",  // 重复使用之前的键
@@ -707,6 +711,10 @@ const baseTranslations = {
     "common_networkError": "网络错误，请检查网络连接",
     "common_serverError": "服务器错误",
     "common_detectedFolderNameConflict": "检测到文件夹名称冲突，将重命名为",
+    "common_theme": "主题",
+    "common_lightTheme": "浅色主题",
+    "common_darkTheme": "深色主题",
+    "common_systemTheme": "系统主题",
     "common_uploadFiles": "上传文件",
     "common_clickOrDragFiles": "点击或拖拽文件到此处上传",
     "common_selectMultipleFiles": "支持多选文件",
