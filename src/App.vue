@@ -44,8 +44,7 @@ const is3DViewerPage = computed(() => {
   margin-top: 64px; /* 为固定头部留出空间 */
   padding: 0px 0;
   min-height: calc(100vh - 64px); /* 减去头部高度 */
-  height: calc(100vh - 64px); /* 确保高度正确计算 */
-  overflow-y: auto; /* 允许内容区域滚动 */
+  /* 移除固定高度和overflow属性，让浏览器处理滚动 */
 }
 
 /* 3D查看器页面全屏样式 */

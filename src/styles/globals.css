@@ -353,6 +353,14 @@
   }
 }
 
+/* 定义可复用组件样式 */
+@layer components {
+  /* 页面标题样式 */
+  .page-title {
+    @apply text-2xl md:text-3xl font-bold text-foreground mb-6;
+  }
+}
+
 /* 保留原有的自定义样式 */
 /* 全局 HTML 和 body 样式 */
 html, body {
@@ -373,19 +381,19 @@ html, body {
 
 /* 滚动条轨道样式 */
 ::-webkit-scrollbar-track {
-  background: #f1f1f1; /* 轨道背景色：浅灰色 */
+  background: var(--neutral-1); /* 轨道背景色：浅灰色 */
   border-radius: 3px; /* 轨道边框半径：3px */
 }
 
 /* 滚动条滑块样式 */
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1; /* 滑块背景色：中灰色 */
+  background: var(--neutral-6); /* 滑块背景色：中灰色 */
   border-radius: 3px; /* 滑块边框半径：3px */
 }
 
 /* 滚动条滑块悬停样式 */
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8; /* 悬停时滑块背景色：深灰色 */
+  background: var(--primary-9); /* 悬停时滑块背景色：深灰色 */
 }
 
 /* 链接样式 */
@@ -397,7 +405,7 @@ a {
 
 /* 链接悬停样式 */
 a:hover {
-  color: hsl(var(--primary)) / 0.8; /* 悬停时链接颜色：主色调，透明度 0.8 */
+  opacity: 0.8; /* 悬停时链接透明度：0.8 */
 }
 
 /* 表单元素样式 */

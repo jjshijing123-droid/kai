@@ -1,10 +1,8 @@
 <template>
   <!-- 按钮组件的根元素，使用动态类名和属性绑定 -->
   <button
-    <!-- 应用基于variant、size和自定义class生成的样式类 -->
     :class="buttonVariants({ variant, size, class: props.class })"
-    <!-- 将所有非样式相关的属性传递给原生button元素 -->
-    v-bind="props"
+    v-bind="buttonProps"
   >
     <!-- 插槽：用于插入按钮的文本或图标内容 -->
     <slot />
@@ -33,7 +31,7 @@ const buttonVariants = cva(
         // 危险/删除按钮样式
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80", 
         // 描边按钮样式
-        outline: "border-[var(--neutral-9)] border hover:bg-accent hover:bg-[--neutral-3)] active:border-[var(--neutral-9)]/80 text-[--neutral-12)]", 
+        outline: "border-[var(--neutral-9)] border hover:bg-accent hover:bg-[var(--neutral-3)] active:border-[var(--neutral-9)]/80 text-[var(--neutral-12)]", 
         // 次要按钮样式
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70", 
         // 幽灵按钮样式（无背景）
