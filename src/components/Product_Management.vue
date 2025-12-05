@@ -88,7 +88,7 @@
           <!-- 上传文件夹 -->
           <div class="upload-section" @click="showUploadFolderModal = true">
             <div class="upload-content">
-              <LucideIcon name="Folder" class="h-10 w-10 text-primary" />
+              <LucideIcon name="Folder" />
               <p class="upload-title">{{ t('productManagement_uploadFolder') }}</p>
               <p class="upload-hint">上传单个完整的产品文件夹压缩包</p>
             </div>
@@ -97,7 +97,7 @@
           <!-- 上传文件 -->
           <div class="upload-section" @click="showUploadFileModal = true">
             <div class="upload-content">
-              <LucideIcon name="FileUp" class="h-10 w-10 text-primary" />
+              <LucideIcon name="FileUp" />
               <p class="upload-title">{{ t('productManagement_uploadFiles') }}</p>
               <p class="upload-hint">上传文件到当前文件夹</p>
             </div>
@@ -192,6 +192,38 @@
         <div v-if="folderNameError" class="text-sm text-red-500">
           {{ folderNameError }}
         </div>
+
+        <!-- 创建文件夹使用说明 -->
+        <div class="file-upload-instructions">
+          <div class="instructions-header">
+            <div class="instructions-icon">
+              <LucideIcon name="Info" />
+            </div>
+            <h4>{{ t('common_usageInstructions') }}</h4>
+          </div>
+          <div class="instructions-content">
+            <div class="instructions-item">
+              <LucideIcon name="FileText" />
+              <span>{{ t('productManagement_folderNameHelp') }}</span>
+            </div>
+            <div class="instructions-item">
+              <LucideIcon name="AlertCircle" />
+              <span>{{ t('productManagement_folderNameTooShort') }}</span>
+            </div>
+            <div class="instructions-item">
+              <LucideIcon name="AlertCircle" />
+              <span>{{ t('productManagement_folderNameTooLong') }}</span>
+            </div>
+            <div class="instructions-item">
+              <LucideIcon name="AlertCircle" />
+              <span>{{ t('productManagement_folderNameNoLeadingTrailingSpaces') }}</span>
+            </div>
+            <div class="instructions-item">
+              <LucideIcon name="AlertCircle" />
+              <span>{{ t('productManagement_folderNameContainsInvalidSequence') }}</span>
+            </div>
+          </div>
+        </div>
       </div>
       
       <template #footer>
@@ -275,12 +307,14 @@
       width="lg:max-w-2xl"
       @close="closeUploadFolderModal"
     >
-      <ProductFolderUploader
-        ref="folderUploaderRef"
-        :disabled="uploading"
-        @upload-start="handleUploadStart"
-        @upload-complete="handleUploadComplete"
-      />
+      <div class="file-upload-section">
+        <ProductFolderUploader
+          ref="folderUploaderRef"
+          :disabled="uploading"
+          @upload-start="handleUploadStart"
+          @upload-complete="handleUploadComplete"
+        />
+      </div>
       <template #footer>
         <Button @click="closeUploadFolderModal" variant="line" size="40">
           {{ t('common_cancel') }}
@@ -311,10 +345,10 @@
             type="file"
             multiple
             @change="handleFileSelect"
-            style="display: none;"
+            class="file-input"
           />
           <div class="upload-content">
-            <LucideIcon name="FileUp" class="h-10 w-10 text-primary" />
+            <LucideIcon name="FileUp" />
             <p class="upload-title">{{ t('common_uploadFiles') }}</p>
             <p class="upload-hint">{{ t('common_clickOrDragFiles') }}</p>
           </div>
@@ -384,6 +418,34 @@
                   <LucideIcon name="X" class="h-4 w-4" />
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 上传文件使用说明 -->
+        <div class="file-upload-instructions">
+          <div class="instructions-header">
+            <div class="instructions-icon">
+              <LucideIcon name="Info" class="h-4 w-4" />
+            </div>
+            <h4>{{ t('common_usageInstructions') }}</h4>
+          </div>
+          <div class="instructions-content">
+            <div class="instructions-item">
+              <LucideIcon name="FileText" class="h-4 w-4" />
+              <span>{{ t('common_supportedFileTypes') }}</span>
+            </div>
+            <div class="instructions-item">
+              <LucideIcon name="AlertCircle" class="h-4 w-4" />
+              <span>{{ t('common_maxFileSize') }}</span>
+            </div>
+            <div class="instructions-item">
+              <LucideIcon name="Upload" class="h-4 w-4" />
+              <span>{{ t('common_multiFileUpload') }}</span>
+            </div>
+            <div class="instructions-item">
+              <LucideIcon name="Folder" class="h-4 w-4" />
+              <span>{{ t('common_uploadToCurrentFolder') }}</span>
             </div>
           </div>
         </div>
@@ -1487,6 +1549,68 @@ const handleLoginSuccess = () => {
   width: 42px;
   height: 42px;
   color: var(--primary-9);
+}
+
+.file-input {
+  display: none;
+}
+
+/* 提示信息 */
+.file-upload-instructions {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--primary-2);
+  border: 1px solid var(--primary-6);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--neutral-11);
+}
+
+.instructions-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.instructions-header .instructions-icon {
+  color: var(--primary-9);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.instructions-header h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--neutral-12);
+}
+
+.instructions-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.instructions-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.instructions-item svg {
+  font-size: 16px;
+  color: var(--primary-9);
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.instructions-item span {
+  line-height: 1.5;
 }
 
 /* 文件夹网格 */

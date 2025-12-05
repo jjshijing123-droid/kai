@@ -40,29 +40,57 @@
             <p class="upload-zone-hint">{{ t('productManagement_clickOrDragHint') }}</p>
           </div>
         </div>
+
+        <!-- 批量上传使用说明 -->
+        <div class="file-upload-instructions">
+          <div class="instructions-header">
+            <div class="instructions-icon">
+              <LucideIcon name="Info" />
+            </div>
+            <h4>{{ t('common_usageInstructions') }}</h4>
+          </div>
+          <div class="instructions-content">
+            <div class="instructions-item">
+              <LucideIcon name="FileArchive" />
+              <span>{{ t('common_uploadZipInstructions') }}</span>
+            </div>
+            <div class="instructions-item">
+              <LucideIcon name="AlertCircle" />
+              <span>{{ t('common_maxFileSize') }}</span>
+            </div>
+            <div class="instructions-item">
+              <LucideIcon name="FolderTree" />
+              <span>{{ t('common_rootFolderRequirement') }}</span>
+            </div>
+            <div class="instructions-item">
+              <LucideIcon name="RefreshCw" />
+              <span>{{ t('common_batchReplaceInstructions') }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 第二步：上传进度 -->
       <div v-if="currentUploadStep === 2" class="progress-section space-y-4">
         <!-- 已选择的文件 -->
         <div v-if="selectedZipFiles.length > 0" class="selected-files">
-          <h5 class="text-sm font-medium text-gray-700 mb-2">{{ t('productManagement_selectedZipFile') }}</h5>
+          <h5 class="text-sm font-medium text-neutral-12 mb-2">{{ t('productManagement_selectedZipFile') }}</h5>
           <div class="space-y-2">
-            <div v-for="(file, index) in selectedZipFiles" :key="index" class="flex items-center gap-3 p-2 bg-gray-50 rounded-md">
+            <div v-for="(file, index) in selectedZipFiles" :key="index" class="flex items-center gap-3 p-2 bg-neutral-2 rounded-md">
               <LucideIcon name="Archive" class="h-4 w-4 text-primary" />
-              <span class="text-sm text-gray-600 flex-1">{{ file.name }}</span>
-              <span class="text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
+              <span class="text-sm text-neutral-11 flex-1">{{ file.name }}</span>
+              <span class="text-xs text-neutral-9">({{ formatFileSize(file.size) }})</span>
             </div>
           </div>
         </div>
 
         <!-- 上传进度 -->
-        <div class="upload-progress p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div class="upload-progress p-4 bg-green-2 border border-green-6 rounded-lg">
           <div class="space-y-4">
             <!-- 进度状态和百分比 -->
             <div class="flex justify-between items-center">
-              <span class="text-sm font-medium text-green-600">{{ uploadStatus }}</span>
-              <span class="text-sm font-semibold text-green-700">{{ Math.round(uploadProgress) }}%</span>
+              <span class="text-sm font-medium text-green-10">{{ uploadStatus }}</span>
+              <span class="text-sm font-semibold text-green-11">{{ Math.round(uploadProgress) }}%</span>
             </div>
             
             <!-- 进度条 -->
@@ -71,17 +99,17 @@
             <!-- 详细的进度信息 -->
             <div class="space-y-3">
               <div class="flex justify-between items-center">
-                <span class="text-xs text-gray-500">{{ t('productManagement_currentStage') }}</span>
-                <span class="text-xs font-medium text-gray-700">{{ currentStageText }}</span>
+                <span class="text-xs text-neutral-10">{{ t('productManagement_currentStage') }}</span>
+                <span class="text-xs font-medium text-neutral-12">{{ currentStageText }}</span>
               </div>
               <div class="grid grid-cols-2 gap-4">
                 <div class="flex justify-between items-center">
-                  <span class="text-xs text-gray-500">{{ t('productManagement_processedFiles') }}</span>
-                  <span class="text-xs font-semibold text-blue-600">{{ processedFiles }}/{{ totalFiles }}</span>
+                  <span class="text-xs text-neutral-10">{{ t('productManagement_processedFiles') }}</span>
+                  <span class="text-xs font-semibold text-primary-9">{{ processedFiles }}/{{ totalFiles }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-xs text-gray-500">{{ t('productManagement_processedFolders') }}</span>
-                  <span class="text-xs font-semibold text-blue-600">{{ processedFolders }}/{{ totalFolders }}</span>
+                  <span class="text-xs text-neutral-10">{{ t('productManagement_processedFolders') }}</span>
+                  <span class="text-xs font-semibold text-primary-9">{{ processedFolders }}/{{ totalFolders }}</span>
                 </div>
               </div>
             </div>
@@ -91,40 +119,43 @@
     </div>
     
     <template #footer>
-      <Button @click="handleClose" :disabled="uploading">
+      <Button @click="handleClose" :disabled="uploading"  variant="line" size="40">
         {{ t('productManagement_cancel') }}
       </Button>
       
       <Button
         v-if="currentUploadStep === 1"
         @click="nextStep"
-        variant="primary"
+        variant="fill"
+        size="40"
         :disabled="!zipFileValid || uploading"
         class="next-step-button"
       >
         {{ t('productManagement_startUpload') }}
-        <LucideIcon name="ChevronRight" class="h-4 w-4 ml-2" />
+        <LucideIcon name="ChevronRight" size="16"/>
       </Button>
       
       <Button
         v-if="currentUploadStep === 2"
         @click="prevStep"
-        variant="secondary"
+        variant="line"
+        size="40"
         class="prev-step-button"
       >
-        <LucideIcon name="ChevronLeft" class="h-4 w-4 mr-2" />
+        <LucideIcon name="ChevronLeft" size="16" />
         {{ t('productManagement_back') }}
       </Button>
       
       <Button
         v-if="currentUploadStep === 2"
         @click="startBatchZipUpload"
-        variant="primary"
+        variant="fill"
+        size="40"
         :disabled="uploading"
         :loading="uploading"
         class="upload-button"
       >
-        <LucideIcon name="Upload" class="h-4 w-4 mr-2" />
+        <LucideIcon name="Upload" size="16" />
         {{ t('productManagement_startUpload') }}
       </Button>
     </template>
@@ -230,6 +261,8 @@ const handleZipFileSelection = async (event) => {
     if (zipFiles.length > 0) {
       // 简单验证
       zipFileValid.value = true
+      // 文件选择后自动跳转到第二步
+      nextStep()
     }
   }
 }
@@ -463,31 +496,9 @@ const startBatchZipUpload = async () => {
   align-items: center;
 }
 
-/* 导航按钮 */
-.next-step-button,
-.prev-step-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.upload-button {
-  background: var(--primary-9) !important;
-  border: none !important;
-  color: white !important;
-}
 
-.upload-button:hover {
-  background: var(--primary-11) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 160, 217, 0.3) !important;
-}
 
-.upload-button:disabled {
-  background: var(--neutral-6) !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
 
 /* ZIP上传区域样式 */
 .zip-upload-section {
@@ -541,6 +552,64 @@ const startBatchZipUpload = async () => {
   font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
   letter-spacing: 0;
+}
+
+/* 提示信息 */
+.file-upload-instructions {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--primary-2);
+  border: 1px solid var(--primary-6);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--neutral-11);
+}
+
+.instructions-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.instructions-header .instructions-icon {
+  color: var(--primary-9);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.instructions-header h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--neutral-12);
+}
+
+.instructions-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.instructions-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.instructions-item svg {
+  font-size: 16px;
+  color: var(--primary-9);
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.instructions-item span {
+  line-height: 1.5;
 }
 
 /* 响应式设计 */

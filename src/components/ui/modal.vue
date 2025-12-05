@@ -84,7 +84,7 @@ const onClose = () => {
 .modal-container {
   background: var(--background);
   border-radius: 8px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--neutral-2); /* 透明的边框是为了下面的阴影看起来像描边 */
   max-height: 90vh;
   overflow: hidden;
   display: flex;

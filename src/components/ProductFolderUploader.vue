@@ -2,10 +2,10 @@
   <div class="product-folder-uploader">
     <!-- 拖拽上传区域 -->
     <div 
-      class="upload-area"
+      class="file-upload-area"
       :class="{ 
-        'upload-area--dragover': isDragOver,
-        'upload-area--disabled': disabled 
+        'file-upload-area--dragover': isDragOver,
+        'file-upload-area--disabled': disabled 
       }"
       @click="triggerFileInput"
       @drop="handleDrop"
@@ -13,15 +13,9 @@
       @dragleave.prevent="handleDragLeave"
     >
       <div class="upload-content">
-        <div class="upload-icon">
-                  <LucideIcon name="Folder" class="h-12 w-12 text-primary" />
-                </div>
-        <div class="upload-text">
-          <div class="upload-title">{{ t('common_uploadProductFolder') }}</div>
-          <div class="upload-subtitle">
-            {{ t('common_clickOrDragZip') }}
-          </div>
-        </div>
+        <LucideIcon name="Folder" />
+        <p class="upload-title">{{ t('common_uploadProductFolder') }}</p>
+        <p class="upload-hint">{{ t('common_clickOrDragZip') }}</p>
         <input
           ref="fileInput"
           type="file"
@@ -94,28 +88,28 @@
     <!-- 移除内部按钮，改为通过emit让父组件在Modal footer中处理 -->
 
     <!-- 提示信息 -->
-    <div class="upload-hint">
-      <div class="hint-header">
-        <div class="hint-icon">
-          <LucideIcon name="Info" class="h-4 w-4" />
+    <div class="file-upload-instructions">
+      <div class="instructions-header">
+        <div class="instructions-icon">
+          <LucideIcon name="Info" />
         </div>
         <h4>{{ t('common_usageInstructions') }}</h4>
       </div>
-      <div class="hint-content">
-        <div class="hint-item">
-          <LucideIcon name="FileArchive" class="h-4 w-4" />
+      <div class="instructions-content">
+        <div class="instructions-item">
+          <LucideIcon name="FileArchive" />
           <span>{{ t('common_uploadZipInstructions') }}</span>
         </div>
-        <div class="hint-item">
-          <LucideIcon name="FolderTree" class="h-4 w-4" />
+        <div class="instructions-item">
+          <LucideIcon name="FolderTree" />
           <span>{{ t('common_rootFolderRequirement') }}</span>
         </div>
-        <div class="hint-item">
-          <LucideIcon name="AlertCircle" class="h-4 w-4" />
+        <div class="instructions-item">
+          <LucideIcon name="AlertCircle" />
           <span>{{ t('common_folderNameConflict') }}</span>
         </div>
-        <div class="hint-item">
-          <LucideIcon name="HardDrive" class="h-4 w-4" />
+        <div class="instructions-item">
+          <LucideIcon name="HardDrive" />
           <span>{{ t('common_maxFileSize') }}</span>
         </div>
       </div>
@@ -397,34 +391,41 @@ defineExpose({
 }
 
 /* 拖拽上传区域 */
-.upload-area {
-  border: 2px dashed #d9d9d9;
+.file-upload-area {
+  border: 2px dashed var(--neutral-6);
   border-radius: 8px;
-  padding: 20px 20px;
+  padding: 30px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #fafafa;
+  background: var(--neutral-2);
+  margin-bottom: 20px;
 }
 
-.upload-area:hover {
-  border-color: #1890ff;
-  background: #f0f8ff;
+.file-upload-area:hover {
+  border-color: var(--primary-9);
+  background: var(--primary-3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 160, 217, 0.15);
 }
 
-.upload-area--dragover {
-  border-color: #1890ff;
-  background: #e6f7ff;
+.file-upload-area--dragover {
+  border-color: var(--primary-9);
+  background: var(--primary-3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 160, 217, 0.15);
 }
 
-.upload-area--disabled {
+.file-upload-area--disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-.upload-area--disabled:hover {
-  border-color: #d9d9d9;
-  background: #fafafa;
+.file-upload-area--disabled:hover {
+  border-color: var(--neutral-6);
+  background: var(--neutral-2);
+  transform: none;
+  box-shadow: none;
 }
 
 .upload-content {
@@ -434,27 +435,28 @@ defineExpose({
   gap: 10px;
 }
 
-.upload-icon svg{
-  width: 44px;
-  height: 44px;
-  color: #00a0d9;
-}
-
-.upload-text {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.upload-content svg {
+  width: 42px;
+  height: 42px;
+  color: var(--primary-9);
 }
 
 .upload-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 14px;
+  color: var(--neutral-12);
+  margin: 0;
+  font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  line-height: 21px;
+  letter-spacing: 0;
 }
 
-.upload-subtitle {
-  font-size: 14px;
-  color: #8c8c8c;
+.upload-hint {
+  font-size: 12px;
+  color: var(--neutral-11);
+  margin: 0;
+  font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  line-height: 21px;
+  letter-spacing: 0;
 }
 
 .file-input {
@@ -469,9 +471,9 @@ defineExpose({
 .folder-name-section {
   margin-top: 20px;
   padding: 20px;
-  background: #fafafa;
+  background: var(--neutral-2);
   border-radius: 6px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--neutral-3);
 }
 
 .form-item {
@@ -483,18 +485,18 @@ defineExpose({
 .form-label {
   font-size: 14px;
   font-weight: 500;
-  color: #262626;
+  color: var(--neutral-12);
   line-height: 1.5;
 }
 
 .error-text {
-  color: #ff4d4f;
+  color: var(--red-9);
   font-size: 12px;
   margin-top: 4px;
 }
 
 .info-text {
-  color: #1890ff;
+  color: var(--primary-9);
   font-size: 12px;
   margin-top: 4px;
 }
@@ -503,8 +505,8 @@ defineExpose({
 .upload-progress-section {
   margin-top: 20px;
   padding: 20px;
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
+  background: var(--green-2);
+  border: 1px solid var(--green-6);
   border-radius: 6px;
 }
 
@@ -517,7 +519,7 @@ defineExpose({
 }
 
 .progress-percent {
-  color: #52c41a;
+  color: var(--green-9);
   font-weight: 600;
 }
 
@@ -526,7 +528,7 @@ defineExpose({
   gap: 16px;
   margin-top: 8px;
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--neutral-9);
 }
 
 /* 上传结果 */
@@ -554,76 +556,74 @@ defineExpose({
 }
 
 /* 提示信息 */
-.upload-hint {
+.file-upload-instructions {
   margin-top: 20px;
   padding: 16px;
-  background: #f0f8ff;
-  border: 1px solid #91d5ff;
+  background: var(--primary-2);
+  border: 1px solid var(--primary-6);
   border-radius: 6px;
   font-size: 14px;
-  color: #595959;
+  color: var(--neutral-11);
 }
 
-.hint-header {
+.instructions-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
 }
 
-.hint-header .hint-icon {
-  color: #1890ff;
+.instructions-header .instructions-icon {
+  color: var(--primary-9);
   font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.hint-header h4 {
+.instructions-header h4 {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
-  color: #262626;
+  color: var(--neutral-12);
 }
 
-.hint-content {
+.instructions-content {
   display: flex;
   flex-direction: column;
   gap: 0px;
 }
 
-.hint-item {
+.instructions-item {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 4px 0;
 }
 
-.hint-item .icon {
+.instructions-item svg {
   font-size: 16px;
-  color: #1890ff;
+  color: var(--primary-9);
   flex-shrink: 0;
+  width: 16px;
+  height: 16px;
 }
 
-.hint-item span {
+.instructions-item span {
   line-height: 1.5;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .upload-area {
+  .file-upload-area {
     padding: 30px 16px;
-  }
-  
-  .upload-icon {
-    font-size: 36px;
   }
   
   .upload-title {
     font-size: 14px;
   }
   
-  .upload-subtitle {
+  .upload-hint {
     font-size: 12px;
   }
   
