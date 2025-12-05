@@ -141,7 +141,7 @@ const onClose = () => {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #262626;
+  color: var(--neutral-12);
   flex: 1;
 }
 
@@ -155,14 +155,14 @@ const onClose = () => {
   background: transparent;
   border-radius: 6px;
   cursor: pointer;
-  color: #8c8c8c;
+  color: var(--neutral-12);
   font-size: 16px;
   transition: all 0.2s ease;
 }
 
 .modal-close-btn:hover {
-  background: #f5f5f5;
-  color: #262626;
+  background: var(--neutral-2);
+  color: var(--neutral-12);
 }
 
 .modal-close-btn :deep(svg) {

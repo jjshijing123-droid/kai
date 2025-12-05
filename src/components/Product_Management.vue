@@ -282,12 +282,12 @@
         @upload-complete="handleUploadComplete"
       />
       <template #footer>
-        <Button @click="closeUploadFolderModal" variant="secondary">
+        <Button @click="closeUploadFolderModal" variant="line" size="40">
           {{ t('common_cancel') }}
         </Button>
         <Button
           @click="handleFolderUploadConfirm"
-          variant="primary"
+          variant="fill" size="40"
           :loading="uploading"
         >
           <LucideIcon name="Upload" class="h-4 w-4" />
@@ -389,15 +389,10 @@
         </div>
       </div>
       <template #footer>
-        <Button @click="closeUploadFileModal" variant="secondary" :disabled="uploading">
+        <Button @click="closeUploadFileModal" variant="line" size="40"  :disabled="uploading">
           {{ t('common_cancel') }}
         </Button>
-        <Button
-          @click="handleFileUploadConfirm"
-          variant="primary"
-          :loading="uploading"
-          :disabled="selectedFiles.length === 0"
-        >
+        <Button @click="handleFileUploadConfirm" variant="fill" size="40" :loading="uploading" :disabled="selectedFiles.length === 0">
           <LucideIcon name="Upload" class="h-4 w-4" />
           {{ t('common_startUpload') }}
         </Button>
@@ -1303,7 +1298,7 @@ const handleLoginSuccess = () => {
   display: flex;
   align-items: center;
   padding: 16px 20px;
-  background: white;
+  background: var(--neutral-opacity-3);
   border-radius: 12px;
   height: auto;
   min-height: 55px;
@@ -1313,9 +1308,8 @@ const handleLoginSuccess = () => {
 }
 
 .upload-file-item:hover {
-  background: var(--neutral-3);
-  border-color: var(--primary-9);
-  box-shadow: 0 2px 8px rgba(0, 160, 217, 0.15);
+  background: var(--primary-3);
+  border-color: var(--primary-opacity-5);
 }
 
 .upload-file-item.file-uploading {
