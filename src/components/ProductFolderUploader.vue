@@ -126,6 +126,60 @@ import Progress from './ui/progress.vue'
 import Alert from './ui/alert.vue'
 import LucideIcon from './ui/LucideIcon.vue'
 
+// 全局消息提示
+const showMessage = (type, text) => {
+  const messageDiv = document.createElement('div')
+  messageDiv.className = `message-${type}`
+  messageDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    padding: 12px 20px;
+    border-radius: 10px;
+    color: white;
+    z-index: 9999;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 400px;
+    word-wrap: break-word;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    opacity: 0;
+  `
+  
+  if (type === 'warning') {
+    messageDiv.style.backgroundColor = 'var(--orange-8)'
+  } else if (type === 'error') {
+    messageDiv.style.backgroundColor = 'var(--red-9)'
+  } else if (type === 'success') {
+    messageDiv.style.backgroundColor = 'var(--green-8)'
+  } else {
+    messageDiv.style.backgroundColor = 'var(--primary-8)'
+  }
+  
+  messageDiv.textContent = text
+  document.body.appendChild(messageDiv)
+  
+  // 入场动画
+  setTimeout(() => {
+    messageDiv.style.opacity = '1'
+    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
+  }, 10)
+  
+  // 3秒后自动移除
+  setTimeout(() => {
+    messageDiv.style.opacity = '0'
+    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        document.body.removeChild(messageDiv)
+      }
+    }, 300)
+  }, 3000)
+}
+
 const { t } = useI18n()
 
 const props = defineProps({
@@ -206,14 +260,14 @@ const handleDragLeave = (event) => {
 const addFile = (file) => {
   // 验证文件类型
   if (!file.name.toLowerCase().endsWith('.zip')) {
-    alert(t('common_zipOnly'))
+    showMessage('warning', t('common_zipOnly'))
     return
   }
 
   // 验证文件大小（100MB）
   const maxSize = 100 * 1024 * 1024
   if (file.size > maxSize) {
-    alert(t('common_fileSizeExceeded'))
+    showMessage('warning', t('common_fileSizeExceeded'))
     return
   }
 

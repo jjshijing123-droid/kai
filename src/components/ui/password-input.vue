@@ -154,20 +154,20 @@ defineExpose({
   position: relative;
   display: flex;
   align-items: center;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--neutral-6);
   border-radius: 6px;
-  background: white;
+  background: var(--neutral-1);
   transition: all 0.3s ease;
   overflow: hidden;
 }
 
 .password-input-container:hover {
-  border-color: #1890ff;
+  border-color: var(--primary-9);
 }
 
 .password-focused {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  border-color: var(--primary-9);
+  box-shadow: 0 0 0 2px var(--primary-opacity-3);
 }
 
 .input-prefix,
@@ -177,7 +177,7 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: 0 12px;
-  color: #8c8c8c;
+  color: var(--neutral-9);
   font-size: 14px;
 }
 
@@ -192,18 +192,18 @@ defineExpose({
   background: transparent;
   padding: 0 12px;
   font-size: 14px;
-  color: #1a1a1a;
+  color: var(--neutral-12);
   line-height: 1.5;
   font-family: inherit;
 }
 
 .password-input::placeholder {
-  color: #bfbfbf;
+  color: var(--neutral-8);
 }
 
 .password-input:disabled {
-  color: #8c8c8c;
-  background: #f5f5f5;
+  color: var(--neutral-9);
+  background: var(--neutral-3);
   cursor: not-allowed;
 }
 
@@ -242,11 +242,11 @@ defineExpose({
 }
 
 .input-error {
-  border-color: #ff4d4f;
+  border-color: var(--red-9);
 }
 
 .input-error:hover {
-  border-color: #ff4d4f;
+  border-color: var(--red-9);
 }
 
 .password-toggle {
@@ -259,16 +259,16 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #8c8c8c;
+  color: var(--neutral-9);
 }
 
 .password-toggle:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: #595959;
+  background: var(--neutral-opacity-2);
+  color: var(--neutral-11);
 }
 
 .password-toggle:active {
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--neutral-opacity-4);
 }
 
 .password-toggle .icon {
@@ -276,20 +276,20 @@ defineExpose({
 }
 
 .input-error .password-input-container {
-  border-color: #ff4d4f;
+  border-color: var(--red-9);
 }
 
 .input-error .password-input-container:hover {
-  border-color: #ff4d4f;
+  border-color: var(--red-9);
 }
 
 .input-error .password-input-container:focus-within {
-  border-color: #ff4d4f;
-  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.1);
+  border-color: var(--red-9);
+  box-shadow: 0 0 0 2px var(--red-opacity-3);
 }
 
 .input-error .input-error-text {
-  color: #ff4d4f;
+  color: var(--red-9);
   font-size: 12px;
   margin-top: 4px;
 }
@@ -300,18 +300,18 @@ defineExpose({
 }
 
 .input-disabled .password-input-container {
-  background: #f5f5f5;
-  border-color: #d9d9d9;
+  background: var(--neutral-3);
+  border-color: var(--neutral-6);
 }
 
 .input-disabled .password-input {
-  color: #8c8c8c;
+  color: var(--neutral-9);
   background: transparent;
 }
 
 .input-disabled .input-prefix,
 .input-disabled .input-suffix {
-  color: #bfbfbf;
+  color: var(--neutral-8);
 }
 
 /* 响应式设计 */

@@ -8,12 +8,12 @@
     <div class="header-controls">
       <!-- 桌面端显示的导航按钮 -->
       <div class="nav-buttons desktop-only">
-        <Button  @click="goToI18nManager" class="nav-button" variant="no" size="32">
+        <Button  @click="goToI18nManager" class="nav-button" variant="no" size="32" :title="!isAdminLoggedIn ? t('common_needAdminPermission') : ''">
           <LucideIcon name="Globe" size="16" />
           {{ t('header_i18nManager') }}
         </Button>
         
-        <Button @click="goToProductManager" class="nav-button"  variant="no" size="32">
+        <Button @click="goToProductManager" class="nav-button"  variant="no" size="32" :title="!isAdminLoggedIn ? t('common_needAdminPermission') : ''">
           <LucideIcon name="Package" size="16" />
           {{ t('header_productManager') }}
         </Button>
@@ -34,11 +34,17 @@
       </Button>
     </div>
     
-    <!-- 统一抽屉菜单 -->
-    <Drawer
-      :isOpen="menuVisible"
-      @close="closeMenu"
-    />
+    <!-- 通用抽屉菜单 -->
+      <Drawer
+        :isOpen="menuVisible"
+        @close="closeMenu"
+      />
+      
+      <!-- 登录模态框 -->
+      <AdminLoginModal
+        v-model:open="showLoginModal"
+        @login-success="handleLoginSuccess"
+      />
   </div>
 </template>
 
@@ -47,15 +53,73 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Menu, Sun, Moon } from 'lucide-vue-next'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter, useRoute } from 'vue-router'
+import { useAdminAuth } from '../composables/useAdminAuth.js'
 import Drawer from './Drawer.vue'
 import Button from './ui/button.vue'
 import LucideIcon from './ui/LucideIcon.vue'
+import AdminLoginModal from './AdminLoginModal.vue'
 
 const { currentLanguage, toggleLanguage, t } = useI18n()
 const router = useRouter()
 const route = useRoute()
+const { isAdminLoggedIn } = useAdminAuth()
 
 const menuVisible = ref(false)
+const showLoginModal = ref(false)
+
+// 全局消息提示
+const showMessage = (type, text) => {
+  const messageDiv = document.createElement('div')
+  messageDiv.className = `message-${type}`
+  messageDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    padding: 12px 20px;
+    border-radius: 10px;
+    color: white;
+    z-index: 9999;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 400px;
+    word-wrap: break-word;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    opacity: 0;
+  `
+  
+  if (type === 'warning') {
+    messageDiv.style.backgroundColor = 'var(--orange-8)'
+  } else if (type === 'error') {
+    messageDiv.style.backgroundColor = 'var(--red-9)'
+  } else if (type === 'success') {
+    messageDiv.style.backgroundColor = 'var(--green-8)'
+  } else {
+    messageDiv.style.backgroundColor = 'var(--primary-8)'
+  }
+  
+  messageDiv.textContent = text
+  document.body.appendChild(messageDiv)
+  
+  // 入场动画
+  setTimeout(() => {
+    messageDiv.style.opacity = '1'
+    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
+  }, 10)
+  
+  // 3秒后自动移除
+  setTimeout(() => {
+    messageDiv.style.opacity = '0'
+    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        document.body.removeChild(messageDiv)
+      }
+    }, 300)
+  }, 3000)
+}
 
 // 主题切换相关
 const currentTheme = ref('light')
@@ -102,13 +166,28 @@ const goToHome = () => {
 }
 
 const goToI18nManager = () => {
+  if (!isAdminLoggedIn.value) {
+    showMessage('warning', t('common_adminPermissionI18n'))
+    showLoginModal.value = true
+    return
+  }
   router.push('/i18n-manager')
   menuVisible.value = false
 }
 
 const goToProductManager = () => {
+  if (!isAdminLoggedIn.value) {
+    showMessage('warning', t('common_adminPermissionProduct'))
+    showLoginModal.value = true
+    return
+  }
   router.push('/product-management')
   menuVisible.value = false
+}
+
+const handleLoginSuccess = () => {
+  showLoginModal.value = false
+  // 登录成功后，用户可以再次点击按钮进入管理页面
 }
 
 // 统一菜单控制

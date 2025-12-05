@@ -77,15 +77,12 @@ const login = async (username, password) => {
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       isAdminLoggedIn.value = true
       localStorage.setItem(ADMIN_SESSION_KEY, 'true')
-      showMessage('success', '管理员登录成功！')
       return { success: true }
     } else {
-      showMessage('error', '用户名或密码错误')
       return { success: false, error: '用户名或密码错误' }
     }
   } catch (error) {
     console.error('登录错误:', error)
-    showMessage('error', '登录失败，请重试')
     return { success: false, error: '登录失败，请重试' }
   }
 }
@@ -94,7 +91,6 @@ const login = async (username, password) => {
 const logout = () => {
   isAdminLoggedIn.value = false
   localStorage.removeItem(ADMIN_SESSION_KEY)
-  showMessage('success', '已成功登出')
 }
 
 // 检查是否有权限访问特定功能

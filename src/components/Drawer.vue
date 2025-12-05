@@ -5,9 +5,9 @@
       <div class="drawer-panel" @click.stop>
         <div class="drawer-header">
           <h3 class="drawer-title"></h3>
-          <button class="drawer-close-btn" @click="closeDrawer" size="icon">
-            <LucideIcon name="X" size="20" />
-          </button>
+          <Button @click="closeDrawer" variant="no" size="icon32">
+            <LucideIcon name="X" size="16" />
+          </Button>
         </div>
         <div class="drawer-content">
           <!-- 管理员认证部分 -->
@@ -23,7 +23,7 @@
                   <LucideIcon name="User" size="20" class="menu-icon" />
                   <span class="menu-text">{{ t('common_loggedIn') }}</span>
                 </div>
-                <Button variant="text" size="small" @click="handleLogout" class="logout-button">
+                <Button variant="line" size="40" @click="handleLogout" class="logout-button">
                   <LucideIcon name="LogOut" size="16" />
                   {{ t('common_logout') }}
                 </Button>
@@ -43,8 +43,6 @@
               <div
                 class="menu-item"
                 @click="goToI18nManager"
-                :class="{ 'disabled': !isAdminLoggedIn }"
-                :title="!isAdminLoggedIn ? t('common_needAdminPermission') : ''"
               >
                 <LucideIcon name="Globe" size="20" class="menu-icon" />
                 <span class="menu-text">{{ t('header_i18nManager') }}</span>
@@ -53,8 +51,6 @@
               <div
                 class="menu-item"
                 @click="goToProductManager"
-                :class="{ 'disabled': !isAdminLoggedIn }"
-                :title="!isAdminLoggedIn ? t('common_needAdminPermission') : ''"
               >
                 <LucideIcon name="Package" size="20" class="menu-icon" />
                 <span class="menu-text">{{ t('header_productManager') }}</span>
@@ -143,43 +139,51 @@ import AdminLoginModal from './AdminLoginModal.vue'
 import Button from './ui/button.vue'
 import LucideIcon from './ui/LucideIcon.vue'
 
-// 原生消息提示实现（替代Ant Design Vue message）
 const showMessage = (type, text) => {
   const messageDiv = document.createElement('div')
   messageDiv.className = `message-${type}`
   messageDiv.style.cssText = `
     position: fixed;
     top: 20px;
-    right: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
     padding: 12px 20px;
-    border-radius: 6px;
+    border-radius: 10px;
     color: white;
     z-index: 9999;
     font-size: 14px;
     font-weight: 500;
-    max-width: 300px;
+    max-width: 400px;
     word-wrap: break-word;
+    text-align: center;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
+    opacity: 0;
   `
   
   if (type === 'warning') {
-    messageDiv.style.backgroundColor = '#f59e0b'
+    messageDiv.style.backgroundColor = 'var(--orange-8)'
   } else if (type === 'error') {
-    messageDiv.style.backgroundColor = '#ef4444'
+    messageDiv.style.backgroundColor = 'var(--red-9)'
   } else if (type === 'success') {
-    messageDiv.style.backgroundColor = '#22c55e'
+    messageDiv.style.backgroundColor = 'var(--green-8)'
   } else {
-    messageDiv.style.backgroundColor = '#0ea5e9'
+    messageDiv.style.backgroundColor = 'var(--primary-8)'
   }
   
   messageDiv.textContent = text
   document.body.appendChild(messageDiv)
   
+  // 入场动画
+  setTimeout(() => {
+    messageDiv.style.opacity = '1'
+    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
+  }, 10)
+  
   // 3秒后自动移除
   setTimeout(() => {
     messageDiv.style.opacity = '0'
-    messageDiv.style.transform = 'translateX(100%)'
+    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
     setTimeout(() => {
       if (messageDiv.parentNode) {
         document.body.removeChild(messageDiv)
@@ -229,6 +233,7 @@ const toggleTheme = (theme) => {
   currentTheme.value = theme
   localStorage.setItem('theme', theme)
   applyTheme(theme)
+  closeDrawer()
 }
 
 // 组件挂载时初始化主题
@@ -257,6 +262,7 @@ const goToHome = () => {
 const goToI18nManager = () => {
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionI18n'))
+    closeDrawer() // 先关闭抽屉
     showLoginModal.value = true
     return
   }
@@ -267,6 +273,7 @@ const goToI18nManager = () => {
 const goToProductManager = () => {
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionProduct'))
+    closeDrawer() // 先关闭抽屉
     showLoginModal.value = true
     return
   }
@@ -274,14 +281,15 @@ const goToProductManager = () => {
   closeDrawer()
 }
 
-// 管理员相关函数
 const openLoginModal = () => {
+  closeDrawer()
   showLoginModal.value = true
 }
 
 const handleLoginSuccess = () => {
   // 登录成功消息已在 useAdminAuth.js 中显示，此处不再重复显示
   showLoginModal.value = false
+  closeDrawer()
 }
 
 const handleLoginFailed = (error) => {
@@ -290,23 +298,18 @@ const handleLoginFailed = (error) => {
 
 const handleLogout = () => {
   logout()
+  showMessage('success', t('common_logoutSuccess'))
   // 如果当前在受保护页面，跳转到首页
   const currentPath = router.currentRoute.value.path
   if (currentPath.includes('/i18n-manager') || currentPath.includes('/product-management')) {
     router.push('/')
   }
+  closeDrawer()
 }
 
-const switchLanguage = async (lang) => {
-  const result = setLanguage(lang)
-  if (result) {
-    // 等待语言切换完成
-    await nextTick()
-    // 关闭抽屉
-    closeDrawer()
-  } else {
-    closeDrawer()
-  }
+const switchLanguage = (lang) => {
+  setLanguage(lang)
+  closeDrawer()
 }
 </script>
 
@@ -328,7 +331,7 @@ const switchLanguage = async (lang) => {
 .drawer-panel {
   width: 320px;
   height: 100%;
-  background: #ffffff;
+  background: var(--neutral-1);
   display: flex;
   flex-direction: column;
 }
@@ -340,7 +343,7 @@ const switchLanguage = async (lang) => {
   justify-content: space-between;
   padding: 0 16px;
   height: 64px;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--neutral-4);
 }
 
 .drawer-title {
@@ -348,28 +351,10 @@ const switchLanguage = async (lang) => {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #212529;
+  color: var(--neutral-12);
 }
 
-.drawer-close-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: transparent;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  color: #6c757d;
-  font-size: 16px;
-}
 
-.drawer-close-btn:hover {
-  background: #f8f9fa;
-  color: #495057;
-}
 
 /* 抽屉内容 */
 .drawer-content {
@@ -393,17 +378,17 @@ const switchLanguage = async (lang) => {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-radius: 4px;
+  border-radius: 10px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  border: 1px solid #e9ecef;
-  color: #495057;
+  border: 1px solid var(--neutral-4);
+  color: var(--neutral-10);
   font-weight: 500;
-  background: #ffffff;
+  background: var(--neutral-1);
 }
 
 .admin-login-item:hover {
-  background: #f8f9fa;
+  background: var(--neutral-2);
 }
 
 .admin-logged-in {
@@ -411,9 +396,9 @@ const switchLanguage = async (lang) => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-radius: 4px;
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  background: var(--neutral-2);
+  border: 1px solid var(--neutral-4);
 }
 
 .admin-info {
@@ -422,17 +407,7 @@ const switchLanguage = async (lang) => {
   flex: 1;
 }
 
-.logout-button {
-  color: #6c757d;
-  font-size: 12px;
-  height: 24px;
-  padding: 0 8px;
-}
 
-.logout-button:hover {
-  color: #dc3545;
-  background: #fff5f5;
-}
 
 /* 菜单部分样式 */
 .menu-section {
@@ -443,7 +418,7 @@ const switchLanguage = async (lang) => {
   margin: 0 0 12px 0;
   font-size: 13px;
   font-weight: 600;
-  color: #6c757d;
+  color: var(--neutral-10);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -458,19 +433,19 @@ const switchLanguage = async (lang) => {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-radius: 4px;
+  border-radius: 10px;
   cursor: pointer;
   transition: background-color 0.2s ease;
   border: 1px solid transparent;
-  background: #ffffff;
+  background: var(--neutral-1);
 }
 
 .menu-item:hover {
-  background: #f8f9fa;
+  background: var(--neutral-2);
 }
 
 .menu-item:active {
-  background: #e9ecef;
+  background: var(--neutral-4);
 }
 
 .menu-icon {
@@ -480,25 +455,17 @@ const switchLanguage = async (lang) => {
   width: 20px;
   height: 20px;
   margin-right: 12px;
-  color: #495057;
+  color: var(--neutral-10);
 }
 
 .menu-text {
   font-size: 14px;
   font-weight: 500;
-  color: #212529;
+  color: var(--neutral-12);
   flex: 1;
 }
 
-.menu-item.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
-.menu-item.disabled:hover {
-  background: transparent;
-  border-color: #e9ecef;
-}
 
 /* 语言切换部分样式 */
 .language-section {
@@ -508,28 +475,28 @@ const switchLanguage = async (lang) => {
 .language-options {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .language-option {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-radius: 4px;
+  border-radius: 10px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--neutral-4);
   position: relative;
-  background: #ffffff;
+  background: var(--neutral-1);
 }
 
 .language-option:hover {
-  background: #f8f9fa;
+  background: var(--neutral-2);
 }
 
 .language-option.active {
-  background: #f8f9fa;
-  border-color: #dee2e6;
+  background: var(--neutral-2);
+  border-color: var(--neutral-5);
 }
 
 .language-flag {
@@ -540,7 +507,7 @@ const switchLanguage = async (lang) => {
 .language-text {
   font-size: 14px;
   font-weight: 500;
-  color: #212529;
+  color: var(--neutral-12);
   flex: 1;
 }
 
@@ -550,7 +517,7 @@ const switchLanguage = async (lang) => {
   justify-content: center;
   width: 16px;
   height: 16px;
-  color: #6c757d;
+  color: var(--neutral-10);
 }
 
 /* 主题切换部分样式 */
@@ -561,28 +528,28 @@ const switchLanguage = async (lang) => {
 .theme-options {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .theme-option {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-radius: 4px;
+  border-radius: 10px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--neutral-4);
   position: relative;
-  background: #ffffff;
+  background: var(--neutral-1);
 }
 
 .theme-option:hover {
-  background: #f8f9fa;
+  background: var(--neutral-2);
 }
 
 .theme-option.active {
-  background: #f8f9fa;
-  border-color: #dee2e6;
+  background: var(--neutral-2);
+  border-color: var(--neutral-5);
 }
 
 .theme-icon {
@@ -593,7 +560,7 @@ const switchLanguage = async (lang) => {
 .theme-text {
   font-size: 14px;
   font-weight: 500;
-  color: #212529;
+  color: var(--neutral-12);
   flex: 1;
 }
 
@@ -603,7 +570,7 @@ const switchLanguage = async (lang) => {
   justify-content: center;
   width: 16px;
   height: 16px;
-  color: #6c757d;
+  color: var(--neutral-10);
 }
 
 /* 响应式调整 */

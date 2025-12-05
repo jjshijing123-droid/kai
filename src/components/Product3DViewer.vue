@@ -79,44 +79,51 @@ import { useRoute } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import Product3DHeader from './Product3DHeader.vue'
 import Drawer from './Drawer.vue'
-// 使用原生消息提示实现（已迁移到Shadcn-Vue架构）
 const showMessage = (type, text) => {
-  // 原生消息提示实现
   const messageDiv = document.createElement('div')
   messageDiv.className = `message-${type}`
   messageDiv.style.cssText = `
     position: fixed;
     top: 20px;
-    right: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
     padding: 12px 20px;
-    border-radius: 6px;
+    border-radius: 10px;
     color: white;
     z-index: 9999;
     font-size: 14px;
     font-weight: 500;
-    max-width: 300px;
+    max-width: 400px;
     word-wrap: break-word;
+    text-align: center;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
+    opacity: 0;
   `
   
   if (type === 'warning') {
-    messageDiv.style.backgroundColor = '#f59e0b'
+    messageDiv.style.backgroundColor = 'var(--orange-8)'
   } else if (type === 'error') {
-    messageDiv.style.backgroundColor = '#ef4444'
+    messageDiv.style.backgroundColor = 'var(--red-9)'
   } else if (type === 'success') {
-    messageDiv.style.backgroundColor = '#22c55e'
+    messageDiv.style.backgroundColor = 'var(--green-8)'
   } else {
-    messageDiv.style.backgroundColor = '#0ea5e9'
+    messageDiv.style.backgroundColor = 'var(--primary-8)'
   }
   
   messageDiv.textContent = text
   document.body.appendChild(messageDiv)
   
+  // 入场动画
+  setTimeout(() => {
+    messageDiv.style.opacity = '1'
+    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
+  }, 10)
+  
   // 3秒后自动移除
   setTimeout(() => {
     messageDiv.style.opacity = '0'
-    messageDiv.style.transform = 'translateX(100%)'
+    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
     setTimeout(() => {
       if (messageDiv.parentNode) {
         document.body.removeChild(messageDiv)

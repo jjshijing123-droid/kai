@@ -1,15 +1,6 @@
 <template>
-  <!-- 未登录提示 - 使用统一组件 -->
-  <AdminAccessDenied
-    v-if="!isAdminLoggedIn"
-    subtitle-key="common_needAdminSubtitleProduct"
-    :redirect-path="'/'"
-    :back-button-text="t('productManagement_backToHome')"
-    :on-login-success="handleLoginSuccess"
-  />
-
   <!-- 管理员内容 -->
-  <div v-else class="file-manager">
+  <div v-if="isAdminLoggedIn" class="file-manager">
     <!-- 页面头部 -->
     <div class="page-header">
       <!-- Frame 348 -->
@@ -498,6 +489,12 @@
       </div>
     </div>
   </div>
+
+  <!-- 登录模态框 -->
+  <AdminLoginModal
+    v-model:open="showLoginModal"
+    @login-success="handleLoginSuccess"
+  />
 </template>
 
 <script setup>
@@ -505,7 +502,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
-import AdminAccessDenied from './AdminAccessDenied.vue'
+import AdminLoginModal from './AdminLoginModal.vue'
 import Button from './ui/button.vue'
 import Input from './ui/input.vue'
 import Modal from './ui/modal.vue'
@@ -514,12 +511,67 @@ import SearchInput from './ui/search-input.vue'
 import ProductFolderUploader from './ProductFolderUploader.vue'
 import BatchUploadModal from './BatchUploadModal.vue'
 
+// 全局消息提示
+const showMessage = (type, text) => {
+  const messageDiv = document.createElement('div')
+  messageDiv.className = `message-${type}`
+  messageDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    padding: 12px 20px;
+    border-radius: 10px;
+    color: white;
+    z-index: 9999;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 400px;
+    word-wrap: break-word;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    opacity: 0;
+  `
+  
+  if (type === 'warning') {
+    messageDiv.style.backgroundColor = 'var(--orange-8)'
+  } else if (type === 'error') {
+    messageDiv.style.backgroundColor = 'var(--red-9)'
+  } else if (type === 'success') {
+    messageDiv.style.backgroundColor = 'var(--green-8)'
+  } else {
+    messageDiv.style.backgroundColor = 'var(--primary-8)'
+  }
+  
+  messageDiv.textContent = text
+  document.body.appendChild(messageDiv)
+  
+  // 入场动画
+  setTimeout(() => {
+    messageDiv.style.opacity = '1'
+    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
+  }, 10)
+  
+  // 3秒后自动移除
+  setTimeout(() => {
+    messageDiv.style.opacity = '0'
+    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        document.body.removeChild(messageDiv)
+      }
+    }, 300)
+  }, 3000)
+}
+
 const { t } = useI18n()
 const router = useRouter()
 const { isAdminLoggedIn } = useAdminAuth()
 
 // 响应式数据
 const products = ref([])
+const showLoginModal = ref(!isAdminLoggedIn.value)
 const currentPath = ref(['Product'])
 const loading = ref(true)
 const error = ref(null)
@@ -985,7 +1037,7 @@ const handleFileSelect = (event) => {
     
     // 显示无效文件信息
     if (invalidFiles.length > 0) {
-      alert(`${invalidFiles.length} 个文件大小超过限制（100MB）`)
+      showMessage('warning', `${invalidFiles.length} 个文件大小超过限制（100MB）`)
     }
   }
 }
@@ -1042,7 +1094,7 @@ const handleFileUpload = async () => {
     
   } catch (error) {
     console.error('文件上传失败:', error)
-    alert('文件上传失败: ' + error.message)
+    showMessage('error', '文件上传失败: ' + error.message)
   } finally {
     uploading.value = false
   }

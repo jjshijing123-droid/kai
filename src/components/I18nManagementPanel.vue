@@ -1,16 +1,7 @@
 <template>
   <div class="i18n-manager">
-    <!-- 未登录提示 - 使用统一组件 -->
-    <AdminAccessDenied
-      v-if="!isAdminLoggedIn"
-      subtitle-key="common_needAdminSubtitleI18n"
-      :redirect-path="'/'"
-      :back-button-text="t('common_backToHome')"
-      :on-login-success="handleLoginSuccess"
-    />
-
     <!-- 管理员内容 -->
-    <div v-else class="admin-content">
+    <div v-if="isAdminLoggedIn" class="admin-content">
       <!-- 页面头部 -->
       <div class="page-header">
         <!-- Frame 348 -->
@@ -251,6 +242,12 @@
       </Card>
     </div>
   </div>
+
+  <!-- 登录模态框 -->
+  <AdminLoginModal
+    v-model:open="showLoginModal"
+    @login-success="handleLoginSuccess"
+  />
 </template>
 
 <script setup>
@@ -258,7 +255,7 @@ import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
 import i18n from '../i18n/index.js'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
-import AdminAccessDenied from './AdminAccessDenied.vue'
+import AdminLoginModal from './AdminLoginModal.vue'
 import Button from './ui/button.vue'
 import Card from './ui/card.vue'
 import Input from './ui/input.vue'
@@ -266,6 +263,60 @@ import Progress from './ui/progress.vue'
 import Badge from './ui/badge.vue'
 import Table from './ui/table.vue'
 import LucideIcon from './ui/LucideIcon.vue'
+
+// 全局消息提示
+const showMessage = (type, text) => {
+  const messageDiv = document.createElement('div')
+  messageDiv.className = `message-${type}`
+  messageDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    padding: 12px 20px;
+    border-radius: 10px;
+    color: white;
+    z-index: 9999;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 400px;
+    word-wrap: break-word;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    opacity: 0;
+  `
+  
+  if (type === 'warning') {
+    messageDiv.style.backgroundColor = 'var(--orange-8)'
+  } else if (type === 'error') {
+    messageDiv.style.backgroundColor = 'var(--red-9)'
+  } else if (type === 'success') {
+    messageDiv.style.backgroundColor = 'var(--green-8)'
+  } else {
+    messageDiv.style.backgroundColor = 'var(--primary-8)'
+  }
+  
+  messageDiv.textContent = text
+  document.body.appendChild(messageDiv)
+  
+  // 入场动画
+  setTimeout(() => {
+    messageDiv.style.opacity = '1'
+    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
+  }, 10)
+  
+  // 3秒后自动移除
+  setTimeout(() => {
+    messageDiv.style.opacity = '0'
+    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        document.body.removeChild(messageDiv)
+      }
+    }, 300)
+  }, 3000)
+}
 
 // 使用实际的 i18n 数据
 const { currentLanguage, availableLanguages, translationCompleteness, t, getTranslationKeys, addTranslations, updateTranslation, deleteTranslation } = useI18n()
@@ -275,6 +326,7 @@ const { isAdminLoggedIn } = useAdminAuth()
 
 // 响应式数据
 const searchTerm = ref('')
+const showLoginModal = ref(!isAdminLoggedIn.value)
 const newKey = ref('')
 const newTranslations = reactive({})
 const saving = ref(false)
@@ -447,7 +499,7 @@ const addTranslation = async () => {
     }, 100)
   } catch (error) {
     console.error('Error adding translation:', error)
-    alert(currentLanguage === 'zh-CN' ? '添加翻译时发生错误，请检查控制台' : 'Error occurred while adding translation, please check console')
+    showMessage('error', currentLanguage === 'zh-CN' ? '添加翻译时发生错误，请检查控制台' : 'Error occurred while adding translation, please check console')
   }
 }
 
@@ -529,7 +581,7 @@ const saveAllTranslations = async () => {
     loadTranslations()
   }, 200)
   
-  alert(t('i18nManager_saveSuccess'))
+  showMessage('success', t('i18nManager_saveSuccess'))
 }
 
 // 导出翻译
