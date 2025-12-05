@@ -66,7 +66,10 @@ const hasSuffix = computed(() => {
 
 const inputClasses = computed(() => {
   return {
-    'password-focused': focused.value
+    'password-focused': focused.value,
+    'input-small': props.size === 'small',
+    'input-large': props.size === 'large',
+    'input-default': props.size === 'default'
   }
 })
 
@@ -159,37 +162,37 @@ const filteredProps = computed(() => {
   cursor: not-allowed;
 }
 
-.input-small {
+.password-input-container.input-small {
   min-height: 32px;
 }
 
-.input-small .password-input {
+.password-input-container.input-small .password-input {
   font-size: 13px;
   padding: 0 8px;
 }
 
-.input-small .input-prefix,
-.input-small .input-suffix {
+.password-input-container.input-small .input-prefix,
+.password-input-container.input-small .input-suffix {
   padding: 0 8px;
   font-size: 13px;
 }
 
-.input-large {
+.password-input-container.input-large {
   min-height: 40px;
 }
 
-.input-large .password-input {
+.password-input-container.input-large .password-input {
   font-size: 15px;
   padding: 0 16px;
 }
 
-.input-large .input-prefix,
-.input-large .input-suffix {
+.password-input-container.input-large .input-prefix,
+.password-input-container.input-large .input-suffix {
   padding: 0 16px;
   font-size: 15px;
 }
 
-.input-default {
+.password-input-container.input-default {
   min-height: 36px;
 }
 

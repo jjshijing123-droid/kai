@@ -36,7 +36,7 @@
             <h3 class="section-title">{{ t('drawer_navigation') }}</h3>
             <div class="menu-list">
               <div class="menu-item" @click="goToHome">
-                <LucideIcon name="Home" size="20" class="menu-icon" />
+                <LucideIcon name="Home" size="14" class="menu-icon" />
                 <span class="menu-text">{{ t('drawer_home') }}</span>
               </div>
               
@@ -44,7 +44,7 @@
                 class="menu-item"
                 @click="goToI18nManager"
               >
-                <LucideIcon name="Globe" size="20" class="menu-icon" />
+                <LucideIcon name="Globe" size="14" class="menu-icon" />
                 <span class="menu-text">{{ t('header_i18nManager') }}</span>
               </div>
               
@@ -52,7 +52,7 @@
                 class="menu-item"
                 @click="goToProductManager"
               >
-                <LucideIcon name="Package" size="20" class="menu-icon" />
+                <LucideIcon name="Package" size="14" class="menu-icon" />
                 <span class="menu-text">{{ t('header_productManager') }}</span>
               </div>
             </div>
@@ -70,7 +70,7 @@
                 <span class="language-flag">🇨🇳</span>
                 <span class="language-text">{{ t('common_chinese') }}</span>
                 <div class="language-check" v-if="currentLanguage === 'zh-CN'">
-                  <LucideIcon name="Check" size="14" />
+                  <LucideIcon name="Check" size="16" />
                 </div>
               </div>
               
@@ -82,7 +82,7 @@
                 <span class="language-flag">🇺🇸</span>
                 <span class="language-text">{{ t('common_english') }}</span>
                 <div class="language-check" v-if="currentLanguage === 'en'">
-                  <LucideIcon name="Check" size="14" />
+                  <LucideIcon name="Check" size="16" />
                 </div>
               </div>
             </div>
@@ -97,10 +97,10 @@
                 :class="{ active: currentTheme === 'light' }"
                 @click="toggleTheme('light')"
               >
-                <span class="theme-icon">🌞</span>
+                <LucideIcon name="Sun" size="16" class="theme-icon" />
                 <span class="theme-text">{{ t('common_lightTheme') }}</span>
                 <div class="theme-check" v-if="currentTheme === 'light'">
-                  <LucideIcon name="Check" size="14" />
+                  <LucideIcon name="Check" size="16" />
                 </div>
               </div>
               
@@ -109,10 +109,10 @@
                 :class="{ active: currentTheme === 'dark' }"
                 @click="toggleTheme('dark')"
               >
-                <span class="theme-icon">🌙</span>
+                <LucideIcon name="Moon" size="16" class="theme-icon" />
                 <span class="theme-text">{{ t('common_darkTheme') }}</span>
                 <div class="theme-check" v-if="currentTheme === 'dark'">
-                  <LucideIcon name="Check" size="14" />
+                  <LucideIcon name="Check" size="16" />
                 </div>
               </div>
             </div>
@@ -121,12 +121,7 @@
       </div>
     </div>
     
-    <!-- 登录模态框 -->
-    <AdminLoginModal
-      v-model:open="showLoginModal"
-      @login-success="handleLoginSuccess"
-      @login-failed="handleLoginFailed"
-    />
+
   </div>
 </template>
 
@@ -135,7 +130,6 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter } from 'vue-router'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
-import AdminLoginModal from './AdminLoginModal.vue'
 import Button from './ui/button.vue'
 import LucideIcon from './ui/LucideIcon.vue'
 
@@ -194,9 +188,7 @@ const showMessage = (type, text) => {
 
 const { currentLanguage, t, setLanguage } = useI18n()
 const router = useRouter()
-const { isAdminLoggedIn, logout, checkPermission } = useAdminAuth()
-
-const showLoginModal = ref(false)
+const { isAdminLoggedIn, logout, checkPermission, openLoginModal } = useAdminAuth()
 
 // 主题切换相关
 const currentTheme = ref('light')
@@ -263,7 +255,7 @@ const goToI18nManager = () => {
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionI18n'))
     closeDrawer() // 先关闭抽屉
-    showLoginModal.value = true
+    openLoginModal()
     return
   }
   router.push('/i18n-manager')
@@ -274,21 +266,15 @@ const goToProductManager = () => {
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionProduct'))
     closeDrawer() // 先关闭抽屉
-    showLoginModal.value = true
+    openLoginModal()
     return
   }
   router.push('/product-management')
   closeDrawer()
 }
 
-const openLoginModal = () => {
-  closeDrawer()
-  showLoginModal.value = true
-}
-
 const handleLoginSuccess = () => {
   // 登录成功消息已在 useAdminAuth.js 中显示，此处不再重复显示
-  showLoginModal.value = false
   closeDrawer()
 }
 
@@ -452,8 +438,8 @@ const switchLanguage = (lang) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   margin-right: 12px;
   color: var(--neutral-10);
 }

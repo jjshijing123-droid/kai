@@ -40,11 +40,7 @@
         @close="closeMenu"
       />
       
-      <!-- 登录模态框 -->
-      <AdminLoginModal
-        v-model:open="showLoginModal"
-        @login-success="handleLoginSuccess"
-      />
+
   </div>
 </template>
 
@@ -57,15 +53,13 @@ import { useAdminAuth } from '../composables/useAdminAuth.js'
 import Drawer from './Drawer.vue'
 import Button from './ui/button.vue'
 import LucideIcon from './ui/LucideIcon.vue'
-import AdminLoginModal from './AdminLoginModal.vue'
 
 const { currentLanguage, toggleLanguage, t } = useI18n()
 const router = useRouter()
 const route = useRoute()
-const { isAdminLoggedIn } = useAdminAuth()
+const { isAdminLoggedIn, openLoginModal } = useAdminAuth()
 
 const menuVisible = ref(false)
-const showLoginModal = ref(false)
 
 // 全局消息提示
 const showMessage = (type, text) => {
@@ -168,7 +162,7 @@ const goToHome = () => {
 const goToI18nManager = () => {
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionI18n'))
-    showLoginModal.value = true
+    openLoginModal()
     return
   }
   router.push('/i18n-manager')
@@ -178,16 +172,11 @@ const goToI18nManager = () => {
 const goToProductManager = () => {
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionProduct'))
-    showLoginModal.value = true
+    openLoginModal()
     return
   }
   router.push('/product-management')
   menuVisible.value = false
-}
-
-const handleLoginSuccess = () => {
-  showLoginModal.value = false
-  // 登录成功后，用户可以再次点击按钮进入管理页面
 }
 
 // 统一菜单控制

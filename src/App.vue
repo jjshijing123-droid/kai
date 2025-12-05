@@ -9,6 +9,12 @@
         <router-view />
       </div>
     </main>
+    
+    <!-- 全局登录模态框 -->
+    <AdminLoginModal
+      v-model:open="showLoginModal"
+      @login-success="handleLoginSuccess"
+    />
   </div>
 </template>
 
@@ -16,13 +22,21 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from './components/Header.vue'
+import AdminLoginModal from './components/AdminLoginModal.vue'
+import { useAdminAuth } from './composables/useAdminAuth.js'
 
 const route = useRoute()
+const { showLoginModal, closeLoginModal } = useAdminAuth()
 
 // 检测是否为3D查看器页面或图片展示页面（这些页面使用自己的header）
 const is3DViewerPage = computed(() => {
   return route.path.startsWith('/product-3d/') || route.path.startsWith('/product-images/')
 })
+
+// 登录成功处理
+const handleLoginSuccess = () => {
+  closeLoginModal()
+}
 </script>
 
 

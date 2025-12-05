@@ -54,6 +54,9 @@ const ADMIN_CREDENTIALS = {
 // 登录状态管理
 const isAdminLoggedIn = ref(false)
 
+// 全局登录模态框状态
+const showLoginModal = ref(false)
+
 // 本地存储键名
 const ADMIN_SESSION_KEY = 'admin_session'
 
@@ -104,6 +107,16 @@ const checkPermission = (resource) => {
   return protectedResources.includes(resource)
 }
 
+// 打开登录模态框
+const openLoginModal = () => {
+  showLoginModal.value = true
+}
+
+// 关闭登录模态框
+const closeLoginModal = () => {
+  showLoginModal.value = false
+}
+
 // 初始化检查存储的会话
 checkStoredSession()
 
@@ -112,11 +125,14 @@ export function useAdminAuth() {
     // 状态
     isAdminLoggedIn, // 返回响应式引用而不是当前值
     isAuthenticated,
+    showLoginModal,
     
     // 方法
     login,
     logout,
-    checkPermission
+    checkPermission,
+    openLoginModal,
+    closeLoginModal
   }
 }
 

@@ -2,16 +2,12 @@
 <Modal
   :open="modalOpen"
   :title="modalTitle"
-  width="400px"
+  width="modal-sm"
   @close="handleCancel"
   :show-footer="false"
 >
   <div class="login-form-container">
     <div class="login-header">
-      <div class="login-icon">
-        <LucideIcon name="Lock" size="48" />
-      </div>
-      <p class="login-description">{{ t('common_enterCredentials') }}</p>
     </div>
 
     <form @submit.prevent="handleLogin" class="login-form">
@@ -225,21 +221,7 @@ const resetForm = () => {
 }
 
 .login-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.login-icon {
-  color: var(--primary-9);
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: center;
-}
-
-.login-description {
-  color: var(--neutral-9);
-  font-size: 14px;
-  margin: 0;
+  margin-bottom: 0px;
 }
 
 .login-form {
