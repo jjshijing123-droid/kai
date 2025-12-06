@@ -1,23 +1,13 @@
 <template>
-  <Modal
-    :open="open"
-    :title="t('productManagement_batchUpload')"
-    width="w-[520px]"
-    @close="handleClose"
-  >
+  <Modal :open="open" :title="t('productManagement_batchUpload')" width="w-[520px]" @close="handleClose">
     <div class="batch-upload-content">
       <!-- 操作步骤指示器 -->
       <div class="step-indicator">
-        <div
-          v-for="(step, index) in uploadSteps"
-          :key="step.key"
-          class="step-item"
-          :class="{
+        <div v-for="(step, index) in uploadSteps" :key="step.key" class="step-item" :class="{
             'step-active': currentUploadStep === index + 1,
             'step-completed': currentUploadStep > index + 1,
             'step-pending': currentUploadStep < index + 1
-          }"
-        >
+          }">
           <div class="step-number">{{ index + 1 }}</div>
           <div class="step-title">{{ step.title }}</div>
           <div class="step-description">{{ step.description }}</div>
@@ -27,13 +17,8 @@
       <!-- 第一步：选择压缩包 -->
       <div v-if="currentUploadStep === 1" class="zip-upload-section">
         <div class="upload-area" @click="triggerFileInput">
-          <input
-            ref="fileInput"
-            type="file"
-            accept=".zip,.rar,.7z"
-            @change="handleZipFileSelection"
-            style="display: none;"
-          />
+          <input ref="fileInput" type="file" accept=".zip,.rar,.7z" @change="handleZipFileSelection"
+            style="display: none;" />
           <div class="upload-zone-content">
             <LucideIcon name="Upload" class="upload-icon" />
             <h4 class="upload-zone-title">{{ t('productManagement_uploadZipFile') }}</h4>
@@ -42,32 +27,18 @@
         </div>
 
         <!-- 批量上传使用说明 -->
-        <div class="file-upload-instructions">
-          <div class="instructions-header">
-            <div class="instructions-icon">
-              <LucideIcon name="Info" />
-            </div>
-            <h4>{{ t('common_usageInstructions') }}</h4>
-          </div>
-          <div class="instructions-content">
-            <div class="instructions-item">
-              <LucideIcon name="FileArchive" />
-              <span>{{ t('common_uploadZipInstructions') }}</span>
-            </div>
-            <div class="instructions-item">
-              <LucideIcon name="AlertCircle" />
-              <span>{{ t('common_maxFileSize') }}</span>
-            </div>
-            <div class="instructions-item">
-              <LucideIcon name="FolderTree" />
-              <span>{{ t('common_rootFolderRequirement') }}</span>
-            </div>
-            <div class="instructions-item">
-              <LucideIcon name="RefreshCw" />
-              <span>{{ t('common_batchReplaceInstructions') }}</span>
-            </div>
-          </div>
-        </div>
+        <Functionaldescription
+            :displayTitle="t('common_usageInstructions')"
+            iconName="AlertCircle"  
+            :instructions="[        
+            { icon: 'FileArchive', text: t('common_uploadZipInstructions') },
+            { icon: 'AlertCircle', text: t('common_maxFileSize') },
+            { icon: 'FolderTree', text: t('common_rootFolderRequirement') },
+            { icon: 'RefreshCw', text: t('common_batchReplaceInstructions') }
+            ]"
+        />
+        
+
       </div>
 
       <!-- 第二步：上传进度 -->
@@ -76,7 +47,8 @@
         <div v-if="selectedZipFiles.length > 0" class="selected-files">
           <h5 class="text-sm font-medium text-neutral-12 mb-2">{{ t('productManagement_selectedZipFile') }}</h5>
           <div class="space-y-2">
-            <div v-for="(file, index) in selectedZipFiles" :key="index" class="flex items-center gap-3 p-2 bg-neutral-2 rounded-md">
+            <div v-for="(file, index) in selectedZipFiles" :key="index"
+              class="flex items-center gap-3 p-2 bg-neutral-2 rounded-md">
               <LucideIcon name="Archive" class="h-4 w-4 text-primary" />
               <span class="text-sm text-neutral-11 flex-1">{{ file.name }}</span>
               <span class="text-xs text-neutral-9">({{ formatFileSize(file.size) }})</span>
@@ -92,10 +64,10 @@
               <span class="text-sm font-medium text-green-10">{{ uploadStatus }}</span>
               <span class="text-sm font-semibold text-green-11">{{ Math.round(uploadProgress) }}%</span>
             </div>
-            
+
             <!-- 进度条 -->
             <Progress :percent="uploadProgress" class="w-full h-2" />
-            
+
             <!-- 详细的进度信息 -->
             <div class="space-y-3">
               <div class="flex justify-between items-center">
@@ -117,44 +89,25 @@
         </div>
       </div>
     </div>
-    
+
     <template #footer>
-      <Button @click="handleClose" :disabled="uploading"  variant="line" size="40">
+      <Button @click="handleClose" :disabled="uploading" variant="line" size="40">
         {{ t('productManagement_cancel') }}
       </Button>
-      
-      <Button
-        v-if="currentUploadStep === 1"
-        @click="nextStep"
-        variant="fill"
-        size="40"
-        :disabled="!zipFileValid || uploading"
-        class="next-step-button"
-      >
+
+      <Button v-if="currentUploadStep === 1" @click="nextStep" variant="fill" size="40"
+        :disabled="!zipFileValid || uploading" class="next-step-button">
         {{ t('productManagement_startUpload') }}
-        <LucideIcon name="ChevronRight" size="16"/>
+        <LucideIcon name="ChevronRight" size="16" />
       </Button>
-      
-      <Button
-        v-if="currentUploadStep === 2"
-        @click="prevStep"
-        variant="line"
-        size="40"
-        class="prev-step-button"
-      >
+
+      <Button v-if="currentUploadStep === 2" @click="prevStep" variant="line" size="40" class="prev-step-button">
         <LucideIcon name="ChevronLeft" size="16" />
         {{ t('productManagement_back') }}
       </Button>
-      
-      <Button
-        v-if="currentUploadStep === 2"
-        @click="startBatchZipUpload"
-        variant="fill"
-        size="40"
-        :disabled="uploading"
-        :loading="uploading"
-        class="upload-button"
-      >
+
+      <Button v-if="currentUploadStep === 2" @click="startBatchZipUpload" variant="fill" size="40" :disabled="uploading"
+        :loading="uploading" class="upload-button">
         <LucideIcon name="Upload" size="16" />
         {{ t('productManagement_startUpload') }}
       </Button>
@@ -167,6 +120,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 import Button from './ui/button.vue'
 import Modal from './ui/modal.vue'
+import Functionaldescription from './Functionaldescription.vue'
 import Progress from './ui/progress.vue'
 import LucideIcon from './ui/LucideIcon.vue'
 

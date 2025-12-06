@@ -1,29 +1,17 @@
 <template>
   <div class="product-folder-uploader">
     <!-- 拖拽上传区域 -->
-    <div 
-      class="file-upload-area"
-      :class="{ 
+    <div class="file-upload-area" :class="{ 
         'file-upload-area--dragover': isDragOver,
         'file-upload-area--disabled': disabled 
-      }"
-      @click="triggerFileInput"
-      @drop="handleDrop"
-      @dragover.prevent="handleDragOver"
-      @dragleave.prevent="handleDragLeave"
-    >
+      }" @click="triggerFileInput" @drop="handleDrop" @dragover.prevent="handleDragOver"
+      @dragleave.prevent="handleDragLeave">
       <div class="upload-content">
         <LucideIcon name="Folder" />
         <p class="upload-title">{{ t('common_uploadProductFolder') }}</p>
         <p class="upload-hint">{{ t('common_clickOrDragZip') }}</p>
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".zip"
-          :disabled="disabled"
-          @change="handleFileSelect"
-          class="file-input"
-        />
+        <input ref="fileInput" type="file" accept=".zip" :disabled="disabled" @change="handleFileSelect"
+          class="file-input" />
       </div>
     </div>
 
@@ -31,12 +19,8 @@
     <div v-if="selectedFile" class="folder-name-section">
       <div class="form-item">
         <label class="form-label">{{ t('common_productFolderName') }}</label>
-        <Input
-          v-model:value="folderName"
-          :placeholder="t('common_folderNamePlaceholder')"
-          :disabled="uploading"
-          @input="validateFolderName"
-        />
+        <Input v-model:value="folderName" :placeholder="t('common_folderNamePlaceholder')" :disabled="uploading"
+          @input="validateFolderName" />
         <div v-if="folderNameError" class="error-text">
           {{ folderNameError }}
         </div>
@@ -52,11 +36,7 @@
         <span>{{ t('common_uploadingProductFolder') }}</span>
         <span class="progress-percent">{{ uploadProgress }}%</span>
       </div>
-      <Progress
-        :percent="uploadProgress"
-        :show-info="false"
-        status="active"
-      />
+      <Progress :percent="uploadProgress" :show-info="false" status="active" />
       <div class="progress-details">
         <div>{{ t('common_files') }}: {{ processedFiles }}/{{ totalFiles }}</div>
         <div>{{ t('common_folders') }}: {{ processedFolders }}/{{ totalFolders }}</div>
@@ -65,13 +45,8 @@
 
     <!-- 上传结果 -->
     <div v-if="uploadResult" class="upload-result">
-      <Alert
-        :message="uploadResult.success ? t('common_uploadSuccess') : t('common_uploadFailed')"
-        :type="uploadResult.success ? 'success' : 'error'"
-        show-icon
-        closable
-        @close="uploadResult = null"
-      >
+      <Alert :message="uploadResult.success ? t('common_uploadSuccess') : t('common_uploadFailed')"
+        :type="uploadResult.success ? 'success' : 'error'" show-icon closable @close="uploadResult = null">
         <template #description>
           <div v-if="uploadResult.success">
             <p>{{ t('common_productFolderName') }}: <strong>{{ uploadResult.actualName }}</strong></p>
@@ -87,33 +62,18 @@
 
     <!-- 移除内部按钮，改为通过emit让父组件在Modal footer中处理 -->
 
-    <!-- 提示信息 -->
-    <div class="file-upload-instructions">
-      <div class="instructions-header">
-        <div class="instructions-icon">
-          <LucideIcon name="Info" />
-        </div>
-        <h4>{{ t('common_usageInstructions') }}</h4>
-      </div>
-      <div class="instructions-content">
-        <div class="instructions-item">
-          <LucideIcon name="FileArchive" />
-          <span>{{ t('common_uploadZipInstructions') }}</span>
-        </div>
-        <div class="instructions-item">
-          <LucideIcon name="FolderTree" />
-          <span>{{ t('common_rootFolderRequirement') }}</span>
-        </div>
-        <div class="instructions-item">
-          <LucideIcon name="AlertCircle" />
-          <span>{{ t('common_folderNameConflict') }}</span>
-        </div>
-        <div class="instructions-item">
-          <LucideIcon name="HardDrive" />
-          <span>{{ t('common_maxFileSize') }}</span>
-        </div>
-      </div>
-    </div>
+    <!-- 上传当个产品文件夹提示信息 -->
+    <Functionaldescription
+      :displayTitle="t('common_usageInstructions')"
+      iconName="AlertCircle"
+      :instructions="[  
+      { icon: 'FileArchive', text: t('common_uploadZipInstructions') },
+      { icon: 'FolderTree', text: t('common_rootFolderRequirement') },
+      { icon: 'AlertCircle', text: t('common_folderNameConflict') },
+      { icon: 'HardDrive', text: t('common_maxFileSize') }
+      ]"
+    />
+
   </div>
 </template>
 
@@ -125,6 +85,7 @@ import Input from './ui/input.vue'
 import Progress from './ui/progress.vue'
 import Alert from './ui/alert.vue'
 import LucideIcon from './ui/LucideIcon.vue'
+import Functionaldescription from './Functionaldescription.vue'
 
 // 全局消息提示
 const showMessage = (type, text) => {
@@ -609,63 +570,7 @@ defineExpose({
   font-size: 16px;
 }
 
-/* 提示信息 */
-.file-upload-instructions {
-  margin-top: 20px;
-  padding: 16px;
-  background: var(--primary-2);
-  border: 1px solid var(--primary-6);
-  border-radius: 6px;
-  font-size: 14px;
-  color: var(--neutral-11);
-}
 
-.instructions-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.instructions-header .instructions-icon {
-  color: var(--primary-9);
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.instructions-header h4 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--neutral-12);
-}
-
-.instructions-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0px;
-}
-
-.instructions-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 0;
-}
-
-.instructions-item svg {
-  font-size: 16px;
-  color: var(--primary-9);
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-}
-
-.instructions-item span {
-  line-height: 1.5;
-}
 
 /* 响应式设计 */
 @media (max-width: 768px) {

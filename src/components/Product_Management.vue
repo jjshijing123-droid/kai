@@ -185,36 +185,20 @@
         </div>
 
         <!-- 创建文件夹使用说明 -->
-        <div class="file-upload-instructions">
-          <div class="instructions-header">
-            <div class="instructions-icon">
-              <LucideIcon name="Info" />
-            </div>
-            <h4>{{ t('common_usageInstructions') }}</h4>
-          </div>
-          <div class="instructions-content">
-            <div class="instructions-item">
-              <LucideIcon name="FileText" />
-              <span>{{ t('productManagement_folderNameHelp') }}</span>
-            </div>
-            <div class="instructions-item">
-              <LucideIcon name="AlertCircle" />
-              <span>{{ t('productManagement_folderNameTooShort') }}</span>
-            </div>
-            <div class="instructions-item">
-              <LucideIcon name="AlertCircle" />
-              <span>{{ t('productManagement_folderNameTooLong') }}</span>
-            </div>
-            <div class="instructions-item">
-              <LucideIcon name="AlertCircle" />
-              <span>{{ t('productManagement_folderNameNoLeadingTrailingSpaces') }}</span>
-            </div>
-            <div class="instructions-item">
-              <LucideIcon name="AlertCircle" />
-              <span>{{ t('productManagement_folderNameContainsInvalidSequence') }}</span>
-            </div>
-          </div>
-        </div>
+        <Functionaldescription
+          :displayTitle="t('common_usageInstructions')"
+          iconName="AlertCircle"
+          :instructions="[
+            { icon: 'FileText', text: t('productManagement_folderNameHelp') },
+            { icon: 'AlertCircle', text: t('productManagement_folderNameTooShort') },
+            { icon: 'AlertCircle', text: t('productManagement_folderNameTooLong') },
+            { icon: 'AlertCircle', text: t('productManagement_folderNameNoLeadingTrailingSpaces') },
+            { icon: 'AlertCircle', text: t('productManagement_folderNameContainsInvalidSequence') }
+          ]"
+        />
+
+
+
       </div>
       
       <template #footer>
@@ -414,32 +398,17 @@
         </div>
 
         <!-- 上传文件使用说明 -->
-        <div class="file-upload-instructions">
-          <div class="instructions-header">
-            <div class="instructions-icon">
-              <LucideIcon name="Info" class="h-4 w-4" />
-            </div>
-            <h4>{{ t('common_usageInstructions') }}</h4>
-          </div>
-          <div class="instructions-content">
-            <div class="instructions-item">
-              <LucideIcon name="FileText" class="h-4 w-4" />
-              <span>{{ t('common_supportedFileTypes') }}</span>
-            </div>
-            <div class="instructions-item">
-              <LucideIcon name="AlertCircle" class="h-4 w-4" />
-              <span>{{ t('common_maxFileSize') }}</span>
-            </div>
-            <div class="instructions-item">
-              <LucideIcon name="Upload" class="h-4 w-4" />
-              <span>{{ t('common_multiFileUpload') }}</span>
-            </div>
-            <div class="instructions-item">
-              <LucideIcon name="Folder" class="h-4 w-4" />
-              <span>{{ t('common_uploadToCurrentFolder') }}</span>
-            </div>
-          </div>
-        </div>
+        <Functionaldescription
+          :displayTitle="t('common_usageInstructions')"
+          iconName="AlertCircle"
+          :instructions="[
+            { icon: 'FileText', text: t('common_supportedFileTypes') },
+            { icon: 'AlertCircle', text: t('common_maxFileSize') },
+            { icon: 'Upload', text: t('common_multiFileUpload') },
+            { icon: 'Folder', text: t('common_uploadToCurrentFolder') }
+          ]"
+        />
+
       </div>
       <template #footer>
         <Button @click="closeUploadFileModal" variant="line" size="40"  :disabled="uploading">
@@ -510,6 +479,7 @@ import LucideIcon from './ui/LucideIcon.vue'
 import SearchInput from './ui/search-input.vue'
 import ProductFolderUploader from './ProductFolderUploader.vue'
 import BatchUploadModal from './BatchUploadModal.vue'
+import Functionaldescription from './Functionaldescription.vue'
 
 // 全局消息提示
 const showMessage = (type, text) => {
@@ -1262,15 +1232,7 @@ const handleLoginSuccess = () => {
 }
 
 /* 页面标题 */
-.page-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--8C8C8C-12);
-  margin: 0;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
-  line-height: 24px;
-  letter-spacing: 0;
-}
+
 
 /* Frame 330 - 搜索和操作区域 */
 .frame330 {
@@ -1607,63 +1569,7 @@ const handleLoginSuccess = () => {
   display: none;
 }
 
-/* 提示信息 */
-.file-upload-instructions {
-  margin-top: 20px;
-  padding: 16px;
-  background: var(--primary-2);
-  border: 1px solid var(--primary-6);
-  border-radius: 6px;
-  font-size: 14px;
-  color: var(--neutral-11);
-}
 
-.instructions-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.instructions-header .instructions-icon {
-  color: var(--primary-9);
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.instructions-header h4 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--neutral-12);
-}
-
-.instructions-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0px;
-}
-
-.instructions-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 0;
-}
-
-.instructions-item svg {
-  font-size: 16px;
-  color: var(--primary-9);
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-}
-
-.instructions-item span {
-  line-height: 1.5;
-}
 
 /* 文件夹网格 */
 .folder-grid {
@@ -2030,9 +1936,7 @@ const handleLoginSuccess = () => {
 }
 
 @media (max-width: 576px) {
-  .page-title {
-    font-size: 18px;
-  }
+
   
   .action-buttons {
     flex-direction: column;

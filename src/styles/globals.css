@@ -361,11 +361,51 @@
   }
 }
 
+
+
 /* 定义可复用组件样式 */
 @layer components {
-  /* 页面标题样式 */
+    /* 页面标题样式 */
   .page-title {
-    @apply text-[12px] md:text-3xl font-bold text-neutral-12 mb-6;
+  font-size: 22px;
+  font-weight: 700;
+  color:var(-neutral-12);
+  margin: 0;
+  line-height: 24px;
+  letter-spacing: 0;
+  }
+
+  /* 文件上传说明样式模板 */
+  .file-upload-instructions {
+    @apply mt-5 p-4 bg-primary-2 border border-primary-6 rounded-md text-sm text-neutral-11;
+  }
+
+  .instructions-header {
+    @apply flex items-center gap-2 mb-2;
+  }
+
+  .instructions-header .instructions-icon {
+    @apply text-primary-9 text-base flex items-center justify-center;
+  }
+
+  .instructions-header h4 {
+    @apply leading-tight m-0 text-base font-semibold text-neutral-12;
+  }
+
+  .instructions-content {
+    @apply flex flex-col gap-0;
+  }
+
+  .instructions-item {
+    @apply flex items-center gap-2.5 py-1;
+  }
+
+  .instructions-item svg {
+    @apply text-sm text-primary-9 flex-shrink-0 w-4 h-4;
+  }
+
+  .instructions-item span {
+    @apply leading-tight;
   }
 }
 
