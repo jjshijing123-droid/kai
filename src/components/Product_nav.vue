@@ -1,6 +1,5 @@
 <template>
   <div class="product-detail">
-    <button class="lang-switch" @click="toggleLanguage">{{ currentLanguage === 'zh-CN' ? t('common_english') : t('common_chinese') }}</button>
     
     <div class="container">
       <div class="header-container">
@@ -22,15 +21,15 @@
       </div>
       
       <div class="button-container">
-        <router-link
+        <button
           v-if="productName && productName.trim() !== '' && hasView1Files"
           id="rotateBtn"
           class="btn"
-          :to="`/product-3d/${encodeURIComponent(productName)}`"
+          @click="navigateTo3DViewer"
           :data-i18n="'productDetail_product360'"
         >
           {{ product360Text }}
-        </router-link>
+        </button>
         <button
           v-if="productName && productName.trim() !== '' && hasImages6ViewsFiles"
           id="views6Btn"
@@ -92,6 +91,13 @@ watch(currentLanguage, () => {
 
 // 初始化翻译
 updateTranslations()
+
+// 导航到3D查看器页面
+const navigateTo3DViewer = () => {
+  if (productName.value && productName.value.trim() !== '') {
+    router.push(`/product-3d/${encodeURIComponent(productName.value)}`)
+  }
+}
 
 // 导航到图片展示页面
 const navigateToImages = (type) => {
@@ -280,7 +286,7 @@ onMounted(async () => {
   align-items: center;
   margin: 0;
   padding-top: 10%;
-  background-color: #ffffff;
+  background-color: var(--neutral-1);
   overflow-x: hidden;
 }
 
@@ -295,8 +301,8 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   margin-bottom: 30px;
-  background-color: #ffffff;
-  border: 1px #f0f0f0 solid ;
+  background-color: var(--neutral-1);
+  border: 1px var(--neutral-3) solid ;
   padding: 20px;
   border-radius: 30px;
 }
@@ -320,9 +326,9 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: var(--neutral-2);
   border-radius: 8px;
-  color: #666;
+  color: var(--neutral-11);
   font-size: 14px;
   margin-bottom: 10px;
 }
@@ -343,7 +349,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, #f5f5f5 25%, #e8e8e8 50%, #f5f5f5 75%);
+  background: linear-gradient(90deg, var(--neutral-2) 25%, var(--neutral-4) 50%, var(--neutral-2) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   z-index: 1;
@@ -361,7 +367,7 @@ onMounted(async () => {
 }
 
 h1 {
-  color: #333;
+  color: var(--neutral-12);
   margin: 0;
   font-weight: 800;
   font-size: 1.5rem;
@@ -376,8 +382,8 @@ h1 {
 .btn {
   padding: 12px;
   font-size: 1rem;
-  color: white;
-  background-color: #4d4d4d;
+  color:  var(--anniu-2);
+  background-color: var(--anniu-1);
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -389,44 +395,21 @@ h1 {
 }
 
 .btn:hover {
-  background-color: #00a0d9;
+  background-color: var(--primary-9);
 }
 
 .hidden {
   display: none;
 }
 
-/* Language Switch Button */
-.lang-switch {
-  position: absolute;
-  top: 20px;
-  color: #4d4d4d;
-  right: 20px;
-  padding: 6px 12px;
-  background: #f0f0f000;
-  border: 1px solid #00000010;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
-  z-index: 100;
-}
 
-.lang-switch:hover {
-  background: #00000010;
-}
 
 @media (min-width: 320px) and (max-width: 480px) {
   .product-detail {
     padding: 10px 20px;
   }
   
-  .lang-switch {
-    top: 10px;
-    right: 10px;
-    padding: 4px 8px;
-    font-size: 11px;
-  }
+
 
   .container {
     margin-top: 10%;

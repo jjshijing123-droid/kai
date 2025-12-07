@@ -1119,7 +1119,7 @@ const cleanup = () => {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  background: #fafafa;
+  background: var(--neutral-1);
   border-radius: 8px;
   padding: 25px 20px;
   width: 280px;
@@ -1129,7 +1129,7 @@ const cleanup = () => {
   width: 100%;
   word-break: break-word;
   text-align: center;            
-  color: #1a1a1a;
+  color: var(--neutral-12);
   font-size: 1.2em;
   margin-bottom: 15px;
 }
@@ -1141,7 +1141,7 @@ const cleanup = () => {
 
 .progress-container {
   height: 4px;
-  background: #f5f5f5;
+  background: var(--neutral-2);
   margin-bottom: 10px;
   border-radius: 2px;
   overflow: hidden;
@@ -1149,17 +1149,17 @@ const cleanup = () => {
 
 .progress-bar {
   height: 100%;
-  background: #00a0d9;
+  background: var(--primary-9);
   transition: width 0.3s;
 }
 
 .progress-text {
   font-size: 14px;
-  color: #4d4d4d;
+  color: var(--neutral-12);
 }
 
 .error-message {
-  color: #d32f2f;
+  color: var(--red-9);
   font-size: 14px;
   margin-top: 10px;
 }
@@ -1167,7 +1167,7 @@ const cleanup = () => {
 .retry-btn {
   margin-top: 10px;
   padding: 6px 12px;
-  background: #4285f4;
+  background: var(--primary-9);
   color: white;
   border: none;
   border-radius: 4px;
@@ -1192,8 +1192,8 @@ const cleanup = () => {
 .auto-rotate-btn {
   padding: 8px 20px;
   background: rgba(0, 0, 0, 0);
-  color: #1a1a1a;
-  border: 1px solid #00000010;
+  color: var(--neutral-12);
+  border: 1px solid var(--neutral-opacity-6);
   border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
@@ -1201,7 +1201,7 @@ const cleanup = () => {
 }
 
 .auto-rotate-btn:hover {
-  background: #00000010;
+  background: var(--neutral-opacity-6);
 }
 
 .download-progress-container {
@@ -1241,13 +1241,13 @@ const cleanup = () => {
 
 .download-progress-bar {
   height: 100%;
-  background: #00A0D9;
+  background: var(--primary-9);
   transition: width 0.3s;
 }
 
 .download-progress-percent {
   font-size: 14px;
-  color: #666;
+  color: var(--neutral-11);
 }
 
 

@@ -32,6 +32,10 @@
     --radius: 0.5rem; /* 边框半径：0.5rem */
     --custom: var(--green-9); /* 自定义颜色：绿色 */
     --custom-foreground: var(--neutral-1); /* 自定义颜色前景色：白色 */
+
+    /* 自定义按钮颜色 */
+    --anniu-1: #202020;
+    --anniu-2: #ffffff;
     
     /* Figma 颜色变量 */
     /* 中性色 */
@@ -198,6 +202,10 @@
     --ring: var(--neutral-12); /* 环形颜色：浅蓝灰色 */
     --custom: var(--green-9); /* 深色主题自定义颜色：浅绿色 */
     --custom-foreground: var(--neutral-1); /* 深色主题自定义颜色前景色：深绿色 */
+
+        /* 自定义按钮颜色 */
+    --anniu-1: #222222;
+    --anniu-2: #ffffff;
     
     /* Figma 深色主题颜色变量 */
     /* 中性色 */

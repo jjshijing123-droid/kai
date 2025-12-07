@@ -84,6 +84,14 @@ export default {
             DEFAULT: "var(--custom)", // 自定义颜色
             foreground: "var(--custom-foreground)", // 自定义颜色前景色
           },
+
+          //自定义按钮颜色
+
+          anniu:{
+            1: "var(--anniu-1)",
+            2: "var(--anniu-2)",
+          },
+
           // Figma 中性色
           neutral: {
             1: "var(--neutral-1)",

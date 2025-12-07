@@ -911,9 +911,9 @@ const handleDrawerToggle = () => {
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #f0f0f0;
+  border: 3px solid var(--neutral-3);
   border-radius: 50%;
-  border-top-color: #007bff;
+  border-top-color: var(--primary-9);
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 15px;
 }
@@ -921,7 +921,7 @@ const handleDrawerToggle = () => {
 .loading-text {
   font-size: 16px;
   margin-top: 10px;
-  color: #333;
+  color: var(--neutral-12);
 }
 
 .progress-text {
@@ -930,7 +930,7 @@ const handleDrawerToggle = () => {
   text-align: center;
   font-size: 14px;
   margin-top: 5px;
-  color: #666;
+  color: var(--neutral-11);
 }
 
 @keyframes spin {
@@ -983,7 +983,7 @@ const handleDrawerToggle = () => {
   user-select: none;
   position: relative;
   overflow: hidden;
-  background: #f0f0f0;
+  background: var(--neutral-3);
 }
 
 .thumbnail::before {
@@ -1003,11 +1003,11 @@ const handleDrawerToggle = () => {
 }
 
 .thumbnail.active {
-  border-color: #00A0D9;
+  border-color: var(--primary-9);
 }
 
 .thumbnail.loaded {
-  background: white;
+  background: var(--neutral-1);
 }
 
 /* 导航按钮 */
@@ -1017,9 +1017,9 @@ const handleDrawerToggle = () => {
   transform: translateY(-50%);
   width: 50px;
   height: 50px;
-  background: white;
-  color: #666;
-  border: 1px solid #ddd;
+  background: var(--neutral-1);
+  color: var(--neutral-11);
+  border: 1px solid var(--neutral-7);
   border-radius: 50%;
   font-size: 18px;
   cursor: pointer;
@@ -1126,65 +1126,65 @@ const handleDrawerToggle = () => {
 /* 高对比度模式支持 */
 @media (prefers-contrast: high) {
   .gallery-container {
-    border: 1px solid #000;
+    border: 1px solid var(--neutral-12);
   }
   
   .thumbnail {
-    border-color: #000;
+    border-color: var(--neutral-12);
   }
   
   .thumbnail.active {
-    border-color: #0066cc;
+    border-color: var(--primary-9);
   }
   
   .nav-button {
-    border-color: #000;
+    border-color: var(--neutral-12);
   }
   
   .loading-container {
-    border: 1px solid #000;
+    border: 1px solid var(--neutral-12);
   }
 }
 
 /* 深色模式支持 - 保持白色风格 */
 @media (prefers-color-scheme: dark) {
   .image-gallery {
-    background: white;
+    background: var(--neutral-1);
   }
   
   .gallery-container {
-    background: white;
+    background: var(--neutral-1);
   }
   
   .main-viewer {
-    background: white;
+    background: var(--neutral-1);
   }
   
   .thumbnails-wrapper {
-    background: white;
+    background: var(--neutral-1);
   }
   
   .thumbnail {
-    background: #f0f0f0;
+    background: var(--neutral-3);
   }
   
   .nav-button {
-    background: white;
-    color: #666;
-    border-color: #ddd;
+    background: var(--neutral-1);
+    color: var(--neutral-11);
+    border-color: var(--neutral-7);
   }
   
   .loading-container {
-    background: white;
-    color: #333;
+    background: var(--neutral-1);
+    color: var(--neutral-12);
   }
   
   .loading-text {
-    color: #333;
+    color: var(--neutral-12);
   }
   
   .progress-text {
-    color: #666;
+    color: var(--neutral-11);
   }
 }
 

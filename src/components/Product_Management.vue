@@ -481,59 +481,7 @@ import ProductFolderUploader from './ProductFolderUploader.vue'
 import BatchUploadModal from './BatchUploadModal.vue'
 import Functionaldescription from './Functionaldescription.vue'
 
-// 全局消息提示
-const showMessage = (type, text) => {
-  const messageDiv = document.createElement('div')
-  messageDiv.className = `message-${type}`
-  messageDiv.style.cssText = `
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100%);
-    padding: 12px 20px;
-    border-radius: 10px;
-    color: white;
-    z-index: 9999;
-    font-size: 14px;
-    font-weight: 500;
-    max-width: 400px;
-    word-wrap: break-word;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-    opacity: 0;
-  `
-  
-  if (type === 'warning') {
-    messageDiv.style.backgroundColor = 'var(--orange-8)'
-  } else if (type === 'error') {
-    messageDiv.style.backgroundColor = 'var(--red-9)'
-  } else if (type === 'success') {
-    messageDiv.style.backgroundColor = 'var(--green-8)'
-  } else {
-    messageDiv.style.backgroundColor = 'var(--primary-8)'
-  }
-  
-  messageDiv.textContent = text
-  document.body.appendChild(messageDiv)
-  
-  // 入场动画
-  setTimeout(() => {
-    messageDiv.style.opacity = '1'
-    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
-  }, 10)
-  
-  // 3秒后自动移除
-  setTimeout(() => {
-    messageDiv.style.opacity = '0'
-    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
-    setTimeout(() => {
-      if (messageDiv.parentNode) {
-        document.body.removeChild(messageDiv)
-      }
-    }, 300)
-  }, 3000)
-}
+
 
 const { t } = useI18n()
 const router = useRouter()
@@ -1231,7 +1179,7 @@ const handleLoginSuccess = () => {
   box-shadow: none;
 }
 
-/* 页面标题 */
+
 
 
 /* Frame 330 - 搜索和操作区域 */
@@ -1502,16 +1450,7 @@ const handleLoginSuccess = () => {
   height: 14px;
 }
 
-/* 上传统计 */
-.upload-summary {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--neutral-4);
-  display: flex;
-  gap: 24px;
-  justify-content: center;
-  flex-shrink: 0;
-}
+
 
 /* 上传区域 */
 .upload-section {
@@ -1831,16 +1770,12 @@ const handleLoginSuccess = () => {
   letter-spacing: 0;
 }
 
-/* 状态样式 */
-.spinner {
-  font-size: 16px;
-  color: var(--primary-9);
-}
+
 
 /* 右键菜单 */
 .context-menu {
   position: fixed;
-  background: white;
+  background: var(--neutral-1);
   border: 1px solid var(--neutral-3);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

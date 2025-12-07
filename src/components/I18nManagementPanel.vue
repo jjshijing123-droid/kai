@@ -13,10 +13,6 @@
             <h1 class="page-title">{{ t('i18nManager_title') }}</h1>
           </div>
           <div class="header-actions">
-            <Button @click="copyToClipboard" variant="secondary" class="refresh-button">
-              <LucideIcon name="Copy" class="h-4 w-4" />
-              {{ currentLanguage === 'zh-CN' ? '复制翻译内容' : 'Copy Translations' }}
-            </Button>
             <Button @click="exportTranslations" variant="secondary" class="refresh-button">
               <LucideIcon name="Upload" class="h-4 w-4" />
               {{ t('i18nManager_export') }}
@@ -507,93 +503,7 @@ const addTranslation = async () => {
   }
 }
 
-// 保存翻译 - 已废弃，使用 commitTranslation 代替
-const saveTranslation = async (lang, key, value) => {
-  if (!translations[lang]) {
-    translations[lang] = {}
-  }
-  translations[lang][key] = value
-  
-  // 使用实际的 i18n 系统保存
-  updateTranslation(lang, key, value)
-  
-  // 静默保存到文件
-  await i18n.saveTranslationsToFile()
-}
 
-// 生成 translations.js 文件内容
-const generateTranslationsFileContent = () => {
-  const translationsData = i18n.getAllTranslations()
-  // 构建完整的 translations.js 文件内容
-  const fileContent = `// 基础翻译配置 - 按组件组织翻译键
-const baseTranslations = ${JSON.stringify(translationsData, null, 2)};
-
-// 动态翻译对象 - 直接使用基础翻译，不再从localStorage加载
-export let translations = { ...baseTranslations }
-
-// 更新翻译对象（用于保存后更新）
-export function updateTranslations(newTranslations) {
-  // 深度合并新翻译到现有翻译中
-  Object.keys(newTranslations).forEach(lang => {
-    if (!translations[lang]) {
-      translations[lang] = {}
-    }
-    Object.assign(translations[lang], newTranslations[lang])
-  })
-  console.log('Translations updated:', translations)
-}
-
-// 重新加载翻译数据（用于保存后刷新）
-export function reloadTranslations() {
-  // 不重新加载基础翻译，保持现有翻译
-  console.log('Reloading translations skipped, keeping existing data')
-}
-
-// 获取翻译函数
-export function getTranslation(key, language = 'en') {
-  const langTranslations = translations[language] || translations['en']
-  return langTranslations[key] || key
-}
-
-// 获取所有翻译键
-export function getTranslationKeys() {
-  const keys = new Set()
-  Object.keys(translations).forEach(lang => {
-    Object.keys(translations[lang]).forEach(key => keys.add(key))
-  })
-  return Array.from(keys).sort()
-}
-
-// 语言配置
-export const languages = {
-  'en': { name: 'English', flag: '🇺🇸' },
-  'zh-CN': { name: '中文', flag: '🇨🇳' }
-}`
-  
-  return fileContent
-}
-
-// 生成的翻译文件内容
-const generatedTranslationsContent = ref('')
-
-// 显示复制提示
-const showCopyNotification = ref(false)
-
-// 复制到剪贴板
-const copyToClipboard = async () => {
-  const content = generateTranslationsFileContent()
-  try {
-    await navigator.clipboard.writeText(content)
-    showCopyNotification.value = true
-    setTimeout(() => {
-      showCopyNotification.value = false
-    }, 2000)
-    showMessage('success', 'Translations content copied to clipboard')
-  } catch (error) {
-    console.error('Failed to copy to clipboard:', error)
-    showMessage('error', 'Failed to copy to clipboard')
-  }
-}
 
 // 删除翻译
 const handleDeleteTranslation = async (key) => {
@@ -645,9 +555,6 @@ const saveAllTranslations = async () => {
     
     // 显示成功消息
     showMessage('success', t('i18nManager_saveSuccess'))
-    
-    // 生成完整的 translations.js 文件内容
-    generateTranslationsFileContent()
     
     // 强制重新加载翻译数据以确保界面显示最新内容
     setTimeout(() => {
