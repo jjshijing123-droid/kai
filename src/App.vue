@@ -43,6 +43,9 @@ const handleLoginSuccess = () => {
 <style scoped>
 .app {
   min-height: 100vh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .layout-header {
@@ -58,7 +61,8 @@ const handleLoginSuccess = () => {
 .main-content {
   margin-top: 64px; /* 为固定头部留出空间 */
   padding: 0px 0;
-  min-height: calc(100vh - 64px); /* 减去头部高度 */
+  flex: 1; /* 使用 flex 布局占据剩余空间 */
+  min-height: calc(100vh - 64px); /* 仍然保留 min-height 作为 fallback */
   /* 移除固定高度和overflow属性，让浏览器处理滚动 */
 }
 
