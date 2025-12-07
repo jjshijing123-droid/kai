@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 
 const ProductService = require('./server/services/productService');
 const FileService = require('./server/services/fileService');
@@ -87,6 +88,318 @@ app.use('/api', filesRouter);
 
 // 上传管理路由
 app.use('/api', uploadsRouter);
+
+// 翻译管理路由 - 新增
+app.use('/api/i18n', (req, res, next) => {
+  const translationsPath = path.join(__dirname, 'src/i18n/translations.js');
+  req.translationsPath = translationsPath;
+  next();
+});
+
+// 获取所有翻译
+app.get('/api/i18n/translations', (req, res) => {
+  try {
+    const content = fs.readFileSync(req.translationsPath, 'utf8');
+    // 提取baseTranslations对象
+    const baseMatch = content.match(/const baseTranslations = (\{[\s\S]*?\});/);
+    if (!baseMatch) {
+      return res.status(500).json({ success: false, message: 'Failed to parse translations' });
+    }
+    const translations = eval(`(${baseMatch[1]})`);
+    res.json({ success: true, data: translations });
+  } catch (error) {
+    console.error('Failed to get translations:', error);
+    res.status(500).json({ success: false, message: 'Failed to get translations', error: error.message });
+  }
+});
+
+// 更新翻译
+app.post('/api/i18n/translations', (req, res) => {
+  try {
+    const translationsData = req.body;
+    
+    // 构建完整的translations.js文件内容
+    const fileContent = `// 基础翻译配置 - 按组件组织翻译键
+const baseTranslations = ${JSON.stringify(translationsData, null, 2)};
+
+// 动态翻译对象 - 直接使用基础翻译，不再从localStorage加载
+export let translations = { ...baseTranslations }
+
+// 更新翻译对象（用于保存后更新）
+export function updateTranslations(newTranslations) {
+  // 深度合并新翻译到现有翻译中
+  Object.keys(newTranslations).forEach(lang => {
+    if (!translations[lang]) {
+      translations[lang] = {}
+    }
+    Object.assign(translations[lang], newTranslations[lang])
+  })
+  console.log('Translations updated:', translations)
+}
+
+// 重新加载翻译数据（用于保存后刷新）
+export function reloadTranslations() {
+  // 不重新加载基础翻译，保持现有翻译
+  console.log('Reloading translations skipped, keeping existing data')
+}
+
+// 获取翻译函数
+export function getTranslation(key, language = 'en') {
+  const langTranslations = translations[language] || translations['en']
+  return langTranslations[key] || key
+}
+
+// 获取所有翻译键
+export function getTranslationKeys() {
+  const keys = new Set()
+  Object.keys(translations).forEach(lang => {
+    Object.keys(translations[lang]).forEach(key => keys.add(key))
+  })
+  return Array.from(keys).sort()
+}
+
+// 语言配置
+export const languages = {
+  'en': { name: 'English', flag: '🇺🇸' },
+  'zh-CN': { name: '中文', flag: '🇨🇳' }
+}`;
+    
+    // 写入文件
+    fs.writeFileSync(req.translationsPath, fileContent, 'utf8');
+    res.json({ success: true, message: 'Translations updated successfully' });
+  } catch (error) {
+    console.error('Failed to update translations:', error);
+    res.status(500).json({ success: false, message: 'Failed to update translations', error: error.message });
+  }
+});
+
+// 添加单个翻译键
+app.post('/api/i18n/translations/keys', (req, res) => {
+  try {
+    const { key, translations: newTranslations } = req.body;
+    
+    // 读取现有翻译
+    const content = fs.readFileSync(req.translationsPath, 'utf8');
+    const baseMatch = content.match(/const baseTranslations = (\{[\s\S]*?\});/);
+    if (!baseMatch) {
+      return res.status(500).json({ success: false, message: 'Failed to parse translations' });
+    }
+    const translations = eval(`(${baseMatch[1]})`);
+    
+    // 添加新翻译键
+    Object.keys(newTranslations).forEach(lang => {
+      if (!translations[lang]) {
+        translations[lang] = {}
+      }
+      translations[lang][key] = newTranslations[lang];
+    });
+    
+    // 重新构建文件内容
+    const fileContent = `// 基础翻译配置 - 按组件组织翻译键
+const baseTranslations = ${JSON.stringify(translations, null, 2)};
+
+// 动态翻译对象 - 直接使用基础翻译，不再从localStorage加载
+export let translations = { ...baseTranslations }
+
+// 更新翻译对象（用于保存后更新）
+export function updateTranslations(newTranslations) {
+  // 深度合并新翻译到现有翻译中
+  Object.keys(newTranslations).forEach(lang => {
+    if (!translations[lang]) {
+      translations[lang] = {}
+    }
+    Object.assign(translations[lang], newTranslations[lang])
+  })
+  console.log('Translations updated:', translations)
+}
+
+// 重新加载翻译数据（用于保存后刷新）
+export function reloadTranslations() {
+  // 不重新加载基础翻译，保持现有翻译
+  console.log('Reloading translations skipped, keeping existing data')
+}
+
+// 获取翻译函数
+export function getTranslation(key, language = 'en') {
+  const langTranslations = translations[language] || translations['en']
+  return langTranslations[key] || key
+}
+
+// 获取所有翻译键
+export function getTranslationKeys() {
+  const keys = new Set()
+  Object.keys(translations).forEach(lang => {
+    Object.keys(translations[lang]).forEach(key => keys.add(key))
+  })
+  return Array.from(keys).sort()
+}
+
+// 语言配置
+export const languages = {
+  'en': { name: 'English', flag: '🇺🇸' },
+  'zh-CN': { name: '中文', flag: '🇨🇳' }
+}`;
+    
+    // 写入文件
+    fs.writeFileSync(req.translationsPath, fileContent, 'utf8');
+    res.json({ success: true, message: 'Translation key added successfully' });
+  } catch (error) {
+    console.error('Failed to add translation key:', error);
+    res.status(500).json({ success: false, message: 'Failed to add translation key', error: error.message });
+  }
+});
+
+// 更新单个翻译键
+app.put('/api/i18n/translations/keys/:key', (req, res) => {
+  try {
+    const key = req.params.key;
+    const { translations: updatedTranslations } = req.body;
+    
+    // 读取现有翻译
+    const content = fs.readFileSync(req.translationsPath, 'utf8');
+    const baseMatch = content.match(/const baseTranslations = (\{[\s\S]*?\});/);
+    if (!baseMatch) {
+      return res.status(500).json({ success: false, message: 'Failed to parse translations' });
+    }
+    const translations = eval(`(${baseMatch[1]})`);
+    
+    // 更新翻译键
+    Object.keys(updatedTranslations).forEach(lang => {
+      if (!translations[lang]) {
+        translations[lang] = {}
+      }
+      translations[lang][key] = updatedTranslations[lang];
+    });
+    
+    // 重新构建文件内容
+    const fileContent = `// 基础翻译配置 - 按组件组织翻译键
+const baseTranslations = ${JSON.stringify(translations, null, 2)};
+
+// 动态翻译对象 - 直接使用基础翻译，不再从localStorage加载
+export let translations = { ...baseTranslations }
+
+// 更新翻译对象（用于保存后更新）
+export function updateTranslations(newTranslations) {
+  // 深度合并新翻译到现有翻译中
+  Object.keys(newTranslations).forEach(lang => {
+    if (!translations[lang]) {
+      translations[lang] = {}
+    }
+    Object.assign(translations[lang], newTranslations[lang])
+  })
+  console.log('Translations updated:', translations)
+}
+
+// 重新加载翻译数据（用于保存后刷新）
+export function reloadTranslations() {
+  // 不重新加载基础翻译，保持现有翻译
+  console.log('Reloading translations skipped, keeping existing data')
+}
+
+// 获取翻译函数
+export function getTranslation(key, language = 'en') {
+  const langTranslations = translations[language] || translations['en']
+  return langTranslations[key] || key
+}
+
+// 获取所有翻译键
+export function getTranslationKeys() {
+  const keys = new Set()
+  Object.keys(translations).forEach(lang => {
+    Object.keys(translations[lang]).forEach(key => keys.add(key))
+  })
+  return Array.from(keys).sort()
+}
+
+// 语言配置
+export const languages = {
+  'en': { name: 'English', flag: '🇺🇸' },
+  'zh-CN': { name: '中文', flag: '🇨🇳' }
+}`;
+    
+    // 写入文件
+    fs.writeFileSync(req.translationsPath, fileContent, 'utf8');
+    res.json({ success: true, message: 'Translation key updated successfully' });
+  } catch (error) {
+    console.error('Failed to update translation key:', error);
+    res.status(500).json({ success: false, message: 'Failed to update translation key', error: error.message });
+  }
+});
+
+// 删除单个翻译键
+app.delete('/api/i18n/translations/keys/:key', (req, res) => {
+  try {
+    const key = req.params.key;
+    
+    // 读取现有翻译
+    const content = fs.readFileSync(req.translationsPath, 'utf8');
+    const baseMatch = content.match(/const baseTranslations = (\{[\s\S]*?\});/);
+    if (!baseMatch) {
+      return res.status(500).json({ success: false, message: 'Failed to parse translations' });
+    }
+    const translations = eval(`(${baseMatch[1]})`);
+    
+    // 删除翻译键
+    Object.keys(translations).forEach(lang => {
+      if (translations[lang] && translations[lang][key] !== undefined) {
+        delete translations[lang][key];
+      }
+    });
+    
+    // 重新构建文件内容
+    const fileContent = `// 基础翻译配置 - 按组件组织翻译键
+const baseTranslations = ${JSON.stringify(translations, null, 2)};
+
+// 动态翻译对象 - 直接使用基础翻译，不再从localStorage加载
+export let translations = { ...baseTranslations }
+
+// 更新翻译对象（用于保存后更新）
+export function updateTranslations(newTranslations) {
+  // 深度合并新翻译到现有翻译中
+  Object.keys(newTranslations).forEach(lang => {
+    if (!translations[lang]) {
+      translations[lang] = {}
+    }
+    Object.assign(translations[lang], newTranslations[lang])
+  })
+  console.log('Translations updated:', translations)
+}
+
+// 重新加载翻译数据（用于保存后刷新）
+export function reloadTranslations() {
+  // 不重新加载基础翻译，保持现有翻译
+  console.log('Reloading translations skipped, keeping existing data')
+}
+
+// 获取翻译函数
+export function getTranslation(key, language = 'en') {
+  const langTranslations = translations[language] || translations['en']
+  return langTranslations[key] || key
+}
+
+// 获取所有翻译键
+export function getTranslationKeys() {
+  const keys = new Set()
+  Object.keys(translations).forEach(lang => {
+    Object.keys(translations[lang]).forEach(key => keys.add(key))
+  })
+  return Array.from(keys).sort()
+}
+
+// 语言配置
+export const languages = {
+  'en': { name: 'English', flag: '🇺🇸' },
+  'zh-CN': { name: '中文', flag: '🇨🇳' }
+}`;
+    
+    // 写入文件
+    fs.writeFileSync(req.translationsPath, fileContent, 'utf8');
+    res.json({ success: true, message: 'Translation key deleted successfully' });
+  } catch (error) {
+    console.error('Failed to delete translation key:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete translation key', error: error.message });
+  }
+});
 
 // ========== 错误处理 ==========
 

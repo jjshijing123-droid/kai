@@ -119,30 +119,20 @@ class I18nService {
     })
   }
 
-  // 从localStorage加载翻译
+  // 从localStorage加载翻译（已废弃，仅用于兼容旧版本）
   loadFromLocalStorage() {
     try {
-      const savedTranslations = localStorage.getItem('i18n_translations')
-      console.log('Loading from localStorage, data:', savedTranslations)
-      
-      if (savedTranslations) {
-        const parsedTranslations = JSON.parse(savedTranslations)
-        console.log('Parsed translations:', parsedTranslations)
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        const savedTranslations = localStorage.getItem('i18n_translations')
         
-        // 合并localStorage中的翻译到当前翻译对象
-        Object.keys(parsedTranslations).forEach(lang => {
-          if (!translations[lang]) {
-            translations[lang] = {}
-          }
-          Object.assign(translations[lang], parsedTranslations[lang])
-        })
-        
-        console.log('Translations after loading from localStorage:', translations)
-      } else {
-        console.log('No saved translations found in localStorage')
+        if (savedTranslations) {
+          // 清除旧的localStorage数据，因为现在使用后端API保存到文件
+          localStorage.removeItem('i18n_translations')
+          console.log('Removed old localStorage translations data, now using file storage')
+        }
       }
     } catch (error) {
-      console.error('Failed to load translations from localStorage:', error)
+      console.error('Failed to process localStorage translations:', error)
     }
   }
 
@@ -182,34 +172,125 @@ class I18nService {
     return allTranslations
   }
 
-  // 保存翻译到文件 - 只使用localStorage
+  // 保存所有翻译到后端文件
   async saveTranslationsToFile() {
     try {
       const translationsData = this.getAllTranslations()
-      console.log('Saving translations data:', translationsData)
+      console.log('Saving translations data to backend:', translationsData)
       
-      // 总是保存到localStorage作为备份
-      try {
-        localStorage.setItem('i18n_translations', JSON.stringify(translationsData))
-        console.log('Translations saved to localStorage successfully')
-        
-        // 验证保存的数据
-        const saved = localStorage.getItem('i18n_translations')
-        console.log('Verification - saved data:', saved)
-      } catch (localStorageError) {
-        console.error('Failed to save to localStorage:', localStorageError)
+      // 调用后端API保存所有翻译
+      const response = await fetch('http://localhost:3000/api/i18n/translations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(translationsData),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `Failed to save translations: ${response.status}`)
       }
       
-      // API功能暂时禁用，只使用localStorage
-      return false
+      const result = await response.json()
+      console.log('Translations saved successfully to file:', result)
+      
+      // 更新全局 translations 对象，确保修改立即生效
+      Object.keys(translationsData).forEach(lang => {
+        translations[lang] = translationsData[lang]
+      })
+      
+      return true
     } catch (error) {
-      // 捕获所有可能的错误，确保函数不会抛出异常
       console.error('Error in saveTranslationsToFile:', error)
       return false
     }
   }
+  
+  // 添加单个翻译键
+  async addTranslationKey(key, translationsData) {
+    try {
+      console.log('Adding translation key:', key, translationsData)
+      
+      const response = await fetch('http://localhost:3000/api/i18n/translations/keys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key, translations: translationsData }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `Failed to add translation key: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      console.log('Translation key added successfully:', result)
+      
+      return true
+    } catch (error) {
+      console.error('Error in addTranslationKey:', error)
+      return false
+    }
+  }
+  
+  // 更新单个翻译键
+  async updateTranslationKey(key, lang, value) {
+    try {
+      console.log('Updating translation key:', key, lang, value)
+      
+      const response = await fetch(`http://localhost:3000/api/i18n/translations/keys/${encodeURIComponent(key)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ lang, value }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `Failed to update translation key: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      console.log('Translation key updated successfully:', result)
+      
+      return true
+    } catch (error) {
+      console.error('Error in updateTranslationKey:', error)
+      return false
+    }
+  }
+  
+  // 删除单个翻译键
+  async deleteTranslationKey(key) {
+    try {
+      console.log('Deleting translation key:', key)
+      
+      const response = await fetch(`http://localhost:3000/api/i18n/translations/keys/${encodeURIComponent(key)}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `Failed to delete translation key: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      console.log('Translation key deleted successfully:', result)
+      
+      return true
+    } catch (error) {
+      console.error('Error in deleteTranslationKey:', error)
+      return false
+    }
+  }
 
-  // 检查翻译完整性 - 简化版本
+  // 检查翻译完整性 - 精确计算版本
   checkTranslationCompleteness() {
     const allKeys = this.getTranslationKeys()
     const completeness = {}
@@ -217,22 +298,27 @@ class I18nService {
     Object.keys(languages).forEach(lang => {
       try {
         const langTranslations = translations[lang] || {}
-        const langKeys = Object.keys(langTranslations)
         
-        // 计算有效的翻译数量
-        const validTranslations = langKeys.filter(key => {
+        // 遍历所有翻译键，检查每个键在当前语言中是否有有效值
+        let translatedCount = 0
+        const missingKeys = []
+        
+        allKeys.forEach(key => {
           const value = langTranslations[key]
-          return value && value.trim() !== ''
+          if (value && value.trim() !== '') {
+            translatedCount++
+          } else {
+            missingKeys.push(key)
+          }
         })
         
-        const missingKeys = allKeys.filter(key => !langKeys.includes(key))
-        
         const total = allKeys.length
-        const percentage = total > 0 ? Math.round((validTranslations.length / total) * 100) : 0
+        // 计算精确的百分比，保留一位小数
+        const percentage = total > 0 ? Number(((translatedCount / total) * 100).toFixed(1)) : 0
         
         completeness[lang] = {
           total: total,
-          translated: validTranslations.length,
+          translated: translatedCount,
           missing: missingKeys,
           percentage: percentage
         }

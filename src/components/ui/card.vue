@@ -1,5 +1,6 @@
 <template>
-  <div :class="cn('rounded-lg border bg-card text-card-foreground shadow-sm', props.class)">
+  <div :class="cn('rounded-lg border bg-card text-card-foreground shadow-sm', className)">
+    <slot name="header" />
     <slot />
   </div>
 </template>
@@ -8,9 +9,17 @@
 import { cn } from "../../lib/utils"
 
 const props = defineProps({
-  class: {
+  className: {
     type: String,
     default: "",
+  },
+  size: {
+    type: String,
+    default: "medium",
+  },
+  bordered: {
+    type: Boolean,
+    default: true,
   },
 })
 </script>

@@ -13,6 +13,10 @@
             <h1 class="page-title">{{ t('i18nManager_title') }}</h1>
           </div>
           <div class="header-actions">
+            <Button @click="copyToClipboard" variant="secondary" class="refresh-button">
+              <LucideIcon name="Copy" class="h-4 w-4" />
+              {{ currentLanguage === 'zh-CN' ? '复制翻译内容' : 'Copy Translations' }}
+            </Button>
             <Button @click="exportTranslations" variant="secondary" class="refresh-button">
               <LucideIcon name="Upload" class="h-4 w-4" />
               {{ t('i18nManager_export') }}
@@ -29,12 +33,11 @@
       <div class="rounded-lg border bg-card text-card-foreground shadow-sm completeness-section p-6 mb-6">
         <h3 class="text-lg font-semibold mb-4">{{ t('i18nManager_completeness') }}</h3>
         <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
-          <div
-            v-for="lang in availableLanguages"
-            :key="lang.code"
-            :class="{ 'ring-2 ring-primary': lang.code === currentLanguage }"
-            class="rounded-md border p-4 hover:shadow-md transition-shadow"
-          >
+          <template v-for="lang in availableLanguages" :key="lang.code">
+            <div
+              :class="{ 'ring-2 ring-primary': lang.code === currentLanguage }"
+              class="rounded-md border p-4 hover:shadow-md transition-shadow"
+            >
             <div class="flex justify-between items-center mb-3">
               <div class="flex items-center gap-2">
                 <span class="text-xl">{{ lang.flag }}</span>
@@ -62,83 +65,13 @@
                 {{ translationCompleteness[lang.code]?.translated || 0 }}/{{ translationCompleteness[lang.code]?.total || 0 }} {{ t('i18nManager_keys') }}
               </div>
             </div>
-            
-            <div class="flex flex-wrap gap-2">
-              <Badge 
-                v-if="translationCompleteness[lang.code]?.quality" 
-                variant="success"
-                size="small"
-              >
-                {{ currentLanguage === 'zh-CN' ? '质量' : 'Quality' }}: {{ translationCompleteness[lang.code]?.quality }}%
-              </Badge>
-              
-              <Badge 
-                v-if="translationCompleteness[lang.code]?.needsReview?.length" 
-                variant="warning"
-                size="small"
-              >
-                {{ currentLanguage === 'zh-CN' ? '需要审核' : 'Needs Review' }}: {{ translationCompleteness[lang.code]?.needsReview?.length }}
-              </Badge>
             </div>
-          </div>
+          </template>
         </div>
       </div>
 
-      <!-- 需要审核的翻译 -->
-      <Card
-        v-if="hasTranslationsNeedingReview"
-        :title="currentLanguage === 'zh-CN' ? '需要审核的翻译' : 'Translations Needing Review'"
-        class="review-section"
-      >
-        <div class="review-grid">
-          <Card
-            v-for="lang in availableLanguages"
-            :key="lang.code"
-            v-if="translationCompleteness[lang.code]?.needsReview?.length"
-            size="small"
-            :bordered="false"
-            class="review-card"
-          >
-            <template #header>
-              <div class="review-header">
-                <span class="flag">{{ lang.flag }}</span>
-                <span class="lang-name">{{ lang.name }}</span>
-                <Badge 
-                  :count="translationCompleteness[lang.code]?.needsReview?.length"
-                  :number-style="{ backgroundColor: '#ff4d4f' }"
-                />
-              </div>
-            </template>
-            
-            <div class="review-list">
-              <div
-                v-for="item in translationCompleteness[lang.code]?.needsReview?.slice(0, 3)"
-                :key="item.key"
-                class="review-item"
-              >
-                <div class="review-content">
-                  <div class="review-key">
-                    <code>{{ item.key }}</code>
-                  </div>
-                  <div class="review-value">{{ item.value }}</div>
-                  <div class="review-reason">
-                    <Badge color="red" size="small">{{ item.reason }}</Badge>
-                  </div>
-                </div>
-              </div>
-              
-              <div v-if="translationCompleteness[lang.code]?.needsReview?.length > 3" class="review-more">
-                <span class="secondary-text">
-                  {{ currentLanguage === 'zh-CN' ? '还有' : 'More' }} {{ translationCompleteness[lang.code]?.needsReview?.length - 3 }} {{ currentLanguage === 'zh-CN' ? '项' : 'items' }} {{ currentLanguage === 'zh-CN' ? '需要审核...' : 'need review...' }}
-                </span>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </Card>
-
       <!-- 翻译表格 -->
-      <Card class="translations-section">
+      <Card :className="'translations-section'">
         <div class="card-header">
           <h3 class="card-title">{{ t('i18nManager_allTranslations') }}</h3>
           <div class="card-extra">
@@ -207,10 +140,10 @@
         
         <!-- 添加新翻译 -->
         <Card 
-          :title="currentLanguage === 'zh-CN' ? '添加新翻译' : 'Add New Translation'" 
-          class="add-translation-section" 
-          size="small"
+          :className="'add-translation-section'" 
+          :size="'small'"
         >
+          <h3 class="text-lg font-semibold mb-4">{{ currentLanguage === 'zh-CN' ? '添加新翻译' : 'Add New Translation' }}</h3>
           <div class="add-form">
             <div class="form-row">
               <div class="form-item full-width">
@@ -434,9 +367,6 @@ const loadTranslations = async () => {
     // 等待语言数据加载完成
     await nextTick()
     
-    // 首先从localStorage恢复数据
-    restoreFromLocalStorage()
-    
     const keys = getAllTranslationKeys()
     console.log('Loaded translation keys:', keys.length)
     
@@ -464,30 +394,6 @@ const loadTranslations = async () => {
   }
 }
 
-// 从localStorage恢复翻译数据的函数
-const restoreFromLocalStorage = () => {
-  try {
-    const savedTranslations = localStorage.getItem('i18n_translations')
-    if (savedTranslations) {
-      const parsedTranslations = JSON.parse(savedTranslations)
-      console.log('Restoring from localStorage:', parsedTranslations)
-      
-      // 恢复数据到translations对象
-      Object.keys(parsedTranslations).forEach(lang => {
-        if (!translations[lang]) {
-          translations[lang] = {}
-        }
-        // 使用Object.assign确保响应式更新
-        translations[lang] = { ...translations[lang], ...parsedTranslations[lang] }
-      })
-      
-      console.log('Translations after restoration:', translations)
-    }
-  } catch (error) {
-    console.error('Failed to restore from localStorage:', error)
-  }
-}
-
 // 获取所有翻译键
 const allKeys = computed(() => {
   return getAllTranslationKeys()
@@ -501,18 +407,16 @@ const filteredKeys = computed(() => {
     // 检查翻译键
     if (key.toLowerCase().includes(searchLower)) return true
     // 检查所有语言的翻译内容
+    // 确保 availableLanguages.value 是数组，避免调用 some() 时出错
+    if (!availableLanguages.value || !Array.isArray(availableLanguages.value)) {
+      return false
+    }
     return availableLanguages.value.some(lang => {
+      if (!lang || !lang.code) return false
       const translation = translations[lang.code]?.[key] || ''
       return translation.toLowerCase().includes(searchLower)
     })
   })
-})
-
-// 检查是否有需要审核的翻译
-const hasTranslationsNeedingReview = computed(() => {
-  return availableLanguages.value.some(lang =>
-    translationCompleteness.value[lang.code]?.needsReview?.length > 0
-  )
 })
 
 // 直接更新翻译值
@@ -533,13 +437,19 @@ const commitTranslation = async (lang, key) => {
   editingCell.value = null
   delete editingValues[`${lang}_${key}`]
   
-  // 自动保存到文件
-  const saveResult = await i18n.saveTranslationsToFile()
+  // 调用后端API更新单个翻译键
+  const updateResult = await i18n.updateTranslationKey(key, lang, value)
   
-  if (saveResult) {
+  if (updateResult) {
     showMessage('success', t('i18nManager_translationSaved'))
   } else {
-    showMessage('warning', t('i18nManager_translationUpdatedLocally'))
+    // 如果API调用失败，尝试保存所有翻译
+    const saveResult = await i18n.saveTranslationsToFile()
+    if (saveResult) {
+      showMessage('success', t('i18nManager_translationSaved'))
+    } else {
+      showMessage('warning', t('i18nManager_translationUpdatedLocally'))
+    }
   }
 }
 
@@ -548,15 +458,16 @@ const addTranslation = async () => {
   try {
     if (!newKey.value) return
     
-    const newTranslationsData = {}
+    // 准备翻译数据格式
+    const translationsData = {}
     availableLanguages.value.forEach(lang => {
-      newTranslationsData[lang.code] = {
-        [newKey.value]: newTranslations[lang.code] || ''
-      }
+      translationsData[lang.code] = newTranslations[lang.code] || ''
     })
     
     // 使用实际的 i18n 系统保存
-    addTranslations(newTranslationsData)
+    addTranslations({
+      [newKey.value]: translationsData
+    })
     
     // 更新本地数据 - 使用Vue的响应式方法
     availableLanguages.value.forEach(lang => {
@@ -570,21 +481,25 @@ const addTranslation = async () => {
       }
     })
     
+    // 调用后端API添加翻译键
+    const addResult = await i18n.addTranslationKey(newKey.value, translationsData)
+    
     // 重置表单
     newKey.value = ''
     availableLanguages.value.forEach(lang => {
       newTranslations[lang.code] = ''
     })
     
-    // 静默保存到文件
-    await i18n.saveTranslationsToFile()
-    
     // 重新加载翻译数据
     setTimeout(() => {
       loadTranslations()
     }, 100)
     
-    showMessage('success', t('i18nManager_newTranslationAdded'))
+    if (addResult) {
+      showMessage('success', t('i18nManager_newTranslationAdded'))
+    } else {
+      showMessage('warning', t('i18nManager_newTranslationAddedLocally'))
+    }
   } catch (error) {
     console.error('Error adding translation:', error)
     showMessage('error', t('i18nManager_errorAddingTranslation'))
@@ -605,6 +520,80 @@ const saveTranslation = async (lang, key, value) => {
   await i18n.saveTranslationsToFile()
 }
 
+// 生成 translations.js 文件内容
+const generateTranslationsFileContent = () => {
+  const translationsData = i18n.getAllTranslations()
+  // 构建完整的 translations.js 文件内容
+  const fileContent = `// 基础翻译配置 - 按组件组织翻译键
+const baseTranslations = ${JSON.stringify(translationsData, null, 2)};
+
+// 动态翻译对象 - 直接使用基础翻译，不再从localStorage加载
+export let translations = { ...baseTranslations }
+
+// 更新翻译对象（用于保存后更新）
+export function updateTranslations(newTranslations) {
+  // 深度合并新翻译到现有翻译中
+  Object.keys(newTranslations).forEach(lang => {
+    if (!translations[lang]) {
+      translations[lang] = {}
+    }
+    Object.assign(translations[lang], newTranslations[lang])
+  })
+  console.log('Translations updated:', translations)
+}
+
+// 重新加载翻译数据（用于保存后刷新）
+export function reloadTranslations() {
+  // 不重新加载基础翻译，保持现有翻译
+  console.log('Reloading translations skipped, keeping existing data')
+}
+
+// 获取翻译函数
+export function getTranslation(key, language = 'en') {
+  const langTranslations = translations[language] || translations['en']
+  return langTranslations[key] || key
+}
+
+// 获取所有翻译键
+export function getTranslationKeys() {
+  const keys = new Set()
+  Object.keys(translations).forEach(lang => {
+    Object.keys(translations[lang]).forEach(key => keys.add(key))
+  })
+  return Array.from(keys).sort()
+}
+
+// 语言配置
+export const languages = {
+  'en': { name: 'English', flag: '🇺🇸' },
+  'zh-CN': { name: '中文', flag: '🇨🇳' }
+}`
+  
+  return fileContent
+}
+
+// 生成的翻译文件内容
+const generatedTranslationsContent = ref('')
+
+// 显示复制提示
+const showCopyNotification = ref(false)
+
+// 复制到剪贴板
+const copyToClipboard = async () => {
+  const content = generateTranslationsFileContent()
+  try {
+    await navigator.clipboard.writeText(content)
+    showCopyNotification.value = true
+    setTimeout(() => {
+      showCopyNotification.value = false
+    }, 2000)
+    showMessage('success', 'Translations content copied to clipboard')
+  } catch (error) {
+    console.error('Failed to copy to clipboard:', error)
+    showMessage('error', 'Failed to copy to clipboard')
+  }
+}
+
 // 删除翻译
 const handleDeleteTranslation = async (key) => {
   try {
@@ -618,10 +607,14 @@ const handleDeleteTranslation = async (key) => {
       }
     })
     
-    // 静默保存到文件
-    await i18n.saveTranslationsToFile()
+    // 调用后端API删除翻译键
+    const deleteResult = await i18n.deleteTranslationKey(key)
     
-    showMessage('success', t('i18nManager_translationDeleted'))
+    if (deleteResult) {
+      showMessage('success', t('i18nManager_translationDeleted'))
+    } else {
+      showMessage('warning', t('i18nManager_translationDeletedLocally'))
+    }
   } catch (error) {
     console.error('Error deleting translation:', error)
     showMessage('error', t('i18nManager_errorDeletingTranslation'))
@@ -652,6 +645,9 @@ const saveAllTranslations = async () => {
     // 显示成功消息
     showMessage('success', t('i18nManager_saveSuccess'))
     
+    // 生成完整的 translations.js 文件内容
+    generateTranslationsFileContent()
+    
     // 强制重新加载翻译数据以确保界面显示最新内容
     setTimeout(() => {
       loadTranslations()
@@ -663,14 +659,60 @@ const saveAllTranslations = async () => {
   }
 }
 
-// 导出翻译
+// 导出翻译 - 导出为可直接替换 translations.js 的格式
 const exportTranslations = () => {
-  const data = JSON.stringify(translations, null, 2)
-  const blob = new Blob([data], { type: 'application/json' })
+  const translationsData = i18n.getAllTranslations()
+  // 构建完整的 translations.js 文件内容
+  const fileContent = `// 基础翻译配置 - 按组件组织翻译键
+const baseTranslations = ${JSON.stringify(translationsData, null, 2)};
+
+// 动态翻译对象 - 直接使用基础翻译，不再从localStorage加载
+export let translations = { ...baseTranslations }
+
+// 更新翻译对象（用于保存后更新）
+export function updateTranslations(newTranslations) {
+  // 深度合并新翻译到现有翻译中
+  Object.keys(newTranslations).forEach(lang => {
+    if (!translations[lang]) {
+      translations[lang] = {}
+    }
+    Object.assign(translations[lang], newTranslations[lang])
+  })
+  console.log('Translations updated:', translations)
+}
+
+// 重新加载翻译数据（用于保存后刷新）
+export function reloadTranslations() {
+  // 不重新加载基础翻译，保持现有翻译
+  console.log('Reloading translations skipped, keeping existing data')
+}
+
+// 获取翻译函数
+export function getTranslation(key, language = 'en') {
+  const langTranslations = translations[language] || translations['en']
+  return langTranslations[key] || key
+}
+
+// 获取所有翻译键
+export function getTranslationKeys() {
+  const keys = new Set()
+  Object.keys(translations).forEach(lang => {
+    Object.keys(translations[lang]).forEach(key => keys.add(key))
+  })
+  return Array.from(keys).sort()
+}
+
+// 语言配置
+export const languages = {
+  'en': { name: 'English', flag: '🇺🇸' },
+  'zh-CN': { name: '中文', flag: '🇨🇳' }
+}`
+  
+  const blob = new Blob([fileContent], { type: 'text/javascript' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'translations.json'
+  a.download = 'translations.js'
   a.click()
   URL.revokeObjectURL(url)
 }
