@@ -356,9 +356,9 @@ const tableColumns = computed(() => {
 
 // 获取进度条颜色
 const getProgressColor = (percentage) => {
-  if (percentage >= 90) return '#52c41a'
-  if (percentage >= 70) return '#faad14'
-  return '#ff4d4f'
+  if (percentage >= 90) return 'var(--green-9)'
+  if (percentage >= 70) return 'var(--orange-9)'
+  return 'var(--red-9)'
 }
 
 // 从实际的翻译数据加载
@@ -748,7 +748,7 @@ const goBack = () => {
   padding: 20px;
   max-width: 1160px;
   margin: 0 auto;
-  background-color: white;
+  background-color: var(--background);
   /* 利用App.vue中已经计算好的高度空间，确保减去header后充分利用可用空间 */
   min-height: calc(100vh - 64px); /* 与App.vue的main-content保持一致 */
   box-sizing: border-box;
@@ -773,7 +773,7 @@ const goBack = () => {
   align-self: stretch;
   justify-content: space-between;
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--background);
   padding-top: 20px;
   padding-bottom: 20px;
   width: 100%;
@@ -793,7 +793,7 @@ const goBack = () => {
 .page-title {
   font-size: 22px;
   font-weight: 700;
-  color: #202020;
+  color: var(--neutral-12);
   margin: 0;
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 24px;
@@ -802,7 +802,7 @@ const goBack = () => {
 
 /* 返回按钮 */
 .back-button {
-  color: #202020;
+  color: var(--neutral-12);
   font-size: 14px;
   padding: 0;
   height: 24px;
@@ -819,7 +819,7 @@ const goBack = () => {
 }
 
 .back-button:hover {
-  background: #f0f0f0;
+  background: var(--neutral-3);
 }
 
 .back-button svg {
@@ -829,9 +829,9 @@ const goBack = () => {
 
 /* 刷新按钮 */
 .refresh-button {
-  background: #fdfdfd;
-  border: 1px solid #d9d9d9;
-  color: #202020;
+  background: var(--neutral-1);
+  border: 1px solid var(--neutral-6);
+  color: var(--neutral-12);
   font-size: 14px;
   border-radius: 6px;
   padding: 11px 15px;
@@ -845,9 +845,9 @@ const goBack = () => {
 }
 
 .refresh-button.primary {
-  background: #00a0d9;
+  background: var(--primary-9);
   border: none;
-  color: #ffffff;
+  color: var(--background);
 }
 
 .header-actions {
@@ -859,9 +859,9 @@ const goBack = () => {
 .review-section,
 .translations-section {
   margin-bottom: 20px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--neutral-4);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--background);
   padding: 20px;
   box-sizing: border-box;
 }
@@ -919,7 +919,7 @@ const goBack = () => {
 
 /* 语言卡片 */
 .current-language {
-  border: 2px solid #00a0d9 !important;
+  border: 2px solid var(--primary-9) !important;
   box-shadow: 0 2px 8px rgba(0, 160, 217, 0.15);
 }
 
@@ -935,7 +935,7 @@ const goBack = () => {
 
 .lang-name {
   font-weight: 700;
-  color: #202020;
+  color: var(--neutral-12);
   flex: 1;
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
@@ -946,7 +946,7 @@ const goBack = () => {
 
 .stats {
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
   text-align: center;
   margin-top: 8px;
   font-weight: normal;
@@ -960,8 +960,8 @@ const goBack = () => {
 
 /* 审核卡片 */
 .review-card {
-  border: 1px solid #e8e8e8;
-  background: #ffffff;
+  border: 1px solid var(--neutral-4);
+  background: var(--background);
 }
 
 .review-header {
@@ -976,13 +976,13 @@ const goBack = () => {
 }
 
 .review-item {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--neutral-3);
   transition: background-color 0.2s ease;
   padding: 12px 0;
 }
 
 .review-item:hover {
-  background: #fafafa;
+  background: var(--neutral-2);
 }
 
 .review-item:last-child {
@@ -998,7 +998,7 @@ const goBack = () => {
 }
 
 .translation-key {
-  background: #f0f0f0;
+  background: var(--neutral-3);
   padding: 2px 4px;
   border-radius: 3px;
   font-size: 12px;
@@ -1007,7 +1007,7 @@ const goBack = () => {
 
 .review-value {
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
   margin-bottom: 4px;
   word-break: break-word;
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
@@ -1020,13 +1020,13 @@ const goBack = () => {
 .review-more {
   text-align: center;
   padding: 8px;
-  border-top: 1px solid #f0f0f0;
-  background: #fafafa;
+  border-top: 1px solid var(--neutral-3);
+  background: var(--neutral-2);
 }
 
 .secondary-text {
   font-size: 12px;
-  color: #626262;
+  color: var(--neutral-11);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
@@ -1037,13 +1037,13 @@ const goBack = () => {
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--neutral-4);
 }
 
 .card-title {
   font-size: 16px;
   font-weight: 600;
-  color: #202020;
+  color: var(--neutral-12);
   margin: 0;
 }
 
@@ -1057,12 +1057,12 @@ const goBack = () => {
   margin-bottom: 20px;
   overflow: auto;
   width: 100%;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--neutral-4);
   border-radius: 8px;
 }
 
 .translations-table {
-  background: #ffffff;
+  background: var(--background);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -1080,18 +1080,18 @@ const goBack = () => {
 }
 
 .display-cell:hover {
-  background: #f5f5f5;
+  background: var(--neutral-2);
 }
 
 .translation-text {
   flex: 1;
   font-size: 13px;
-  color: #202020;
+  color: var(--neutral-12);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 .placeholder-text {
-  color: #999;
+  color: var(--neutral-9);
   font-style: italic;
 }
 
@@ -1100,13 +1100,13 @@ const goBack = () => {
 }
 
 .edit-icon {
-  color: #999;
+  color: var(--neutral-9);
   margin-left: 8px;
   flex-shrink: 0;
 }
 
 .display-cell:hover .edit-icon {
-  color: #00a0d9;
+  color: var(--primary-9);
 }
 
 .action-buttons {
@@ -1117,16 +1117,16 @@ const goBack = () => {
 /* 添加翻译区域 */
 .add-translation-section {
   margin-top: 20px;
-  border: 1px dashed #cecece;
+  border: 1px dashed var(--neutral-7);
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--neutral-2);
   transition: all 0.2s ease;
   padding: 20px;
 }
 
 .add-translation-section:hover {
-  border-color: #00a0d9;
-  background: #f0f9ff;
+  border-color: var(--primary-9);
+  background: var(--primary-1);
 }
 
 .add-form {
@@ -1154,7 +1154,7 @@ const goBack = () => {
 .form-label {
   font-size: 12px;
   font-weight: 700;
-  color: #202020;
+  color: var(--neutral-12);
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
