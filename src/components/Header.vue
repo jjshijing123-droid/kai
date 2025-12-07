@@ -120,6 +120,16 @@ const currentTheme = ref('light')
 
 // 初始化主题
 const initTheme = () => {
+  // 首先检查当前html元素上已经应用的主题类
+  const htmlElement = document.documentElement
+  const currentHtmlTheme = htmlElement.classList.contains('dark') ? 'dark' : (htmlElement.classList.contains('light') ? 'light' : null)
+  
+  // 如果html元素上已经有主题类，直接使用
+  if (currentHtmlTheme) {
+    currentTheme.value = currentHtmlTheme
+    return // 不需要重新应用主题，因为已经存在
+  }
+  
   // 检查 localStorage 中是否有保存的主题
   const savedTheme = localStorage.getItem('theme')
   
@@ -143,6 +153,9 @@ const applyTheme = (theme) => {
   
   // 应用指定主题
   htmlElement.classList.add(theme)
+  
+  // 更新当前组件的主题状态
+  currentTheme.value = theme
 }
 
 // 切换主题
@@ -197,14 +210,34 @@ const handleClickOutside = (event) => {
   }
 }
 
+// 监听html元素class变化，确保主题状态同步
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.attributeName === 'class') {
+      const htmlElement = document.documentElement
+      const currentHtmlTheme = htmlElement.classList.contains('dark') ? 'dark' : (htmlElement.classList.contains('light') ? 'light' : null)
+      if (currentHtmlTheme) {
+        currentTheme.value = currentHtmlTheme
+      }
+    }
+  })
+})
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   // 初始化主题
   initTheme()
+  
+  // 开始观察html元素的class变化
+  observer.observe(document.documentElement, {
+    attributes: true
+  })
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  // 停止观察
+  observer.disconnect()
 })
 
 </script>

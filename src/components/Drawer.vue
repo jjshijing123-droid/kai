@@ -126,7 +126,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter } from 'vue-router'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
@@ -195,6 +195,16 @@ const currentTheme = ref('light')
 
 // 初始化主题
 const initTheme = () => {
+  // 首先检查当前html元素上已经应用的主题类
+  const htmlElement = document.documentElement
+  const currentHtmlTheme = htmlElement.classList.contains('dark') ? 'dark' : (htmlElement.classList.contains('light') ? 'light' : null)
+  
+  // 如果html元素上已经有主题类，直接使用
+  if (currentHtmlTheme) {
+    currentTheme.value = currentHtmlTheme
+    return // 不需要重新应用主题，因为已经存在
+  }
+  
   // 检查 localStorage 中是否有保存的主题
   const savedTheme = localStorage.getItem('theme')
   
@@ -241,6 +251,21 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close'])
+
+// 监听抽屉打开事件，当抽屉打开时重新检查主题
+watch(() => props.isOpen, (newVal) => {
+  if (newVal) {
+    // 当抽屉打开时，重新检查当前主题
+    const htmlElement = document.documentElement
+    const currentHtmlTheme = htmlElement.classList.contains('dark') ? 'dark' : (htmlElement.classList.contains('light') ? 'light' : null)
+    
+    if (currentHtmlTheme) {
+      currentTheme.value = currentHtmlTheme
+    }
+  }
+})
+
+
 
 const closeDrawer = () => {
   emit('close')
