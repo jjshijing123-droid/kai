@@ -14,7 +14,7 @@
           <div class="admin-section">
             <h3 class="section-title">{{ t('common_admin') }}</h3>
             <div class="admin-content">
-              <div v-if="!isAdminLoggedIn" class="admin-login-item" @click="openLoginModal">
+              <div v-if="!isAdminLoggedIn" class="admin-login-item" @click="handleOpenLoginModal">
                 <LucideIcon name="Lock" size="20" class="menu-icon" />
                 <span class="menu-text">{{ t('common_adminLogin') }}</span>
               </div>
@@ -280,6 +280,11 @@ const handleLoginSuccess = () => {
 
 const handleLoginFailed = (error) => {
   console.error(`${t('common_loginFailed')}:`, error)
+}
+
+const handleOpenLoginModal = () => {
+  closeDrawer()
+  openLoginModal()
 }
 
 const handleLogout = () => {

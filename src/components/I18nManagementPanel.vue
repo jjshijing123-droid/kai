@@ -36,7 +36,8 @@
           <template v-for="lang in availableLanguages" :key="lang.code">
             <div
               :class="{ 'ring-2 --primary-9': lang.code === currentLanguage }"
-              class="rounded-md border p-4 hover:shadow-md transition-shadow"
+              class="rounded-md border p-4 hover:shadow-md transition-shadow cursor-pointer"
+              @click="setLanguage(lang.code)"
             >
             <div class="flex justify-between items-center mb-3">
               <div class="flex items-center gap-2">
@@ -265,7 +266,7 @@ const showMessage = (type, text) => {
 }
 
 // 使用实际的 i18n 数据
-const { currentLanguage, availableLanguages, translationCompleteness, t, getTranslationKeys, addTranslations, updateTranslation, deleteTranslation } = useI18n()
+const { currentLanguage, availableLanguages, translationCompleteness, t, getTranslationKeys, addTranslations, updateTranslation, deleteTranslation, setLanguage } = useI18n()
 
 // 使用管理员认证
 const { isAdminLoggedIn } = useAdminAuth()

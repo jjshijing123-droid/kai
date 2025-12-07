@@ -81,7 +81,7 @@
             <div class="upload-content">
               <LucideIcon name="Folder" />
               <p class="upload-title">{{ t('productManagement_uploadFolder') }}</p>
-              <p class="upload-hint">上传单个完整的产品文件夹压缩包</p>
+              <p class="upload-hint">{{ t('productManagement_uploadFolderHint') }}</p>
             </div>
           </div>
           
@@ -90,7 +90,7 @@
             <div class="upload-content">
               <LucideIcon name="FileUp" />
               <p class="upload-title">{{ t('productManagement_uploadFiles') }}</p>
-              <p class="upload-hint">上传文件到当前文件夹</p>
+              <p class="upload-hint">{{ t('productManagement_uploadFilesHint') }}</p>
             </div>
           </div>
         </div>
@@ -1548,6 +1548,7 @@ const handleLoginSuccess = () => {
   font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
   letter-spacing: 0;
+  text-align: center;
 }
 
 .upload-hint {
@@ -1557,6 +1558,7 @@ const handleLoginSuccess = () => {
   font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
   letter-spacing: 0;
+  text-align: center;
 }
 
 .upload-content svg {
