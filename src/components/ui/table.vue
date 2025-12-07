@@ -328,7 +328,7 @@ watch(() => props.selectedRowKeys, (newKeys) => {
 <style scoped>
 .table-wrapper {
   width: 100%;
-  background: white;
+  background: var(--neutral-1);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -340,14 +340,14 @@ watch(() => props.selectedRowKeys, (newKeys) => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fafafa;
+  border-bottom: 1px solid var(--neutral-3);
+  background: var(--neutral-2);
 }
 
 .table-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--neutral-12);
 }
 
 .table-extra {
@@ -364,15 +364,15 @@ watch(() => props.selectedRowKeys, (newKeys) => {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: var(--neutral-1);
 }
 
 .table-header-cell {
   padding: 12px 16px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fafafa;
+  border-bottom: 1px solid var(--neutral-3);
+  background: var(--neutral-2);
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--neutral-12);
   text-align: left;
   white-space: nowrap;
   font-size: 14px;
@@ -380,10 +380,10 @@ watch(() => props.selectedRowKeys, (newKeys) => {
 
 .table-cell {
   padding: 12px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--neutral-3);
   vertical-align: top;
   font-size: 14px;
-  color: #1a1a1a;
+  color: var(--neutral-12);
 }
 
 /* 表格尺寸变体 */
@@ -405,7 +405,7 @@ watch(() => props.selectedRowKeys, (newKeys) => {
 }
 
 .table-row:hover {
-  background-color: #fafafa;
+  background-color: var(--neutral-2);
 }
 
 .table-row.row-clickable {
@@ -413,16 +413,16 @@ watch(() => props.selectedRowKeys, (newKeys) => {
 }
 
 .table-row.row-selected {
-  background-color: #e6f7ff;
+  background-color: var(--primary-3);
 }
 
 /* 表格条纹 */
 .table-striped .table-row:nth-child(even) {
-  background-color: #fafafa;
+  background-color: var(--neutral-2);
 }
 
 .table-striped .table-row:nth-child(even):hover {
-  background-color: #f0f0f0;
+  background-color: var(--neutral-3);
 }
 
 /* 边框 */
@@ -439,7 +439,7 @@ watch(() => props.selectedRowKeys, (newKeys) => {
 }
 
 .table-bordered .table-row:last-child .table-cell {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--neutral-3);
 }
 
 /* 文本对齐 */
@@ -454,7 +454,8 @@ watch(() => props.selectedRowKeys, (newKeys) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--neutral-1);
+  opacity: 0.8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -465,15 +466,15 @@ watch(() => props.selectedRowKeys, (newKeys) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #1890ff;
+  color: var(--primary-9);
   font-size: 14px;
 }
 
 .loading-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #f0f0f0;
-  border-top: 2px solid #1890ff;
+  border: 2px solid var(--neutral-3);
+  border-top: 2px solid var(--primary-9);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -494,7 +495,7 @@ watch(() => props.selectedRowKeys, (newKeys) => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  color: #8c8c8c;
+  color: var(--neutral-9);
 }
 
 .empty-icon {
@@ -508,12 +509,12 @@ watch(() => props.selectedRowKeys, (newKeys) => {
   align-items: center;
   padding: 16px 20px;
   border-top: 1px solid #f0f0f0;
-  background: #fafafa;
+  background: var(--neutral-2);
 }
 
 .pagination-info {
   font-size: 14px;
-  color: #8c8c8c;
+  color: var(--neutral-9);
 }
 
 .pagination-controls {
@@ -527,12 +528,11 @@ watch(() => props.selectedRowKeys, (newKeys) => {
   gap: 4px;
 }
 
-.pagination-btn,
-.pagination-page-btn {
+.pagination-btn, .pagination-page-btn {
   padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  background: white;
-  color: #1a1a1a;
+  border: 1px solid var(--neutral-6);
+  background: var(--neutral-1);
+  color: var(--neutral-12);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -540,9 +540,9 @@ watch(() => props.selectedRowKeys, (newKeys) => {
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: #f0f2f5;
-  border-color: #1890ff;
-  color: #1890ff;
+  background: var(--neutral-3);
+  border-color: var(--primary-9);
+  color: var(--primary-9);
 }
 
 .pagination-btn:disabled {
@@ -556,15 +556,15 @@ watch(() => props.selectedRowKeys, (newKeys) => {
 }
 
 .pagination-page-btn:hover {
-  background: #f0f2f5;
-  border-color: #1890ff;
-  color: #1890ff;
+  background: var(--neutral-3);
+  border-color: var(--primary-9);
+  color: var(--primary-9);
 }
 
 .pagination-page-btn.active {
-  background: #1890ff;
-  color: white;
-  border-color: #1890ff;
+  background: var(--primary-9);
+  color: var(--neutral-1);
+  border-color: var(--primary-9);
 }
 
 /* 响应式 */

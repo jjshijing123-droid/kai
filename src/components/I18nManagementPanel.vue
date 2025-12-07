@@ -35,7 +35,7 @@
         <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
           <template v-for="lang in availableLanguages" :key="lang.code">
             <div
-              :class="{ 'ring-2 ring-primary': lang.code === currentLanguage }"
+              :class="{ 'ring-2 --primary-9': lang.code === currentLanguage }"
               class="rounded-md border p-4 hover:shadow-md transition-shadow"
             >
             <div class="flex justify-between items-center mb-3">

@@ -28,26 +28,26 @@ const buttonVariants = cva(
       // 按钮类型变体
       variant: {
         // 填充32
-        fill: "bg-[var(--primary-opacity-9)] text-white hover:bg-[var(--primary-opacity-8)] active:bg-[var(--primary-opacity-7)] active:text-[#FFFFFFE5]" ,
+        fill: "bg-primary-9 text-white hover:bg-primary-8 active:bg-primary-7 active:text-white/90" ,
         // 描边32
-        line: "border-[var(--neutral-opacity-6)] text-[var(--neutral-opacity-12)] border-[1px] hover:bg-[var(--neutral-opacity-1)] hover:border-[var(--neutral-opacity-7)] active:border-[var(--neutral-opacity-5)] active:text-[var(--neutral-opacity-11)]",
+        line: "border-neutral-6 text-neutral-12 border hover:bg-neutral-2 hover:border-neutral-7 active:border-neutral-5 active:text-neutral-11",
         // 幽灵
-        no: "text-[var(--neutral-opacity-12)] hover:bg-[var(--neutral-opacity-3)] active:bg-[var(--neutral-opacity-1)] active:text-[var(--neutral-opacity-11)]",
+        no: "text-neutral-12 hover:bg-neutral-2 active:bg-neutral-1 active:text-neutral-11",
 
 
         // 默认主要按钮样式
-        default: "bg-[var(--primary-9)] text-[#ffffff] hover:bg-[var(--primary-9)]/90 active:bg-[var(--primary-10)]",
+        default: "bg-primary-9 text-white hover:bg-primary-9/90 active:bg-primary-10",
 
         // 危险/删除按钮样式
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80", 
+        destructive: "bg-red-9 text-white hover:bg-red-9/90 active:bg-red-10", 
         // 描边按钮样式
-        outline: "border-[var(--neutral-9)] border hover:bg-accent hover:bg-[var(--neutral-3)] active:border-[var(--neutral-9)]/80 text-[var(--neutral-12)]", 
+        outline: "border-neutral-9 border hover:bg-neutral-3 active:border-neutral-9/80 text-neutral-12", 
         // 次要按钮样式
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70", 
         // 幽灵按钮样式（无背景）
-         ghost: "hover:bg-[var(--primary-2)] hover:text-accent-foreground active:bg-accent/80", 
+         ghost: "hover:bg-primary-2 hover:text-accent-foreground active:bg-accent/80", 
         // 纯文本按钮样式
-        text: "bg-transparent hover:bg-gray-100 text-gray-700 active:bg-gray-200", 
+        text: "bg-transparent hover:bg-neutral-2 text-neutral-12 active:bg-neutral-3", 
         // 链接样式按钮
         link: "underline-offset-4 hover:underline text-primary active:bg-primary/10", 
       },

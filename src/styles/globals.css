@@ -9,29 +9,29 @@
 @layer base {
   /* 根元素样式变量（浅色主题） */
   :root {
-    /* 基础颜色 */
-    --background: #ffffff; /* 背景色：白色 */
-    --foreground: #020817; /* 前景色：深灰蓝色 */
-    --card: #ffffff; /* 卡片背景色：白色 */
-    --card-foreground: #020817; /* 卡片前景色：深灰蓝色 */
-    --popover: #ffffff; /* 弹出框背景色：白色 */
-    --popover-foreground: #020817; /* 弹出框前景色：深灰蓝色 */
-    --primary: #0f172a; /* 主色调：深蓝黑色 */
-    --primary-foreground: #f8fafc; /* 主色调前景色：浅灰色 */
-    --secondary: #f1f5f9; /* 次要色调：浅灰色 */
-    --secondary-foreground: #020817; /* 次要色调前景色：深灰蓝色 */
-    --muted: #f1f5f9; /* 辅助色调：浅灰色 */
-    --muted-foreground: #64748b; /* 辅助色调前景色：中灰色 */
-    --accent: #f1f5f9; /* 强调色：浅灰色 */
-    --accent-foreground: #020817; /* 强调色前景色：深灰蓝色 */
-    --destructive: #ef4444; /* 破坏性颜色：红色 */
-    --destructive-foreground: #f8fafc; /* 破坏性颜色前景色：浅灰色 */
-    --border: #e2e8f0; /* 边框颜色：浅灰色 */
-    --input: #e2e8f0; /* 输入框颜色：浅灰色 */
-    --ring: #020817; /* 环形颜色：深灰蓝色 */
+    /* 基础颜色 - 使用Figma颜色变量 */
+    --background: var(--neutral-1); /* 背景色：白色 */
+    --foreground: var(--neutral-12); /* 前景色：深灰蓝色 */
+    --card: var(--neutral-1); /* 卡片背景色：白色 */
+    --card-foreground: var(--neutral-12); /* 卡片前景色：深灰蓝色 */
+    --popover: var(--neutral-1); /* 弹出框背景色：白色 */
+    --popover-foreground: var(--neutral-12); /* 弹出框前景色：深灰蓝色 */
+    --primary: var(--neutral-12); /* 主色调：深蓝黑色 */
+    --primary-foreground: var(--neutral-1); /* 主色调前景色：浅灰色 */
+    --secondary: var(--neutral-3); /* 次要色调：浅灰色 */
+    --secondary-foreground: var(--neutral-12); /* 次要色调前景色：深灰蓝色 */
+    --muted: var(--neutral-3); /* 辅助色调：浅灰色 */
+    --muted-foreground: var(--neutral-11); /* 辅助色调前景色：中灰色 */
+    --accent: var(--neutral-3); /* 强调色：浅灰色 */
+    --accent-foreground: var(--neutral-12); /* 强调色前景色：深灰蓝色 */
+    --destructive: var(--red-9); /* 破坏性颜色：红色 */
+    --destructive-foreground: var(--neutral-1); /* 破坏性颜色前景色：浅灰色 */
+    --border: var(--neutral-4); /* 边框颜色：浅灰色 */
+    --input: var(--neutral-4); /* 输入框颜色：浅灰色 */
+    --ring: var(--neutral-12); /* 环形颜色：深灰蓝色 */
     --radius: 0.5rem; /* 边框半径：0.5rem */
-    --custom: #16a34a; /* 自定义颜色：绿色 */
-    --custom-foreground: #fff1f2; /* 自定义颜色前景色：白色 */
+    --custom: var(--green-9); /* 自定义颜色：绿色 */
+    --custom-foreground: var(--neutral-1); /* 自定义颜色前景色：白色 */
     
     /* Figma 颜色变量 */
     /* 中性色 */
@@ -176,28 +176,28 @@
 
   /* 深色主题样式变量 */
   .dark {
-    /* 基础颜色 */
-    --background: #111111; /* 背景色：深蓝黑色 */
-    --foreground: #f8fafc; /* 前景色：浅灰色 */
-    --card: #020817; /* 卡片背景色：深蓝黑色 */
-    --card-foreground: #f8fafc; /* 卡片前景色：浅灰色 */
-    --popover: #020817; /* 弹出框背景色：深蓝黑色 */
-    --popover-foreground: #f8fafc; /* 弹出框前景色：浅灰色 */
-    --primary: #f8fafc; /* 主色调：浅灰色 */
-    --primary-foreground: #0f172a; /* 主色调前景色：深蓝黑色 */
-    --secondary: #1e293b; /* 次要色调：深灰色 */
-    --secondary-foreground: #f8fafc; /* 次要色调前景色：浅灰色 */
-    --muted: #1e293b; /* 辅助色调：深灰色 */
-    --muted-foreground: #94a3b8; /* 辅助色调前景色：中灰色 */
-    --accent: #1e293b; /* 强调色：深灰色 */
-    --accent-foreground: #f8fafc; /* 强调色前景色：浅灰色 */
-    --destructive: #7f1d1d; /* 破坏性颜色：深红色 */
-    --destructive-foreground: #f8fafc; /* 破坏性颜色前景色：浅灰色 */
-    --border: #1e293b; /* 边框颜色：深灰色 */
-    --input: #1e293b; /* 输入框颜色：深灰色 */
-    --ring: #cbd5e1; /* 环形颜色：浅蓝灰色 */
-    --custom: #22c55e; /* 深色主题自定义颜色：浅绿色 */
-    --custom-foreground: #052e16; /* 深色主题自定义颜色前景色：深绿色 */
+    /* 基础颜色 - 使用Figma颜色变量 */
+    --background: var(--neutral-1); /* 背景色：深蓝黑色 */
+    --foreground: var(--neutral-12); /* 前景色：浅灰色 */
+    --card: var(--neutral-1); /* 卡片背景色：深蓝黑色 */
+    --card-foreground: var(--neutral-12); /* 卡片前景色：浅灰色 */
+    --popover: var(--neutral-1); /* 弹出框背景色：深蓝黑色 */
+    --popover-foreground: var(--neutral-12); /* 弹出框前景色：浅灰色 */
+    --primary: var(--neutral-12); /* 主色调：浅灰色 */
+    --primary-foreground: var(--neutral-1); /* 主色调前景色：深蓝黑色 */
+    --secondary: var(--neutral-3); /* 次要色调：深灰色 */
+    --secondary-foreground: var(--neutral-12); /* 次要色调前景色：浅灰色 */
+    --muted: var(--neutral-3); /* 辅助色调：深灰色 */
+    --muted-foreground: var(--neutral-11); /* 辅助色调前景色：中灰色 */
+    --accent: var(--neutral-3); /* 强调色：深灰色 */
+    --accent-foreground: var(--neutral-12); /* 强调色前景色：浅灰色 */
+    --destructive: var(--red-9); /* 破坏性颜色：深红色 */
+    --destructive-foreground: var(--neutral-1); /* 破坏性颜色前景色：浅灰色 */
+    --border: var(--neutral-4); /* 边框颜色：深灰色 */
+    --input: var(--neutral-4); /* 输入框颜色：深灰色 */
+    --ring: var(--neutral-12); /* 环形颜色：浅蓝灰色 */
+    --custom: var(--green-9); /* 深色主题自定义颜色：浅绿色 */
+    --custom-foreground: var(--neutral-1); /* 深色主题自定义颜色前景色：深绿色 */
     
     /* Figma 深色主题颜色变量 */
     /* 中性色 */
@@ -369,7 +369,7 @@
   .page-title {
   font-size: 22px;
   font-weight: 700;
-  color:var(-neutral-12);
+  color:var(--neutral-12);
   margin: 0;
   line-height: 24px;
   letter-spacing: 0;
