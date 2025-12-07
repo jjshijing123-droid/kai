@@ -1,5 +1,5 @@
 <template>
-  <div class="product-3d-viewer">
+  <div class="product-3d-viewer" :class="{ 'immersive-mode': isImmersiveMode }">
     <!-- 新的3D页面Header - 在沉浸模式下隐藏 -->
     <Product3DHeader v-if="!isImmersiveMode" />
     
@@ -9,16 +9,16 @@
       class="viewer-container"
       ref="viewerContainer"
       @mousedown="handleMouseDown"
-      @touchstart="handleTouchStart"
-      @wheel="handleWheel"
+      @touchstart.passive="handleTouchStart"
+      @wheel.passive="handleWheel"
       @click="handleViewerClick"
     >
       <!-- 产品图片 -->
       <img
-        v-if="productName && productName.trim() !== '' && currentImageSrc"
+        v-if="productName && productName.trim() !== ''"
         id="product-image"
         ref="productImage"
-        :src="currentImageSrc"
+        :src="currentImageSrc || ''"
         :alt="productName + ' 3D展示'"
         class="product-image"
         :style="{
@@ -27,7 +27,7 @@
         }"
         @click="handleImageClick"
         @mousedown="handleImageMouseDown"
-        @touchstart="handleImageTouchStart"
+        @touchstart.passive="handleImageTouchStart"
       />
       
       <!-- 加载状态容器 -->
@@ -194,11 +194,6 @@ const CONFIG = {
 
 // 计算属性
 const currentImageSrc = computed(() => {
-  console.log('🔍 currentImageSrc 计算属性被调用')
-  console.log('   productName:', productName.value)
-  console.log('   currentViewIndex:', currentViewIndex.value)
-  console.log('   enabledViews:', enabledViews.value)
-  
   // 简化的验证逻辑
   if (!productName.value) {
     console.error('❌ Product3DViewer: productName 为空')
@@ -206,7 +201,6 @@ const currentImageSrc = computed(() => {
   }
   
   if (!enabledViews.value || enabledViews.value.length === 0) {
-    console.warn('⚠️ Product3DViewer: enabledViews 为空')
     // 使用默认路径
     const frame = currentFrame.value.toString().padStart(2, '0')
     return `/Product/${productName.value}/view1/image_${frame}${CONFIG.imageExtension}`
@@ -214,7 +208,7 @@ const currentImageSrc = computed(() => {
   
   const view = enabledViews.value[currentViewIndex.value]
   if (!view) {
-    console.warn('⚠️ Product3DViewer: view 未定义，使用默认路径')
+    // 使用默认路径
     const frame = currentFrame.value.toString().padStart(2, '0')
     return `/Product/${productName.value}/view1/image_${frame}${CONFIG.imageExtension}`
   }
@@ -222,8 +216,6 @@ const currentImageSrc = computed(() => {
   // 使用视图路径，但不做过于严格的验证
   const frame = currentFrame.value.toString().padStart(2, '0')
   const imagePath = `${view.path}image_${frame}${CONFIG.imageExtension}`
-  console.log('🖼️ 构建图片路径:', imagePath)
-  
   return imagePath
 })
 
@@ -283,8 +275,8 @@ const initializeViewer = async () => {
     
     // 验证产品名称
     if (!productName.value || productName.value.trim() === '') {
-      console.error('❌ 产品名称为空或无效:', productName.value)
-      showError(t('product3dViewer_invalidProductName'))
+      const errorDetails = `产品名称: ${productName.value}`
+      showError(t('product3dViewer_invalidProductName'), true, errorDetails)
       return
     }
     
@@ -315,13 +307,6 @@ const initializeViewer = async () => {
   } catch (error) {
     showError(t('product3dViewer_loadFailed', { message: error.message }))
     console.error('初始化错误:', error)
-  }
-
-  // 方法：显示错误
-  const showError = (message, showRetryBtn = true) => {
-    console.error('Product3DViewer showError:', message)
-    errorMessage.value = message
-    showRetryButton.value = showRetryBtn
   }
 }
 
@@ -447,9 +432,9 @@ const initializeImageCache = () => {
   }
   
   console.log('🔄 初始化图片缓存，视图数量:', enabledViews.value.length)
-  imageCache.value = []
-  for (let i = 0; i < enabledViews.value.length; i++) {
-    imageCache.value.push([])
+  // 仅在缓存未初始化或视图数量变化时重新初始化
+  if (!imageCache.value || imageCache.value.length !== enabledViews.value.length) {
+    imageCache.value = Array(enabledViews.value.length).fill(null).map(() => Array(CONFIG.totalFrames).fill(null))
   }
   console.log('✅ 图片缓存初始化完成')
 }
@@ -515,61 +500,76 @@ const loadSingleImage = (index, viewIndex) => {
     const path = view.path
     
     // 验证路径格式
-    if (!path || path === '' || path.includes('/product-3d/')) {
+    if (!path || path === '') {
       console.error('❌ Product3DViewer: loadSingleImage - 无效的视图路径:', path)
       reject(new Error(t('product3dViewer_invalidViewPath')))
       return
     }
     
-    const img = new Image()
-    let timer
-    
-    const cleanup = () => {
+    const cleanup = (img, timer) => {
       img.onload = null
       img.onerror = null
       clearTimeout(timer)
     }
     
-    img.onload = () => {
-      cleanup()
-      imageCache.value[viewIndex][index] = img
-      loadedCount.value++
-      updateProgress()
-      resolve(true)
+    const loadImage = (url, format) => {
+      return new Promise((imgResolve, imgReject) => {
+        const img = new Image()
+        let timer
+        
+        img.onload = () => {
+          cleanup(img, timer)
+          imgResolve(img)
+        }
+        
+        img.onerror = () => {
+          cleanup(img, timer)
+          imgReject(new Error(`${format}加载失败: ${url}`))
+        }
+        
+        timer = setTimeout(() => {
+          img.src = ''
+          imgReject(new Error(`${format}加载超时: ${url}`))
+        }, CONFIG.loadTimeout)
+        
+        img.src = url
+      })
     }
     
-    img.onerror = () => {
-      cleanup()
-      console.error(t('product3dViewer_webpLoadFailed'))
-      
-      // 尝试加载PNG格式
-      const pngImg = new Image()
-      const pngUrl = `${path}image_${frame}.png`
-      console.log(`尝试加载PNG格式: ${pngUrl}`)
-      
-      pngImg.onload = () => {
-        imageCache.value[viewIndex][index] = pngImg
+    const webpUrl = `${path}image_${frame}${CONFIG.imageExtension}`
+    const pngUrl = `${path}image_${frame}.png`
+    
+    // 首先尝试加载WebP格式
+    loadImage(webpUrl, 'WebP')
+      .then(img => {
+        imageCache.value[viewIndex][index] = img
         loadedCount.value++
         updateProgress()
+        // 如果是当前显示的帧，立即更新图片
+        if (viewIndex === currentViewIndex.value && index === currentFrame.value && productImage.value) {
+          productImage.value.src = img.src
+        }
         resolve(true)
-      }
-      
-      pngImg.onerror = () => {
-        console.error(t('product3dViewer_pngLoadFailed'))
+      })
+      .catch(webpError => {
+        console.log(`WebP加载失败，尝试加载PNG格式: ${pngUrl}`)
+        // WebP加载失败，尝试加载PNG格式
+        return loadImage(pngUrl, 'PNG')
+      })
+      .then(img => {
+        imageCache.value[viewIndex][index] = img
+        loadedCount.value++
+        updateProgress()
+        // 如果是当前显示的帧，立即更新图片
+        if (viewIndex === currentViewIndex.value && index === currentFrame.value && productImage.value) {
+          productImage.value.src = img.src
+        }
+        resolve(true)
+      })
+      .catch(pngError => {
+        console.error(`PNG加载也失败: ${pngUrl}`)
         reject(new Error(t('product3dViewer_frameLoadFailed', { frame })))
-      }
-      
-      pngImg.src = pngUrl
-    }
-    
-    timer = setTimeout(() => {
-      img.src = ''
-      reject(new Error(t('product3dViewer_frameLoadTimeout', { frame })))
-    }, CONFIG.loadTimeout)
-    
-    const imageUrl = `${path}image_${frame}${CONFIG.imageExtension}`
-    console.log(`正在加载图片: ${imageUrl}`)
-    img.src = imageUrl
+      })
   })
 }
 
@@ -581,41 +581,33 @@ const updateProgress = () => {
 }
 
 const updateFrame = (frameInput) => {
-  console.log('updateFrame called with frameInput:', frameInput)
-  console.log('currentViewIndex.value:', currentViewIndex.value)
-  console.log('imageCache.value:', imageCache.value)
-  
   const totalFrames = CONFIG.totalFrames
   if (totalFrames <= 0) return
   
-  let frame = frameInput % totalFrames
-  if (frame < 0) frame += totalFrames
+  // 简化帧计算，使用更高效的数学运算
+  let targetFrame = Math.floor(frameInput)
+  targetFrame = ((targetFrame % totalFrames) + totalFrames) % totalFrames
   
-  const targetFrame = Math.floor(frame)
-  console.log('Calculated targetFrame:', targetFrame)
-  
-  // 检查当前视角的图片缓存
-  const currentViewCache = imageCache.value[currentViewIndex.value]
-  console.log('currentViewCache:', currentViewCache)
-  
-  if (!currentViewCache || currentViewCache.length === 0) {
-    console.error('No images cached for current view')
-    return
+  // 只有当帧变化时才更新
+  if (currentFrame.value !== targetFrame) {
+    currentFrame.value = targetFrame
+    
+    // 检查当前视角的图片缓存
+    const currentViewCache = imageCache.value[currentViewIndex.value]
+    
+    if (currentViewCache && currentViewCache.length > 0) {
+      const targetImg = currentViewCache[targetFrame]
+      // 只有当图片存在且与当前显示的图片不同时才更新
+      if (targetImg && productImage.value && productImage.value.src !== targetImg.src) {
+        // 使用requestAnimationFrame确保DOM更新在动画帧中进行
+        requestAnimationFrame(() => {
+          if (productImage.value) {
+            productImage.value.src = targetImg.src
+          }
+        })
+      }
+    }
   }
-  
-  const targetImg = currentViewCache[targetFrame]
-  console.log('targetImg:', targetImg)
-  if (!targetImg) {
-    console.error('Target image not found for frame:', targetFrame)
-    return
-  }
-  
-  if (productImage.value && productImage.value.src !== targetImg.src) {
-    console.log('Updating image src from', productImage.value.src, 'to', targetImg.src)
-    productImage.value.src = targetImg.src
-  }
-  currentFrame.value = targetFrame
-  console.log('currentFrame.value updated to:', currentFrame.value)
 }
 
 const switchView = (direction) => {
@@ -648,16 +640,39 @@ const handleTouchStart = (e) => {
   }
 }
 
+// 为handleWheel添加节流，限制调用频率
+let lastWheelTime = 0
+const WHEEL_THROTTLE_MS = 16 // 约60fps
+
+// 优化的handleWheel函数
 const handleWheel = (e) => {
-  e.preventDefault()
-  const delta = Math.sign(e.deltaY)
-  const maxViewportHeight = window.innerHeight + 100
-  let newHeight = viewerContainer.value.offsetHeight + (-delta * CONFIG.wheelStep)
-  newHeight = Math.max(CONFIG.minHeight, Math.min(newHeight, maxViewportHeight))
+  // 使用节流限制调用频率
+  const now = Date.now()
+  if (now - lastWheelTime < WHEEL_THROTTLE_MS) {
+    return
+  }
+  lastWheelTime = now
   
-  if (newHeight !== viewerContainer.value.offsetHeight) {
-    viewerContainer.value.style.height = `${newHeight}px`
-    productImage.value.style.maxHeight = `${newHeight}px`
+  // 简化计算，使用更高效的数学运算
+  const delta = Math.sign(e.deltaY)
+  const currentHeight = viewerContainer.value.offsetHeight
+  const newHeight = Math.max(
+    CONFIG.minHeight,
+    Math.min(
+      currentHeight + (-delta * CONFIG.wheelStep),
+      window.innerHeight + 100
+    )
+  )
+  
+  // 只有当高度变化时才更新DOM
+  if (newHeight !== currentHeight) {
+    // 使用requestAnimationFrame确保DOM更新在动画帧中进行
+    requestAnimationFrame(() => {
+      viewerContainer.value.style.height = `${newHeight}px`
+      if (productImage.value) {
+        productImage.value.style.maxHeight = `${newHeight}px`
+      }
+    })
   }
 }
 
@@ -681,6 +696,19 @@ const handleMoveStart = (x, y) => {
   viewerContainer.value.style.cursor = 'grabbing'
 }
 
+// 添加节流函数
+const throttle = (func, limit) => {
+  let inThrottle = false;
+  return function(...args) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  }
+};
+
+// 优化的handleMove函数，使用节流限制调用频率
 const handleMove = (clientX, clientY) => {
   if (!isDragging.value) return
   
@@ -696,10 +724,13 @@ const handleMove = (clientX, clientY) => {
     if (deltaTime > 0) {
       velocity = -deltaX * CONFIG.rotationSpeed / deltaTime * 16
     }
-    updateFrame(currentFrame.value - deltaX * CONFIG.rotationSpeed)
+    // 直接计算目标帧，减少不必要的计算
+    const targetFrame = currentFrame.value - deltaX * CONFIG.rotationSpeed
+    updateFrame(targetFrame)
   }
   
-  if (Math.abs(deltaY) > 20) {
+  // 垂直拖拽切换视角，增加阈值减少频繁切换
+  if (Math.abs(deltaY) > 30) {
     // 垂直拖拽 - 切换视角
     const direction = deltaY > 0 ? 'up' : 'down'
     switchView(direction)
@@ -728,11 +759,13 @@ const startInertiaAnimation = () => {
     const deltaTime = timestamp - lastFrameTime
     lastFrameTime = timestamp
     
-    // 应用摩擦力
+    // 应用摩擦力 - 使用更高效的衰减算法
     velocity *= 0.95
     
     if (Math.abs(velocity) > 0.1) {
-      updateFrame(currentFrame.value + velocity * (deltaTime / 16))
+      // 直接计算目标帧，减少不必要的计算
+      const targetFrame = currentFrame.value + velocity * (deltaTime / 16)
+      updateFrame(targetFrame)
       inertiaAnimationId = requestAnimationFrame(animate)
     } else {
       cancelInertiaAnimation()
@@ -759,25 +792,20 @@ const toggleAutoRotation = () => {
 }
 
 const startAutoRotation = () => {
-  console.log('startAutoRotation called')
-  
   // 先停止现有的旋转
   stopAutoRotation()
   
   isAutoRotating.value = true
-  // 进入沉浸模式，隐藏界面元素
-  isImmersiveMode.value = true
+  // 移除进入沉浸模式的代码，避免改变背景色
   
   // 累积旋转值，确保小数值也能有效工作
   let accumulatedRotation = 0
   
   const rotate = () => {
     if (!isAutoRotating.value) {
-      console.log('Auto rotation stopped, exiting animation loop')
       return
     }
     
-    console.log('Updating frame in auto rotation')
     accumulatedRotation += CONFIG.autoRotateSpeed
     
     // 当累积值达到或超过1时，才更新帧
@@ -791,7 +819,6 @@ const startAutoRotation = () => {
   }
   
   autoRotateId = requestAnimationFrame(rotate)
-  console.log('Auto rotation started, isAutoRotating:', isAutoRotating.value)
 }
 
 const stopAutoRotation = () => {
@@ -799,8 +826,7 @@ const stopAutoRotation = () => {
     cancelAnimationFrame(autoRotateId)
     autoRotateId = null
     isAutoRotating.value = false
-    // 退出沉浸模式，显示界面元素
-    isImmersiveMode.value = false
+    // 移除退出沉浸模式的代码，避免改变背景色
   }
 }
 
@@ -906,9 +932,14 @@ const downloadAllImages = async () => {
 }
 
 // 错误处理
-const showError = (message, showRetryBtn = true) => {
-  errorMessage.value = message
+const showError = (message, showRetryBtn = true, errorDetails = '') => {
+  let fullMessage = message
+  if (errorDetails) {
+    fullMessage += ` (${errorDetails})`
+  }
+  errorMessage.value = fullMessage
   showRetry.value = showRetryBtn
+  console.error(`🔴 ${fullMessage}`)
 }
 
 const retryLoading = () => {
@@ -922,10 +953,14 @@ const retryLoading = () => {
 }
 
 const initializeEvents = () => {
-  document.addEventListener('mousemove', handleMouseMove)
+  // 使用节流函数包装鼠标和触摸移动事件处理
+  const throttledHandleMouseMove = throttle(handleMouseMove, 16) // 约60fps
+  const throttledHandleTouchMove = throttle(handleTouchMove, 16) // 约60fps
+  
+  document.addEventListener('mousemove', throttledHandleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
-  document.addEventListener('touchmove', handleTouchMove, { passive: false })
-  document.addEventListener('touchend', handleTouchEnd)
+  document.addEventListener('touchmove', throttledHandleTouchMove, { passive: false })
+  document.addEventListener('touchend', handleTouchEnd, { passive: true })
   
   // 添加键盘控制
   document.addEventListener('keydown', handleKeyDown)
@@ -935,6 +970,10 @@ const initializeEvents = () => {
   
   // 监听下载事件
   document.addEventListener('download-all-images', handleDownloadAllImages)
+  
+  // 保存节流函数引用，以便清理
+  initializeEvents.throttledMouseMove = throttledHandleMouseMove
+  initializeEvents.throttledTouchMove = throttledHandleTouchMove
 }
 
 const handleMouseMove = (e) => {
@@ -1040,9 +1079,10 @@ const cleanup = () => {
   stopAutoRotation()
   cancelInertiaAnimation()
   
-  document.removeEventListener('mousemove', handleMouseMove)
+  // 移除事件监听器，使用节流包装后的函数引用
+  document.removeEventListener('mousemove', initializeEvents.throttledMouseMove || handleMouseMove)
   document.removeEventListener('mouseup', handleMouseUp)
-  document.removeEventListener('touchmove', handleTouchMove)
+  document.removeEventListener('touchmove', initializeEvents.throttledTouchMove || handleTouchMove)
   document.removeEventListener('touchend', handleTouchEnd)
   document.removeEventListener('keydown', handleKeyDown)
   document.removeEventListener('toggle-3d-drawer', handleDrawerToggle)
@@ -1081,16 +1121,6 @@ const cleanup = () => {
   max-width: 100vw;
   max-height: 100vh;
 }
-
-.top-controls {
-  position: absolute;
-  top: 80px; /* 避免与Header重叠 */
-  right: 20px;
-  display: flex;
-  gap: 10px;
-  z-index: 100;
-}
-
 
 .viewer-container {
   position: relative;
