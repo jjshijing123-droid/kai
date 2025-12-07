@@ -138,20 +138,18 @@
       </Card>
 
       <!-- 翻译表格 -->
-      <Card :title="t('i18nManager_allTranslations')" class="translations-section">
-        <template #header>
-          <div class="card-header">
-            <div class="card-title">{{ t('i18nManager_allTranslations') }}</div>
-            <div class="card-extra">
-              <Input
-                v-model:value="searchTerm"
-                :placeholder="t('i18nManager_search')"
-                style="width: 250px"
-                size="small"
-              />
-            </div>
+      <Card class="translations-section">
+        <div class="card-header">
+          <h3 class="card-title">{{ t('i18nManager_allTranslations') }}</h3>
+          <div class="card-extra">
+            <Input
+              v-model="searchTerm"
+              :placeholder="t('i18nManager_search')"
+              style="width: 250px"
+              size="small"
+            />
           </div>
-        </template>
+        </div>
 
         <div class="translations-table-container">
           <Table
@@ -181,13 +179,27 @@
               </template>
               
               <template v-else>
-                <Input
-                  :value="translations[column.dataIndex] && translations[column.dataIndex][record.key] ? translations[column.dataIndex][record.key] : ''"
-                  :placeholder="record.key"
-                  @input="updateTranslationValue(column.dataIndex, record.key, $event.target.value)"
-                  @blur="saveTranslation(column.dataIndex, record.key, $event.target.value)"
-                  size="small"
-                />
+                <div v-if="isEditing(record.key, column.dataIndex)" class="editing-cell">
+                  <Input
+                    v-model="editingValues[`${column.dataIndex}_${record.key}`]"
+                    :placeholder="getPlaceholder(record.key, column.dataIndex)"
+                    size="small"
+                    @blur="commitTranslation(column.dataIndex, record.key)"
+                    @keydown.enter="commitTranslation(column.dataIndex, record.key)"
+                    autofocus
+                  />
+                </div>
+                <div v-else class="display-cell" @click="startEditing(record.key, column.dataIndex)">
+                  <span class="translation-text">
+                    <template v-if="getTranslationValue(column.dataIndex, record.key)">
+                      {{ getTranslationValue(column.dataIndex, record.key) }}
+                    </template>
+                    <template v-else>
+                      <span class="placeholder-text">{{ getPlaceholder(record.key, column.dataIndex) }}</span>
+                    </template>
+                  </span>
+                  <LucideIcon name="Edit3" class="edit-icon" size="14" />
+                </div>
               </template>
             </template>
           </Table>
@@ -204,7 +216,7 @@
               <div class="form-item full-width">
                 <label class="form-label">{{ currentLanguage === 'zh-CN' ? '翻译键' : 'Translation Key' }}</label>
                 <Input
-                  v-model:value="newKey"
+                  v-model="newKey"
                   :placeholder="t('i18nManager_newKey')"
                   size="small"
                 />
@@ -219,7 +231,7 @@
               >
                 <label class="form-label">{{ `${lang.flag} ${lang.name}` }}</label>
                 <Input
-                  v-model:value="newTranslations[lang.code]"
+                  v-model="newTranslations[lang.code]"
                   :placeholder="t('i18nManager_newTranslation')"
                   size="small"
                 />
@@ -251,10 +263,11 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import i18n from '../i18n/index.js'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
+import { translations, getTranslationKeys as getAllTranslationKeys } from '../i18n/translations.js'
 import AdminLoginModal from './AdminLoginModal.vue'
 import Button from './ui/button.vue'
 import Card from './ui/card.vue'
@@ -330,11 +343,55 @@ const showLoginModal = ref(!isAdminLoggedIn.value)
 const newKey = ref('')
 const newTranslations = reactive({})
 const saving = ref(false)
-// 使用实际的翻译数据
-const translations = reactive({})
+
+// 临时存储当前编辑的翻译值
+const editingValues = reactive({})
+const editingCell = ref(null)
+
+// 检查是否正在编辑指定单元格
+const isEditing = (rowKey, columnKey) => {
+  return editingCell.value &&
+         editingCell.value.rowKey === rowKey &&
+         editingCell.value.columnKey === columnKey
+}
+
+// 开始编辑
+const startEditing = (rowKey, columnKey) => {
+  editingCell.value = { rowKey, columnKey }
+  const value = getTranslationValue(columnKey, rowKey)
+  editingValues[`${columnKey}_${rowKey}`] = value
+}
+
+// 获取翻译值的辅助函数
+const getTranslationValue = (lang, key) => {
+  return translations[lang]?.[key] || ''
+}
+
+// 获取占位符文本
+const getPlaceholder = (key, lang) => {
+  return `请输入 ${key} 的${lang === 'en' ? '英文' : '中文'}翻译`
+}
 
 // 表格列配置
 const tableColumns = computed(() => {
+  // 如果数据还没有准备好，返回基本列
+  if (!availableLanguages.value || !Array.isArray(availableLanguages.value)) {
+    return [
+      {
+        title: t('i18nManager_translationKey'),
+        dataIndex: 'key',
+        width: 200,
+        fixed: 'left'
+      },
+      {
+        title: t('i18nManager_actions'),
+        dataIndex: 'actions',
+        width: 100,
+        fixed: 'right'
+      }
+    ]
+  }
+  
   const columns = [
     {
       title: t('i18nManager_translationKey'),
@@ -345,15 +402,13 @@ const tableColumns = computed(() => {
   ]
   
   // 添加语言列
-  if (availableLanguages.value && Array.isArray(availableLanguages.value)) {
-    availableLanguages.value.forEach(lang => {
-      columns.push({
-        title: `${lang.flag} ${lang.name}`,
-        dataIndex: lang.code,
-        width: 200
-      })
+  availableLanguages.value.forEach(lang => {
+    columns.push({
+      title: `${lang.flag} ${lang.name}`,
+      dataIndex: lang.code,
+      width: 200
     })
-  }
+  })
   
   // 添加操作列
   columns.push({
@@ -374,49 +429,83 @@ const getProgressColor = (percentage) => {
 }
 
 // 从实际的翻译数据加载
-const loadTranslations = () => {
+const loadTranslations = async () => {
   try {
-    const keys = getTranslationKeys()
+    // 等待语言数据加载完成
+    await nextTick()
     
-    // 清空现有翻译 - 使用响应式方式
-    Object.keys(translations).forEach(lang => {
-      delete translations[lang]
-    })
+    // 首先从localStorage恢复数据
+    restoreFromLocalStorage()
     
-    // 从i18n系统加载所有语言的翻译
+    const keys = getAllTranslationKeys()
+    console.log('Loaded translation keys:', keys.length)
+    
+    // 确保 translations 对象结构完整
     if (availableLanguages.value && Array.isArray(availableLanguages.value)) {
       availableLanguages.value.forEach(lang => {
         if (!translations[lang.code]) {
           translations[lang.code] = {}
         }
+        // 验证数据完整性
         keys.forEach(key => {
-          // 使用t函数获取翻译，但确保使用正确的语言代码
-          const translationValue = t(key, {}, lang.code)
-          // 使用响应式赋值
-          translations[lang.code][key] = translationValue
+          if (translations[lang.code][key] === undefined) {
+            translations[lang.code][key] = ''
+          }
         })
       })
+      
+      console.log('Available languages:', availableLanguages.value.map(l => `${l.code}: ${translations[l.code] ? Object.keys(translations[l.code]).length : 0} keys`))
     }
     
-    console.log('Translations loaded from i18n system:', translations)
-    console.log('Available keys:', keys)
-    console.log('Available languages:', availableLanguages.value)
+    // 强制重新渲染表格
+    await nextTick()
   } catch (error) {
     console.error('Error loading translations:', error)
   }
 }
 
+// 从localStorage恢复翻译数据的函数
+const restoreFromLocalStorage = () => {
+  try {
+    const savedTranslations = localStorage.getItem('i18n_translations')
+    if (savedTranslations) {
+      const parsedTranslations = JSON.parse(savedTranslations)
+      console.log('Restoring from localStorage:', parsedTranslations)
+      
+      // 恢复数据到translations对象
+      Object.keys(parsedTranslations).forEach(lang => {
+        if (!translations[lang]) {
+          translations[lang] = {}
+        }
+        // 使用Object.assign确保响应式更新
+        translations[lang] = { ...translations[lang], ...parsedTranslations[lang] }
+      })
+      
+      console.log('Translations after restoration:', translations)
+    }
+  } catch (error) {
+    console.error('Failed to restore from localStorage:', error)
+  }
+}
+
 // 获取所有翻译键
 const allKeys = computed(() => {
-  return getTranslationKeys()
+  return getAllTranslationKeys()
 })
 
 // 过滤翻译键
 const filteredKeys = computed(() => {
   if (!searchTerm.value) return allKeys.value
-  return allKeys.value.filter(key =>
-    key.toLowerCase().includes(searchTerm.value.toLowerCase())
-  )
+  const searchLower = searchTerm.value.toLowerCase()
+  return allKeys.value.filter(key => {
+    // 检查翻译键
+    if (key.toLowerCase().includes(searchLower)) return true
+    // 检查所有语言的翻译内容
+    return availableLanguages.value.some(lang => {
+      const translation = translations[lang.code]?.[key] || ''
+      return translation.toLowerCase().includes(searchLower)
+    })
+  })
 })
 
 // 检查是否有需要审核的翻译
@@ -426,12 +515,32 @@ const hasTranslationsNeedingReview = computed(() => {
   )
 })
 
-// 更新翻译值
+// 直接更新翻译值
 const updateTranslationValue = (lang, key, value) => {
   if (!translations[lang]) {
     translations[lang] = {}
   }
   translations[lang][key] = value
+  // 同步更新到 i18n 系统
+  i18n.updateTranslation(lang, key, value)
+}
+
+// 提交翻译 - 失焦时自动保存
+const commitTranslation = async (lang, key) => {
+  const value = editingValues[`${lang}_${key}`] || ''
+  
+  updateTranslationValue(lang, key, value)
+  editingCell.value = null
+  delete editingValues[`${lang}_${key}`]
+  
+  // 自动保存到文件
+  const saveResult = await i18n.saveTranslationsToFile()
+  
+  if (saveResult) {
+    showMessage('success', t('i18nManager_translationSaved'))
+  } else {
+    showMessage('warning', t('i18nManager_translationUpdatedLocally'))
+  }
 }
 
 // 添加新翻译
@@ -445,8 +554,6 @@ const addTranslation = async () => {
         [newKey.value]: newTranslations[lang.code] || ''
       }
     })
-    
-    console.log('Adding new translation:', newTranslationsData)
     
     // 使用实际的 i18n 系统保存
     addTranslations(newTranslationsData)
@@ -469,41 +576,22 @@ const addTranslation = async () => {
       newTranslations[lang.code] = ''
     })
     
-    // 保存到文件 - 使用改进的方法
-    try {
-      // 直接调用后端API，只发送新翻译键
-      const response = await fetch('/api/save-translations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          translations: newTranslationsData,
-          action: 'add' // 添加操作标识
-        })
-      })
-      
-      if (response.ok) {
-        const result = await response.json()
-        console.log('New translation saved to file:', result.message)
-      } else {
-        console.error('Failed to save new translation to file')
-      }
-    } catch (error) {
-      console.error('Failed to save new translation to file:', error)
-    }
+    // 静默保存到文件
+    await i18n.saveTranslationsToFile()
     
     // 重新加载翻译数据
     setTimeout(() => {
       loadTranslations()
     }, 100)
+    
+    showMessage('success', t('i18nManager_newTranslationAdded'))
   } catch (error) {
     console.error('Error adding translation:', error)
-    showMessage('error', currentLanguage === 'zh-CN' ? '添加翻译时发生错误，请检查控制台' : 'Error occurred while adding translation, please check console')
+    showMessage('error', t('i18nManager_errorAddingTranslation'))
   }
 }
 
-// 保存翻译
+// 保存翻译 - 已废弃，使用 commitTranslation 代替
 const saveTranslation = async (lang, key, value) => {
   if (!translations[lang]) {
     translations[lang] = {}
@@ -513,39 +601,30 @@ const saveTranslation = async (lang, key, value) => {
   // 使用实际的 i18n 系统保存
   updateTranslation(lang, key, value)
   
-  // 立即保存到文件（仅在开发模式下记录日志，避免API调用错误）
-  try {
-    await i18n.saveTranslationsToFile()
-    console.log(`Translation saved to file: ${lang}.${key} = ${value}`)
-  } catch (error) {
-    // API调用失败，仅在开发模式下记录详细错误
-    if (import.meta.env.DEV) {
-      console.log('Translation saved locally:', error.message)
-    }
-  }
+  // 静默保存到文件
+  await i18n.saveTranslationsToFile()
 }
 
 // 删除翻译
 const handleDeleteTranslation = async (key) => {
-  // 使用实际的 i18n 系统删除
-  deleteTranslation(key)
-  
-  // 更新本地数据
-  availableLanguages.value.forEach(lang => {
-    if (translations[lang.code] && translations[lang.code][key]) {
-      delete translations[lang.code][key]
-    }
-  })
-  
-  // 保存到文件
   try {
+    // 使用实际的 i18n 系统删除
+    deleteTranslation(key)
+    
+    // 更新本地数据
+    availableLanguages.value.forEach(lang => {
+      if (translations[lang.code] && translations[lang.code][key]) {
+        delete translations[lang.code][key]
+      }
+    })
+    
+    // 静默保存到文件
     await i18n.saveTranslationsToFile()
-    console.log(`Translation deleted from file: ${key}`)
+    
+    showMessage('success', t('i18nManager_translationDeleted'))
   } catch (error) {
-    // API调用失败，仅在开发模式下记录详细错误
-    if (import.meta.env.DEV) {
-      console.log('Translation deleted locally:', error.message)
-    }
+    console.error('Error deleting translation:', error)
+    showMessage('error', t('i18nManager_errorDeletingTranslation'))
   }
 }
 
@@ -553,35 +632,35 @@ const handleDeleteTranslation = async (key) => {
 const saveAllTranslations = async () => {
   console.log('Starting to save all translations...')
   
-  // 遍历所有翻译键和语言，保存每个翻译
-  allKeys.value.forEach(key => {
-    availableLanguages.value.forEach(lang => {
-      const value = translations[lang.code][key]
-      if (value !== undefined) {
-        console.log(`Saving translation: ${lang.code}.${key} = ${value}`)
-        updateTranslation(lang.code, key, value)
-      }
-    })
-  })
+  // 设置加载状态
+  saving.value = true
   
-  // 保存所有更改到文件
   try {
+    // 遍历所有翻译键和语言，保存每个翻译
+    allKeys.value.forEach(key => {
+      availableLanguages.value.forEach(lang => {
+        const value = translations[lang.code][key]
+        if (value !== undefined) {
+          updateTranslation(lang.code, key, value)
+        }
+      })
+    })
+    
+    // 保存所有更改到文件 - 使用静默保存
     await i18n.saveTranslationsToFile()
-    console.log('All translations saved to file')
+    
+    // 显示成功消息
+    showMessage('success', t('i18nManager_saveSuccess'))
+    
+    // 强制重新加载翻译数据以确保界面显示最新内容
+    setTimeout(() => {
+      loadTranslations()
+    }, 200)
   } catch (error) {
-    // API调用失败，仅在开发模式下记录详细错误
-    if (import.meta.env.DEV) {
-      console.log('Translations saved locally:', error.message)
-    }
+    showMessage('error', t('i18nManager_errorDuringSave'))
+  } finally {
+    saving.value = false
   }
-  
-  // 强制重新加载翻译数据以确保界面显示最新内容
-  setTimeout(() => {
-    console.log('Reloading translations after save...')
-    loadTranslations()
-  }, 200)
-  
-  showMessage('success', t('i18nManager_saveSuccess'))
 }
 
 // 导出翻译
@@ -596,16 +675,18 @@ const exportTranslations = () => {
   URL.revokeObjectURL(url)
 }
 
-onMounted(() => {
+onMounted(async () => {
   console.log('I18nManager mounted')
   
-  // 加载翻译数据
-  loadTranslations()
+  // 等待所有数据加载完成
+  await loadTranslations()
   
   // 初始化新翻译对象
-  availableLanguages.value.forEach(lang => {
-    newTranslations[lang.code] = ''
-  })
+  if (availableLanguages.value) {
+    availableLanguages.value.forEach(lang => {
+      newTranslations[lang.code] = ''
+    })
+  }
 })
 
 // 管理员登录成功回调
@@ -907,17 +988,83 @@ const goBack = () => {
   font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
+/* 卡片头部样式 */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #202020;
+  margin: 0;
+}
+
+.card-extra {
+  display: flex;
+  align-items: center;
+}
+
 /* 翻译表格 */
 .translations-table-container {
   margin-bottom: 20px;
   overflow: auto;
   width: 100%;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
 }
 
 .translations-table {
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
+}
+
+/* 表格单元格编辑样式 */
+.display-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  min-height: 32px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.display-cell:hover {
+  background: #f5f5f5;
+}
+
+.translation-text {
+  flex: 1;
+  font-size: 13px;
+  color: #202020;
+  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+}
+
+.placeholder-text {
+  color: #999;
+  font-style: italic;
+}
+
+.editing-cell {
+  padding: 0;
+}
+
+.edit-icon {
+  color: #999;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.display-cell:hover .edit-icon {
+  color: #00a0d9;
 }
 
 .action-buttons {

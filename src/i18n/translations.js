@@ -34,6 +34,14 @@ const baseTranslations = {
     "i18nManager_newTranslation": "Translation",
     "i18nManager_add": "Add",
     "i18nManager_saveSuccess": "Translations saved successfully",
+    "i18nManager_translationSaved": "Translation saved",
+    "i18nManager_translationUpdatedLocally": "Translation updated (saved locally)",
+    "i18nManager_newTranslationAdded": "New translation added",
+    "i18nManager_errorAddingTranslation": "Error occurred while adding translation, please check console",
+    "i18nManager_translationDeleted": "Translation deleted",
+    "i18nManager_errorDeletingTranslation": "Error occurred while deleting translation",
+    "i18nManager_errorDuringSave": "Error occurred during save",
+    "i18nManager_keys": "translation keys",
 
     // ProductManagement组件
     "productManagement_title": "Product Folder Management",
@@ -553,6 +561,14 @@ const baseTranslations = {
     "i18nManager_newTranslation": "翻译",
     "i18nManager_add": "添加",
     "i18nManager_saveSuccess": "翻译保存成功",
+    "i18nManager_translationSaved": "翻译已保存",
+    "i18nManager_translationUpdatedLocally": "翻译已更新（已保存到本地）",
+    "i18nManager_newTranslationAdded": "新翻译已添加",
+    "i18nManager_errorAddingTranslation": "添加翻译时发生错误，请检查控制台",
+    "i18nManager_translationDeleted": "翻译已删除",
+    "i18nManager_errorDeletingTranslation": "删除翻译时发生错误",
+    "i18nManager_errorDuringSave": "保存过程中发生错误",
+    "i18nManager_keys": "翻译键",
 
     // ProductManagement组件
     "productManagement_title": "产品文件夹管理",
@@ -1053,14 +1069,23 @@ export function updateTranslations(newTranslations) {
 
 // 重新加载翻译数据（用于保存后刷新）
 export function reloadTranslations() {
-  // 重新加载基础翻译
-  translations = { ...baseTranslations }
+  // 不重新加载基础翻译，保持现有翻译
+  console.log('Reloading translations skipped, keeping existing data')
 }
 
 // 获取翻译函数
 export function getTranslation(key, language = 'en') {
   const langTranslations = translations[language] || translations['en']
   return langTranslations[key] || key
+}
+
+// 获取所有翻译键
+export function getTranslationKeys() {
+  const keys = new Set()
+  Object.keys(translations).forEach(lang => {
+    Object.keys(translations[lang]).forEach(key => keys.add(key))
+  })
+  return Array.from(keys).sort()
 }
 
 // 语言配置

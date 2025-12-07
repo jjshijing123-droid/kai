@@ -6,6 +6,7 @@ class I18nService {
     this.currentLanguage = 'en'
     this.listeners = new Set()
     this.init()
+    this.loadFromLocalStorage()
   }
 
   // 初始化
@@ -112,31 +113,36 @@ class I18nService {
   deleteTranslation(key) {
     // 从所有语言中删除该翻译键
     Object.keys(languages).forEach(lang => {
-      this.updateTranslation(lang, key, '')
+      if (translations[lang] && translations[lang][key] !== undefined) {
+        delete translations[lang][key]
+      }
     })
   }
 
-  // 保存翻译到文件
-  async saveTranslationsToFile() {
-    // 调用后端API保存到文件
+  // 从localStorage加载翻译
+  loadFromLocalStorage() {
     try {
-      const response = await fetch('/api/save-translations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ translations: this.getAllTranslations() })
-      })
+      const savedTranslations = localStorage.getItem('i18n_translations')
+      console.log('Loading from localStorage, data:', savedTranslations)
       
-      if (response.ok) {
-        const result = await response.json()
-        console.log('Translations saved to file:', result.message)
+      if (savedTranslations) {
+        const parsedTranslations = JSON.parse(savedTranslations)
+        console.log('Parsed translations:', parsedTranslations)
+        
+        // 合并localStorage中的翻译到当前翻译对象
+        Object.keys(parsedTranslations).forEach(lang => {
+          if (!translations[lang]) {
+            translations[lang] = {}
+          }
+          Object.assign(translations[lang], parsedTranslations[lang])
+        })
+        
+        console.log('Translations after loading from localStorage:', translations)
       } else {
-        console.error('Failed to save translations to file:', response.statusText)
+        console.log('No saved translations found in localStorage')
       }
     } catch (error) {
-      console.error('Error calling save API:', error)
-      console.log('Note: Translation server might not be running. Translations are not saved.')
+      console.error('Failed to load translations from localStorage:', error)
     }
   }
 
@@ -165,7 +171,7 @@ class I18nService {
         const langTranslations = translations[lang] || {}
         Object.keys(langTranslations).forEach(key => {
           const value = langTranslations[key]
-          if (value && value.trim() !== '') { // 排除空值
+          if (value !== undefined) { // 保留所有值，包括空值
             allTranslations[lang][key] = value
           }
         })
@@ -174,6 +180,33 @@ class I18nService {
       }
     })
     return allTranslations
+  }
+
+  // 保存翻译到文件 - 只使用localStorage
+  async saveTranslationsToFile() {
+    try {
+      const translationsData = this.getAllTranslations()
+      console.log('Saving translations data:', translationsData)
+      
+      // 总是保存到localStorage作为备份
+      try {
+        localStorage.setItem('i18n_translations', JSON.stringify(translationsData))
+        console.log('Translations saved to localStorage successfully')
+        
+        // 验证保存的数据
+        const saved = localStorage.getItem('i18n_translations')
+        console.log('Verification - saved data:', saved)
+      } catch (localStorageError) {
+        console.error('Failed to save to localStorage:', localStorageError)
+      }
+      
+      // API功能暂时禁用，只使用localStorage
+      return false
+    } catch (error) {
+      // 捕获所有可能的错误，确保函数不会抛出异常
+      console.error('Error in saveTranslationsToFile:', error)
+      return false
+    }
   }
 
   // 检查翻译完整性 - 简化版本
