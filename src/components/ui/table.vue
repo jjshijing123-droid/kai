@@ -12,46 +12,48 @@
     </div>
     
     <div class="table-container">
-      <table :class="tableClasses">
-        <thead v-if="showHeader !== false">
-          <tr>
-            <th
-              v-for="column in columns"
-              :key="column.key || column.dataIndex"
-              :class="getHeaderClass(column)"
-              :style="getHeaderStyle(column)"
-            >
-              {{ column.title }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(record, index) in dataSource"
-            :key="record.key || index"
-            :class="getRowClass(record, index)"
-            @click="handleRowClick(record, index)"
-            @dblclick="handleRowDoubleClick(record, index)"
-          >
-            <td
-              v-for="column in columns"
-              :key="column.key || column.dataIndex"
-              :class="getCellClass(record, index, column)"
-              @click="handleCellClick(record, index, column)"
-            >
-              <slot
-                name="bodyCell"
-                :column="column"
-                :record="record"
-                :index="index"
-                :text="getCellValue(record, column)"
+      <div class="data-table-container">
+        <table :class="tableClasses">
+          <thead v-if="showHeader !== false">
+            <tr>
+              <th
+                v-for="column in columns"
+                :key="column.key || column.dataIndex"
+                :class="getHeaderClass(column)"
+                :style="getHeaderStyle(column)"
               >
-                {{ getCellValue(record, column) }}
-              </slot>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                {{ column.title }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(record, index) in dataSource"
+              :key="record.key || index"
+              :class="getRowClass(record, index)"
+              @click="handleRowClick(record, index)"
+              @dblclick="handleRowDoubleClick(record, index)"
+            >
+              <td
+                v-for="column in columns"
+                :key="column.key || column.dataIndex"
+                :class="getCellClass(record, index, column)"
+                @click="handleCellClick(record, index, column)"
+              >
+                <slot
+                  name="bodyCell"
+                  :column="column"
+                  :record="record"
+                  :index="index"
+                  :text="getCellValue(record, column)"
+                >
+                  {{ getCellValue(record, column) }}
+                </slot>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     
     <div v-if="loading" class="table-loading">
@@ -330,7 +332,7 @@ watch(() => props.selectedRowKeys, (newKeys) => {
   width: 100%;
   background: var(--neutral-1);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -358,6 +360,7 @@ watch(() => props.selectedRowKeys, (newKeys) => {
 .table-container {
   overflow-x: auto;
   position: relative;
+  height: 100%;
 }
 
 /* 表格基础样式 */
@@ -365,7 +368,24 @@ watch(() => props.selectedRowKeys, (newKeys) => {
   width: 100%;
   border-collapse: collapse;
   background: var(--neutral-1);
+  table-layout: fixed;
 }
+
+/* 表头样式 */
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--neutral-2);
+}
+
+/* 表格容器滚动 */
+.data-table-container {
+  display: block;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
 
 .table-header-cell {
   padding: 12px 16px;

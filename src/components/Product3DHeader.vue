@@ -2,23 +2,24 @@
   <div class="product-3d-header">
     <!-- 左边：返回按钮 -->
     <Button 
-      variant="text"
       @click="handleBack" 
       class="back-button"
-      size="icon"
+      variant="no"
+      size="icon40"
     >
-      <LucideIcon name="ChevronLeft" size="16" />
+      <LucideIcon name="ChevronLeft" size="18" />
     </Button>
     
     <!-- 右边：下载按钮和抽屉按钮 -->
     <div class="right-buttons">
       <!-- 下载按钮 -->
       <Button 
-        variant="text"
         @click="handleDownload" 
         class="download-button"
+        variant="no"
+        size="40"
       >
-        <LucideIcon name="Download" size="16" />
+        <LucideIcon name="Download" size="18" />
         {{ t('product3dHeader_downloadAllImages') }}
       </Button>
       
@@ -99,26 +100,15 @@ onUnmounted(() => {
 }
 
 .right-buttons {
-  display: flex;
-  gap: 6px;
-}
-
-.download-button {
-  display: flex;
+  display:flex;
   align-items: center;
   gap: 6px;
-  font-weight: 500;
-  color: #4d4d4d;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
 }
 
-.back-button:hover,
-.download-button:hover,
-.drawer-button:hover {
-  color: #4d4d4d;
-}
+
+
+
+
 
 
 
@@ -130,10 +120,7 @@ onUnmounted(() => {
   
 
   
-  .download-button {
-    height: 36px;
-    font-size: 14px;
-  }
+
   
 
 }
@@ -144,16 +131,7 @@ onUnmounted(() => {
   }
   
 
-  
-  .download-button {
-    height: 32px;
-    font-size: 13px;
-    padding: 6px 10px;
-  }
-  
-  .download-button span {
-    font-size: 14px;
-  }
+
   
 
 }

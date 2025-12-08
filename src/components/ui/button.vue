@@ -1,7 +1,8 @@
 <template>
   <!-- 按钮组件的根元素，使用动态类名和属性绑定 -->
   <button
-    :class="buttonVariants({ variant, size, class: props.class })"
+    :class="buttonVariants({ variant, size, color, class: props.class })"
+    :style="buttonStyle"
     v-bind="buttonProps"
   >
     <!-- 插槽：用于插入按钮的文本或图标内容 -->
@@ -57,17 +58,31 @@ const buttonVariants = cva(
         sm: "h-9 px-3 rounded-md", // 小尺寸
         lg: "h-11 px-8 rounded-md", // 大尺寸
         icon: "h-10 w-10", // 图标按钮（40x40px）
-        small: "h-8 px-2 text-sm", // 自定义小尺寸
+        small: "h-8 px-2 text-sm gap-1", // 自定义小尺寸
         icon32: "h-8 w-8", // 小图标按钮（32x32px）
         icon40: "h-10 w-10", // 小图标按钮（32x32px）
         32: "h-8 px-2.5 text-[12px] leading-[16px] font-[400] gap-1.5", // 自定义小尺寸
         40: "h-10 px-3.5 text-[15px] leading-[18px] font-[400] gap-2"
       },
+
+      // 新增：颜色变体
+      color: {
+        default: "", // 默认颜色
+        white: "text-white",
+        black: "text-black",
+        red: "text-red-9",
+        blue: "text-blue-9",
+        green: "text-green-9"
+        // 可添加更多预定义颜色
+      }
+
+
     },
     // 默认变体值
     defaultVariants: {
       variant: "fill", // 默认使用主要按钮样式
       size: "32", // 默认使用默认尺寸
+      color: "default" // 默认使用默认颜色
     },
   }
 )
@@ -89,12 +104,37 @@ const props = defineProps({
     type: String, // 属性类型为字符串
     default: "", // 默认值为空字符串
   },
+
+  // 新增：颜色变体
+  color: {
+    type: String,
+    default: "default"
+  }
+
+
+
 })
 
 // 计算属性：过滤出所有原生button属性
 const buttonProps = computed(() => {
   // 从props中解构出样式相关属性，剩余的作为原生属性
-  const { variant, size, class: className, ...rest } = props
+  const { variant, size, color, class: className, ...rest } = props
   return rest // 返回原生button属性
 })
+
+// 计算属性：处理动态颜色值
+const buttonStyle = computed(() => {
+  // 预定义的颜色值数组，这些颜色有特殊的样式处理
+  const predefinedColors = ['default', 'white', 'black', 'red', 'blue', 'green'];
+  
+  // 如果传入了 color 属性，且该颜色不在预定义的颜色列表中
+  if (props.color && !predefinedColors.includes(props.color)) {
+    // 返回内联样式对象，将自定义颜色直接应用于 color 样式
+    return { color: props.color };
+  }
+  
+  // 如果 color 为空、未定义，或是预定义颜色，则返回空对象
+  // 预定义颜色通过 CSS 类名等其他方式处理
+  return {};
+});
 </script>

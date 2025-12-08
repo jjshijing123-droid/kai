@@ -31,8 +31,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 静态文件服务 - 必须在所有API路由之后
+// 静态文件服务 - 必须在API路由之前
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // ========== API路由 ==========
 
@@ -413,6 +414,28 @@ app.use((err, req, res, next) => {
   });
 });
 
+// 前端路由处理 - 对于非API请求，返回index.html
+app.use((req, res, next) => {
+  // 如果请求不是API请求，且不是静态资源，返回index.html
+  if (!req.url.startsWith('/api') && 
+      !req.url.startsWith('/data') && 
+      !req.url.startsWith('/assets') && 
+      !req.url.startsWith('/@vite') && 
+      req.method === 'GET') {
+    // 检查index.html是否存在于当前目录
+    const indexPath = path.join(__dirname, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+    // 检查index.html是否存在于dist目录
+    const distIndexPath = path.join(__dirname, 'dist', 'index.html');
+    if (fs.existsSync(distIndexPath)) {
+      return res.sendFile(distIndexPath);
+    }
+  }
+  next();
+});
+
 // 404处理
 app.use((req, res) => {
   console.log(`404 - 请求的资源不存在: ${req.method} ${req.url}`);
@@ -444,7 +467,7 @@ async function startServer() {
     }
     
     // 启动Express服务器
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log('='.repeat(50));
       console.log(`服务器已启动，端口: ${PORT}`);
       console.log(`产品列表API: http://localhost:${PORT}/api/products`);
@@ -457,6 +480,20 @@ async function startServer() {
       console.log(`检测文件夹API: http://localhost:${PORT}/api/check-folder/:folderPath`);
       console.log(`批量替换API: POST http://localhost:${PORT}/api/batch-replace-products`);
       console.log('='.repeat(50));
+      
+      // 检查服务器是否真正在监听端口
+      const address = server.address();
+      if (address) {
+        console.log(`✅ 服务器确实在监听 ${address.address}:${address.port}`);
+      } else {
+        console.error('❌ 服务器未能获取监听地址');
+      }
+    });
+    
+    // 添加错误处理
+    server.on('error', (error) => {
+      console.error('服务器启动错误:', error);
+      process.exit(1);
     });
     
   } catch (error) {

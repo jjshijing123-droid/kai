@@ -7,17 +7,17 @@
         <!-- Frame 348 -->
         <div class="frame348">
           <div class="frame335">
-            <Button @click="goBack" variant="text" class="back-button">
-              <LucideIcon name="ChevronLeft" class="h-4 w-4" />
+            <Button @click="goBack" variant="no" size="icon40" class="back-button1">
+              <LucideIcon name="ChevronLeft" class="16" />
             </Button>
             <h1 class="page-title">{{ t('i18nManager_title') }}</h1>
           </div>
           <div class="header-actions">
-            <Button @click="exportTranslations" variant="secondary" class="refresh-button">
+            <Button @click="exportTranslations" variant="line" size="40">
               <LucideIcon name="Upload" class="h-4 w-4" />
               {{ t('i18nManager_export') }}
             </Button>
-            <Button @click="saveAllTranslations" :loading="saving" variant="primary" class="refresh-button">
+            <Button @click="saveAllTranslations" :loading="saving" variant="line" size="40">
               <LucideIcon name="Save" class="h-4 w-4" />
               {{ t('i18nManager_saveAll') }}
             </Button>
@@ -26,7 +26,7 @@
       </div>
 
       <!-- 翻译完整性概览 -->
-      <div class="rounded-lg border bg-card text-card-foreground shadow-sm completeness-section p-6 mb-6">
+      <div class="rounded-lg border bg-card text-card-foreground shadow-sm completeness-section p-[20px] mb-6">
         <h3 class="text-lg font-semibold mb-4">{{ t('i18nManager_completeness') }}</h3>
         <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
           <template v-for="lang in availableLanguages" :key="lang.code">
@@ -99,6 +99,7 @@
                   <Button
                     variant="text"
                     size="small"
+                    color="red"
                     @click="handleDeleteTranslation(record.key)"
                     class="danger"
                   >
@@ -682,8 +683,6 @@ const goBack = () => {
   justify-content: space-between;
   border-radius: 12px;
   background: var(--background);
-  padding-top: 20px;
-  padding-bottom: 20px;
   width: 100%;
   height: auto;
   margin-bottom: 20px;
@@ -708,32 +707,7 @@ const goBack = () => {
   letter-spacing: 0;
 }
 
-/* 返回按钮 */
-.back-button {
-  color: var(--neutral-12);
-  font-size: 14px;
-  padding: 0;
-  height: 24px;
-  width: 24px;
-  min-width: auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 6px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
 
-.back-button:hover {
-  background: var(--neutral-3);
-}
-
-.back-button svg {
-  width: 24px;
-  height: 24px;
-}
 
 /* 刷新按钮 */
 .refresh-button {
@@ -969,11 +943,7 @@ const goBack = () => {
   border-radius: 8px;
 }
 
-.translations-table {
-  background: var(--background);
-  border-radius: 8px;
-  overflow: hidden;
-}
+
 
 /* 表格单元格编辑样式 */
 .display-cell {
@@ -1017,10 +987,7 @@ const goBack = () => {
   color: var(--primary-9);
 }
 
-.action-buttons {
-  display: flex;
-  gap: 8px;
-}
+
 
 /* 添加翻译区域 */
 .add-translation-section {

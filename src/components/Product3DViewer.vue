@@ -1221,9 +1221,8 @@ const cleanup = () => {
 
 .auto-rotate-btn {
   padding: 8px 20px;
-  background: rgba(0, 0, 0, 0);
   color: var(--neutral-12);
-  border: 1px solid var(--neutral-opacity-6);
+  border: 1px solid var(--neutral-opacity-4);
   border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
@@ -1231,7 +1230,7 @@ const cleanup = () => {
 }
 
 .auto-rotate-btn:hover {
-  background: var(--neutral-opacity-6);
+  background: var(--neutral-opacity-1);
 }
 
 .download-progress-container {

@@ -202,12 +202,12 @@
       </div>
       
       <template #footer>
-        <Button @click="closeCreateFolderModal" variant="secondary" :disabled="creatingFolder">
+        <Button @click="closeCreateFolderModal" variant="line" size="40" :disabled="creatingFolder">
           {{ t('productManagement_cancel') }}
         </Button>
         <Button
           @click="createFolder"
-          variant="primary"
+          variant="fill" size="40"
           :disabled="!newFolderName || !!folderNameError || creatingFolder"
           :loading="creatingFolder"
         >
@@ -236,12 +236,12 @@
       </div>
       
       <template #footer>
-        <Button @click="closeRenameFolderModal">
+        <Button @click="closeRenameFolderModal" variant="line" size="40">
           {{ t('productManagement_cancel') }}
         </Button>
         <Button
           @click="confirmRenameFolder"
-          variant="primary"
+          variant="fill" size="40"
           :disabled="!renameFolderName || !!renameFolderNameError || renamingFolder"
           :loading="renamingFolder"
         >
@@ -259,15 +259,15 @@
       @ok="confirmDeleteFolder"
       :showFooter="true"
     >
-      <p>{{ t('productManagement_deleteConfirmContent') }}{{ folderToDelete }}{{ t('productManagement_deleteConfirmContent2') }}</p>
+      <p>{{ t('productManagement_deleteConfirmContent', { folderName: folderToDelete }) }}</p>
       
       <template #footer>
-        <Button @click="cancelDelete">
+        <Button @click="cancelDelete" variant="fill" size="40">
           {{ t('productManagement_cancelDelete') }}
         </Button>
         <Button
           @click="confirmDeleteFolder"
-          variant="primary"
+          variant="fill" size="40"
           class="danger"
         >
           {{ t('productManagement_okDelete') }}
