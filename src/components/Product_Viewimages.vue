@@ -8,9 +8,21 @@
       <div class="main-viewer">
         <!-- 加载提示 -->
         <div class="loading-container" v-if="isLoading">
-          <div class="loading-spinner"></div>
-          <div class="loading-text">{{ loadingText }}</div>
-          <div class="progress-text">{{ progressText }}</div>
+          <LoadingState 
+            :loading="isLoading"
+            :text="loadingText"
+            :show-progress="true"
+            :progress="loadingProgress || 0"
+          />
+          <div v-if="showRetry" class="retry-container">
+            <Button 
+              variant="fill" 
+              size="32" 
+              @click="retryLoading"
+            >
+              {{ t('product3dViewer_retry') }}
+            </Button>
+          </div>
         </div>
         
         <!-- 主展示图片 -->
@@ -67,6 +79,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import Product3DHeader from './Product3DHeader.vue'
 import Drawer from './Drawer.vue'
+import LoadingState from './ui/LoadingState.vue'
+import Button from './ui/button.vue'
+import { showMessage } from '../composables/useAdminAuth.js'
 
 const { t, currentLanguage, toggleLanguage } = useI18n()
 const route = useRoute()
@@ -78,7 +93,8 @@ const images = ref([])
 const currentIndex = ref(0)
 const isLoading = ref(true)
 const loadingText = ref('')
-const progressText = ref('0/0')
+const loadingProgress = ref(0)
+const showRetry = ref(false)
 const thumbnailContainer = ref(null)
 const productCatalog = ref(null)
 const drawerVisible = ref(false)
@@ -134,7 +150,8 @@ onMounted(async () => {
     
   } catch (error) {
     console.error('初始化失败:', error)
-    loadingText.value = t('productViewimages_loadFailed').replace('{message}', error.message)
+    const errorMessage = t('productViewimages_loadFailed').replace('{message}', error.message)
+    showMessage('error', errorMessage)
   }
 })
 
@@ -182,7 +199,7 @@ function getProductFromCatalog() {
 async function initGallery() {
   try {
     loadingText.value = t('productViewimages_loadingCatalog')
-    progressText.value = '0%'
+    loadingProgress.value = 0
     
     // 1. 加载产品目录数据
     productCatalog.value = await loadProductCatalog()
@@ -224,37 +241,33 @@ async function initGallery() {
     // 重要：完成初始化后设置 isLoading = false
     isLoading.value = false
     loadingText.value = ''
-    progressText.value = ''
+    loadingProgress.value = 0
     
     console.log('图片展示初始化完成')
     
   } catch (error) {
-    console.error('初始化图片展示失败:', error)
-    
-    // 改进错误信息显示
-    let errorMessage = error.message
-    
-    // 如果是文件夹不存在的错误，尝试显示友好提示
-    if (error.message.includes('图片文件夹不存在')) {
-      const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
-      errorMessage = `当前产品暂无${folderType}文件夹`
-    } else if (error.message.includes('noImagesFound')) {
-      errorMessage = '未找到可用的图片文件'
-    }
-    
-    loadingText.value = `加载失败：${errorMessage}`
-    progressText.value = '0%'
-    
-    // 即使失败也要停止加载状态，让用户知道有问题
-    isLoading.value = false
-    
-    // 3秒后自动隐藏错误信息
-    setTimeout(() => {
-      if (loadingText.value.includes('加载失败')) {
-        loadingText.value = ''
+      console.error('初始化图片展示失败:', error)
+      
+      // 改进错误信息显示
+      let errorMessage = error.message
+      
+      // 如果是文件夹不存在的错误，尝试显示友好提示
+      if (error.message.includes('图片文件夹不存在')) {
+        const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
+        errorMessage = `当前产品暂无${folderType}文件夹`
+      } else if (error.message.includes('noImagesFound')) {
+        errorMessage = '未找到可用的图片文件'
       }
-    }, 5000)
-  }
+      
+      // 使用showMessage函数显示错误提示
+      showMessage('error', errorMessage)
+      
+      // 即使失败也要停止加载状态，让用户知道有问题
+      isLoading.value = false
+      loadingText.value = ''
+      loadingProgress.value = 0
+      showRetry.value = true
+    }
 }
 
 // 基于catalog和检测的优化图片检测
@@ -328,7 +341,8 @@ async function detectAvailableImages() {
       
       // 更新进度
       const progress = Math.round(((i + 1) / expectedCount) * 100)
-      progressText.value = `${progress}%`
+      // 确保进度不超过100%
+      loadingProgress.value = Math.min(progress, 100)
       
       // 每10张图片让出一次主线程
       if (i % 10 === 0) {
@@ -646,7 +660,7 @@ function loadOtherImages() {
       loadedCount++
       const progress = Math.round((loadedCount / images.value.length) * 100)
       if (progress <= 100) {
-        progressText.value = `${progress}%`
+        loadingProgress.value = progress
       }
     })
   }
@@ -793,6 +807,7 @@ async function downloadAllImages() {
   try {
     loadingText.value = t('product3dViewer_preparingDownload')
     isLoading.value = true
+    loadingProgress.value = 0
     
     // 动态导入JSZip和FileSaver
     const JSZip = (await import('jszip')).default
@@ -810,7 +825,7 @@ async function downloadAllImages() {
       folder.file(fileName, blob)
       
       // 更新进度
-      progressText.value = `${i + 1}/${images.value.length}`
+      loadingProgress.value = Math.round(((i + 1) / images.value.length) * 100)
     }
     
     // 生成zip文件
@@ -822,11 +837,16 @@ async function downloadAllImages() {
     loadingText.value = t('product3dViewer_downloadComplete')
     setTimeout(() => {
       isLoading.value = false
+      loadingProgress.value = 0
     }, 2000)
     
   } catch (error) {
     console.error('Download failed:', error)
-    loadingText.value = t('product3dViewer_downloadError').replace('{message}', error.message)
+    const errorMessage = t('product3dViewer_downloadError').replace('{message}', error.message)
+    showMessage('error', errorMessage)
+    isLoading.value = false
+    loadingText.value = ''
+    loadingProgress.value = 0
   }
 }
 
@@ -851,6 +871,15 @@ const closeDrawer = () => {
 // 处理抽屉切换事件
 const handleDrawerToggle = () => {
   toggleDrawer()
+}
+
+// 重试加载
+const retryLoading = () => {
+  loadingText.value = t('productViewimages_detectingImages')
+  loadingProgress.value = 0
+  showRetry.value = false
+  images.value = []
+  initGallery()
 }
 </script>
 
@@ -895,45 +924,26 @@ const handleDrawerToggle = () => {
 /* 加载容器 */
 .loading-container {
   position: absolute;
-  justify-content: center;
-  padding: 30px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 25px 20px;
   width: 280px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: white;
-  color: #333;
-  z-index: 20;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--neutral-3);
-  border-radius: 50%;
-  border-top-color: var(--primary-9);
-  animation: spin 1s ease-in-out infinite;
-  margin-bottom: 15px;
-}
-
-.loading-text {
-  font-size: 16px;
-  margin-top: 10px;
+  background: var(--neutral-1);
   color: var(--neutral-12);
+  z-index: 20;
+  border-radius: 8px;
 }
 
-.progress-text {
+.retry-container {
+  margin-top: 16px;
   width: 100%;
-  word-break: break-word;
-  text-align: center;
-  font-size: 14px;
-  margin-top: 5px;
-  color: var(--neutral-11);
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  display: flex;
+  justify-content: center;
 }
 
 @keyframes loading {
@@ -1087,7 +1097,11 @@ const handleDrawerToggle = () => {
   
   .loading-container {
     width: 260px;
-    padding: 25px;
+    padding: 25px 20px;
+  }
+  
+  .loading-text {
+    font-size: 1em;
   }
 }
 

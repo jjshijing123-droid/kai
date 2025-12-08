@@ -32,17 +32,21 @@
       
       <!-- 加载状态容器 -->
       <div v-if="isLoading" class="loading-container">
-        <div class="loading-text">{{ loadingText }}</div>
-        <div class="loading-progress">
-          <div class="progress-container">
-            <div class="progress-bar" :style="{ width: loadingProgress + '%' }"></div>
-          </div>
-          <span class="progress-text">{{ loadingProgress }}%</span>
+        <LoadingState 
+          :loading="isLoading"
+          :text="loadingText"
+          :show-progress="true"
+          :progress="loadingProgress"
+        />
+        <div v-if="showRetry" class="retry-container">
+          <Button 
+            variant="fill" 
+            size="32" 
+            @click="retryLoading"
+          >
+            {{ t('product3dViewer_retry') }}
+          </Button>
         </div>
-        <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
-        <button v-if="showRetry" class="retry-btn" @click="retryLoading">
-          {{ t('product3dViewer_retry') }}
-        </button>
       </div>
     </div>
 
@@ -79,6 +83,9 @@ import { useRoute } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import Product3DHeader from './Product3DHeader.vue'
 import Drawer from './Drawer.vue'
+import LoadingState from './ui/LoadingState.vue'
+import Progress from './ui/progress.vue'
+import Button from './ui/button.vue'
 const showMessage = (type, text) => {
   const messageDiv = document.createElement('div')
   messageDiv.className = `message-${type}`
@@ -154,6 +161,7 @@ const drawerVisible = ref(false)
 const imageCache = ref([])
 const loadedCount = ref(0)
 const failedLoads = ref(0)
+const totalImages = ref(0) // 新增：固定的总图片数量
 
 // 进度相关
 const loadingProgress = ref(0)
@@ -224,14 +232,15 @@ const currentViewName = computed(() => {
 })
 
 const totalFrames = computed(() => CONFIG.totalFrames)
-
 const enabledViews = computed(() => {
   if (!productName.value || productName.value.trim() === '') {
     console.warn('⚠️ Product3DViewer: productName 为空，视图过滤跳过')
     return []
   }
-  return CONFIG.views.filter(view => view.enabled)
+  const views = CONFIG.views.filter(view => view.enabled)
+  return views
 })
+
 
 // 动画相关变量
 let autoRotateId = null
@@ -290,6 +299,10 @@ const initializeViewer = async () => {
     
     // 初始化图片缓存
     initializeImageCache()
+    
+    // 设置固定的总图片数量
+    totalImages.value = CONFIG.totalFrames * enabledViews.value.length
+    console.log('📊 总图片数量:', totalImages.value)
     
     // 加载关键帧
     await loadKeyFrames()
@@ -426,44 +439,70 @@ const initializeImageCache = () => {
     return
   }
   
-  if (!enabledViews.value || enabledViews.value.length === 0) {
+  const enabledViewsCount = enabledViews.value.length
+  if (enabledViewsCount === 0) {
     console.warn('⚠️ Product3DViewer: initializeImageCache - 没有有效的视图，跳过缓存初始化')
     return
   }
   
-  console.log('🔄 初始化图片缓存，视图数量:', enabledViews.value.length)
-  // 仅在缓存未初始化或视图数量变化时重新初始化
-  if (!imageCache.value || imageCache.value.length !== enabledViews.value.length) {
-    imageCache.value = Array(enabledViews.value.length).fill(null).map(() => Array(CONFIG.totalFrames).fill(null))
+  console.log('🔄 初始化图片缓存，视图数量:', enabledViewsCount, '总帧数:', CONFIG.totalFrames)
+  
+  // 检查缓存是否需要初始化或重新初始化
+  const needsInitialization = !imageCache.value || 
+    imageCache.value.length !== enabledViewsCount || 
+    imageCache.value.some(viewCache => !viewCache || viewCache.length !== CONFIG.totalFrames)
+  
+  if (needsInitialization) {
+    // 重新初始化缓存结构
+    imageCache.value = Array(enabledViewsCount).fill(null).map(() => Array(CONFIG.totalFrames).fill(null))
+    console.log('✅ 图片缓存重新初始化完成，结构:', imageCache.value.length, 'x', CONFIG.totalFrames)
+  } else {
+    console.log('✅ 图片缓存已存在且结构正确')
   }
-  console.log('✅ 图片缓存初始化完成')
-}
 
+}
 const loadKeyFrames = async () => {
   for (let viewIndex = 0; viewIndex < enabledViews.value.length; viewIndex++) {
     await batchLoadImages(CONFIG.keyFrames, viewIndex)
   }
 }
 
+
 const loadRemainingImages = async () => {
-  const framesToLoad = []
-  for (let i = 0; i < CONFIG.totalFrames; i++) {
-    if (!CONFIG.keyFrames.includes(i) && !imageCache.value[0][i]) {
-      framesToLoad.push(i)
+  console.log('📦 开始加载剩余图片...')
+  
+  for (let viewIndex = 0; viewIndex < enabledViews.value.length; viewIndex++) {
+    // 为每个视图单独检查需要加载的帧
+    const framesToLoad = []
+    for (let i = 0; i < CONFIG.totalFrames; i++) {
+      if (!CONFIG.keyFrames.includes(i)) {
+        // 检查当前视图是否需要加载这张图片
+        const needsLoading = !imageCache.value[viewIndex] || !imageCache.value[viewIndex][i]
+        if (needsLoading) {
+          framesToLoad.push(i)
+        }
+      }
+    }
+    console.log(`   视图 ${viewIndex} 需要加载 ${framesToLoad.length} 帧`)
+    if (framesToLoad.length > 0) {
+      await batchLoadImages(framesToLoad, viewIndex)
     }
   }
   
-  for (let viewIndex = 0; viewIndex < enabledViews.value.length; viewIndex++) {
-    await batchLoadImages(framesToLoad, viewIndex)
-  }
+  console.log('📦 剩余图片加载完成')
+
 }
 
 const batchLoadImages = async (frames, viewIndex) => {
   const batchSize = CONFIG.parallelLoads
+  console.log(`   批量加载图片：视图 ${viewIndex}，总帧数 ${frames.length}，批次大小 ${batchSize}`)
+  
   for (let i = 0; i < frames.length; i += batchSize) {
     const batch = frames.slice(i, i + batchSize)
+    console.log(`   处理批次 ${i/batchSize + 1}：帧数 ${batch.join(', ')}`)
     await Promise.all(batch.map(frame => loadImageWithRetry(frame, viewIndex)))
   }
+  console.log(`   视图 ${viewIndex} 的批量加载完成`)
 }
 
 const loadImageWithRetry = async (index, viewIndex, retry = 0) => {
@@ -544,6 +583,7 @@ const loadSingleImage = (index, viewIndex) => {
       .then(img => {
         imageCache.value[viewIndex][index] = img
         loadedCount.value++
+        console.log(`✅ WebP图片加载成功: [${index}]`)
         updateProgress()
         // 如果是当前显示的帧，立即更新图片
         if (viewIndex === currentViewIndex.value && index === currentFrame.value && productImage.value) {
@@ -555,16 +595,17 @@ const loadSingleImage = (index, viewIndex) => {
         console.log(`WebP加载失败，尝试加载PNG格式: ${pngUrl}`)
         // WebP加载失败，尝试加载PNG格式
         return loadImage(pngUrl, 'PNG')
-      })
-      .then(img => {
-        imageCache.value[viewIndex][index] = img
-        loadedCount.value++
-        updateProgress()
-        // 如果是当前显示的帧，立即更新图片
-        if (viewIndex === currentViewIndex.value && index === currentFrame.value && productImage.value) {
-          productImage.value.src = img.src
-        }
-        resolve(true)
+          .then(img => {
+            imageCache.value[viewIndex][index] = img
+            loadedCount.value++
+            console.log(`✅ PNG图片加载成功: [${index}]`)
+            updateProgress()
+            // 如果是当前显示的帧，立即更新图片
+            if (viewIndex === currentViewIndex.value && index === currentFrame.value && productImage.value) {
+              productImage.value.src = img.src
+            }
+            resolve(true)
+          })
       })
       .catch(pngError => {
         console.error(`PNG加载也失败: ${pngUrl}`)
@@ -574,10 +615,10 @@ const loadSingleImage = (index, viewIndex) => {
 }
 
 const updateProgress = () => {
-  const totalImages = CONFIG.totalFrames * enabledViews.value.length
-  const percent = Math.round((loadedCount.value / totalImages) * 100)
-  loadingProgress.value = percent
-  loadingText.value = t('product3dViewer_loading', { loaded: loadedCount.value, total: totalImages })
+  const percent = totalImages.value > 0 ? Math.round((loadedCount.value / totalImages.value) * 100) : 0
+  // 确保进度不超过100%
+  loadingProgress.value = Math.min(percent, 100)
+  loadingText.value = t('product3dViewer_loading', { loaded: loadedCount.value, total: totalImages.value })
 }
 
 const updateFrame = (frameInput) => {
@@ -937,7 +978,7 @@ const showError = (message, showRetryBtn = true, errorDetails = '') => {
   if (errorDetails) {
     fullMessage += ` (${errorDetails})`
   }
-  errorMessage.value = fullMessage
+  showMessage('error', fullMessage)
   showRetry.value = showRetryBtn
   console.error(`🔴 ${fullMessage}`)
 }
@@ -1152,56 +1193,17 @@ const cleanup = () => {
   border-radius: 8px;
   padding: 25px 20px;
   width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.loading-text {
+.retry-container {
+  margin-top: 16px;
   width: 100%;
-  word-break: break-word;
-  text-align: center;            
-  color: var(--neutral-12);
-  font-size: 1.2em;
-  margin-bottom: 15px;
-}
-
-.loading-progress {
-  width: 100%;
-  margin: 0 auto;
-}
-
-.progress-container {
-  height: 4px;
-  background: var(--neutral-2);
-  margin-bottom: 10px;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background: var(--primary-9);
-  transition: width 0.3s;
-}
-
-.progress-text {
-  font-size: 14px;
-  color: var(--neutral-12);
-}
-
-.error-message {
-  color: var(--red-9);
-  font-size: 14px;
-  margin-top: 10px;
-}
-
-.retry-btn {
-  margin-top: 10px;
-  padding: 6px 12px;
-  background: var(--primary-9);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
+  display: flex;
+  justify-content: center;
 }
 
 .controls-container {

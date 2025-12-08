@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 
 // 简单的消息提示实现（替代Ant Design Vue message）
-const showMessage = (type, text) => {
+export const showMessage = (type, text) => {
   const messageDiv = document.createElement('div')
   messageDiv.className = `message-${type}`
   messageDiv.style.cssText = `
