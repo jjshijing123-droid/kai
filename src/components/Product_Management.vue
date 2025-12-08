@@ -1829,11 +1829,10 @@ const handleLoginSuccess = () => {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .file-manager {
-    padding: 16px;
+    padding: 16px 0;
   }
   
   .page-header {
-    padding: 16px;
   }
   
   /* Frame 330 - 搜索和操作区域 */
