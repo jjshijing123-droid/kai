@@ -178,6 +178,12 @@
     --red-opacity-10: #d00003b3;
     --red-opacity-11: #b90007c7;
     --red-opacity-12: #4d0001e2;
+
+    /* 输入框 padding 变量 */
+    --input-padding-default: 12px;  /* 默认尺寸输入框的左右 padding */
+    --input-padding-small: 8px;     /* 小尺寸输入框的左右 padding */
+    --input-padding-large: 16px;    /* 大尺寸输入框的左右 padding */
+
   }
 
   /* 深色主题样式变量 */
@@ -348,6 +354,12 @@
     --red-opacity-10: #ff5759db;
     --red-opacity-11: #ff8f8a;
     --red-opacity-12: #ffd2ce;
+
+     /* 输入框 padding 变量 */
+    --input-padding-default: 12px;  /* 默认尺寸输入框的左右 padding */
+    --input-padding-small: 8px;     /* 小尺寸输入框的左右 padding */
+    --input-padding-large: 16px;    /* 大尺寸输入框的左右 padding */
+
   }
 }
 

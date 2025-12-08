@@ -127,11 +127,12 @@ const filteredProps = computed(() => {
 
 .input-prefix,
 .input-suffix {
+  width: 44px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
+  padding: 0 var(--input-padding-default);
   color: var(--neutral-9);
   font-size: 14px;
 }
@@ -145,7 +146,7 @@ const filteredProps = computed(() => {
   border: none;
   outline: none;
   background: transparent;
-  padding: 0 12px;
+  padding: 0 var(--input-padding-default);
   font-size: 14px;
   color: var(--neutral-12);
   line-height: 1.5;
@@ -168,7 +169,7 @@ const filteredProps = computed(() => {
 
 .password-input-container.input-small .password-input {
   font-size: 13px;
-  padding: 0 8px;
+  padding: 0 var(--input-padding-small);
 }
 
 .password-input-container.input-small .input-prefix,
@@ -183,12 +184,12 @@ const filteredProps = computed(() => {
 
 .password-input-container.input-large .password-input {
   font-size: 15px;
-  padding: 0 16px;
+  padding: 0 var(--input-padding-large);
 }
 
 .password-input-container.input-large .input-prefix,
 .password-input-container.input-large .input-suffix {
-  padding: 0 16px;
+  padding: 0 var(--input-padding-default);
   font-size: 15px;
 }
 

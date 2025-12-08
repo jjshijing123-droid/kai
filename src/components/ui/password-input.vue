@@ -174,6 +174,7 @@ defineExpose({
 
 /* 密码输入框主容器 */
 .password-input-container {
+  height: 40px;
   position: relative;
   display: flex;
   align-items: center;
@@ -198,6 +199,7 @@ defineExpose({
 /* 前缀区域样式 */
 .input-prefix,
 .input-suffix {
+  width: 44px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -218,7 +220,7 @@ defineExpose({
   border: none;
   outline: none;
   background: transparent;
-  padding: 0 12px;
+  padding:  0 var(--input-padding-default) ;
   font-size: 14px;
   color: var(--neutral-12);
   line-height: 1.5;
@@ -244,7 +246,7 @@ defineExpose({
 
 .input-small .password-input {
   font-size: 13px;
-  padding: 0 8px;
+  padding: 0 var(--input-padding-small);
 }
 
 .input-small .input-prefix,
@@ -255,12 +257,11 @@ defineExpose({
 
 /* 大尺寸样式 */
 .input-large {
-  min-height: 40px;
 }
 
 .input-large .password-input {
   font-size: 15px;
-  padding: 0 16px;
+  padding: 0 var(--input-padding-large);
 }
 
 .input-large .input-prefix,

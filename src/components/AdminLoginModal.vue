@@ -21,6 +21,7 @@
           :disabled="loading"
           @keypress.enter="handleLogin"
           class="form-input"
+          style="--input-padding-large: 0;"
         >
           <template #prefix>
             <LucideIcon name="User" size="14" class="input-icon" />
@@ -37,6 +38,7 @@
           size="large"
           @pressEnter="handleLogin"
           class="form-input"
+          style="--input-padding-large: 0;"
         >
           <template #prefix>
             <LucideIcon name="Lock" size="14" class="input-icon" />
@@ -246,6 +248,7 @@ const resetForm = () => {
 .form-input {
   /* 覆盖默认样式 */
 }
+
 
 .input-icon {
   color: var(--neutral-9);
