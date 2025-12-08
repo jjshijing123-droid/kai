@@ -25,12 +25,11 @@
       
       <!-- 抽屉按钮 -->
       <Button 
-        variant="text"
+        variant="no"
+        size="icon40"
         @click="toggleDrawer" 
-        class="drawer-button"
-        size="icon"
       >
-        <LucideIcon name="Menu" size="16" />
+        <LucideIcon name="Menu" size="18" />
       </Button>
     </div>
   </div>
@@ -91,7 +90,6 @@ onUnmounted(() => {
   align-items: center;
   padding: 0 16px;
   height: 64px;
-  background-color: transparent;
   position: fixed;
   top: 0;
   left: 0;

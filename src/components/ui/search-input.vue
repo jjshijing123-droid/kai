@@ -81,7 +81,6 @@ const handleBlur = (event) => {
   outline: none;
   font-size: 12px;
   color: var(--neutral-11);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 13px;
   letter-spacing: 0;
   padding: 0;
@@ -92,7 +91,6 @@ const handleBlur = (event) => {
 
 .search-input-field::placeholder {
   color: var(--neutral-11);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   font-size: 12px;
   line-height: 13px;
   letter-spacing: 0;

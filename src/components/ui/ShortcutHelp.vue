@@ -395,7 +395,6 @@ watch(() => props.visible, (visible) => {
   border: 1px solid #d9d9d9;
   border-radius: 4px;
   font-size: 12px;
-  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   color: #595959;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }

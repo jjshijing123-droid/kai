@@ -460,7 +460,6 @@ defineExpose({
   font-size: 14px;
   color: var(--neutral-12);
   margin: 0;
-  font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
   letter-spacing: 0;
 }
@@ -469,7 +468,6 @@ defineExpose({
   font-size: 12px;
   color: var(--neutral-11);
   margin: 0;
-  font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
   letter-spacing: 0;
 }

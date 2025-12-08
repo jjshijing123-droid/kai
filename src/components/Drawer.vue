@@ -7,8 +7,8 @@
         <div class="drawer-panel" @click.stop>
           <div class="drawer-header">
             <h3 class="drawer-title"></h3>
-            <Button @click="closeDrawer" variant="no" size="icon32">
-              <LucideIcon name="X" size="16" />
+            <Button @click="closeDrawer" variant="no" size="icon40">
+              <LucideIcon name="X" size="18" />
             </Button>
           </div>
           <div class="drawer-content">

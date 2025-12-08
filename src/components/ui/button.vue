@@ -40,7 +40,7 @@ const buttonVariants = cva(
         default: "bg-primary-9 text-white hover:bg-primary-9/90 active:bg-primary-10",
 
         // 危险/删除按钮样式
-        destructive: "bg-red-9 text-white hover:bg-red-9/90 active:bg-red-10", 
+        destructive: "bg-red-9 text-white hover:bg-red-10 active:bg-red-11", 
         // 描边按钮样式
         outline: "border-neutral-9 border hover:bg-neutral-3 active:border-neutral-9/80 text-neutral-12", 
         // 次要按钮样式

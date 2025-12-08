@@ -861,7 +861,6 @@ const handleDrawerToggle = () => {
   align-items: center;
   min-height: 100vh;
   background: #ffffff;
-  font-family: Arial, sans-serif;
   position: relative;
   padding-top: 64px;
 }

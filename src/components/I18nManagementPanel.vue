@@ -661,7 +661,6 @@ const goBack = () => {
   /* 利用App.vue中已经计算好的高度空间，确保减去header后充分利用可用空间 */
   min-height: calc(100vh - 64px); /* 与App.vue的main-content保持一致 */
   box-sizing: border-box;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 /* 页面头部 */
@@ -702,7 +701,6 @@ const goBack = () => {
   font-weight: 700;
   color: var(--neutral-12);
   margin: 0;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 24px;
   letter-spacing: 0;
 }
@@ -721,7 +719,6 @@ const goBack = () => {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 15px;
   letter-spacing: 0;
 }
@@ -774,7 +771,6 @@ const goBack = () => {
 .search-input {
   height: 32px;
   min-height: 32px;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   font-size: 12px;
 }
 
@@ -819,7 +815,6 @@ const goBack = () => {
   font-weight: 700;
   color: var(--neutral-12);
   flex: 1;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 .progress-section {
@@ -832,7 +827,6 @@ const goBack = () => {
   text-align: center;
   margin-top: 8px;
   font-weight: normal;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 .quality-info,
@@ -884,7 +878,6 @@ const goBack = () => {
   padding: 2px 4px;
   border-radius: 3px;
   font-size: 12px;
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
 }
 
 .review-value {
@@ -892,7 +885,6 @@ const goBack = () => {
   color: var(--neutral-11);
   margin-bottom: 4px;
   word-break: break-word;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 .review-reason {
@@ -909,7 +901,6 @@ const goBack = () => {
 .secondary-text {
   font-size: 12px;
   color: var(--neutral-11);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 /* 卡片头部样式 */
@@ -965,7 +956,6 @@ const goBack = () => {
   flex: 1;
   font-size: 13px;
   color: var(--neutral-12);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 .placeholder-text {
@@ -1030,7 +1020,6 @@ const goBack = () => {
   font-size: 12px;
   font-weight: 700;
   color: var(--neutral-12);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
 }
 
 .form-actions {
@@ -1059,7 +1048,6 @@ const goBack = () => {
 .search-input {
   height: 32px;
   min-height: 32px;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   font-size: 12px;
 }
 

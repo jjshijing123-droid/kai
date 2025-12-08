@@ -156,7 +156,7 @@
     <Modal
       :open="showCreateFolderModal"
       :title="t('productManagement_createProductFolder')"
-      width="w-full max-w-sm mx-4 sm:mx-0 sm:w-[520px] sm:max-w-none"
+      width="sm:max-w-md md:min-w-[520px]"
       @close="closeCreateFolderModal"
     >
       <div class="space-y-4">
@@ -220,7 +220,7 @@
     <Modal
       :open="showRenameFolderModal"
       :title="t('productManagement_renameFolder')"
-      width="sm:max-w-md"
+      width="sm:max-w-md md:min-w-[400px]"
       @close="closeRenameFolderModal"
     >
       <div class="form-content">
@@ -254,7 +254,7 @@
     <Modal
       :open="showDeleteConfirm"
       :title="t('productManagement_confirmDelete')"
-      width="sm:max-w-md"
+      width="sm:max-w-md md:min-w-[400px]"
       @close="cancelDelete"
       @ok="confirmDeleteFolder"
       :showFooter="true"
@@ -262,13 +262,13 @@
       <p>{{ t('productManagement_deleteConfirmContent', { folderName: folderToDelete }) }}</p>
       
       <template #footer>
-        <Button @click="cancelDelete" variant="fill" size="40">
+        <Button @click="cancelDelete" variant="line" size="40">
           {{ t('productManagement_cancelDelete') }}
         </Button>
         <Button
           @click="confirmDeleteFolder"
-          variant="fill" size="40"
-          class="danger"
+          variant="destructive" size="40"
+          
         >
           {{ t('productManagement_okDelete') }}
         </Button>
@@ -279,7 +279,7 @@
     <Modal
       :open="showUploadFolderModal"
       :title="t('productManagement_uploadProductFolder')"
-      width="lg:max-w-2xl"
+      width="sm:max-w-md md:min-w-[640px]"
       @close="closeUploadFolderModal"
     >
       <div class="file-upload-section">

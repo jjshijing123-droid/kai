@@ -1092,7 +1092,6 @@ const cleanup = () => {
 
 <style scoped>
 .product-3d-viewer {
-  font-family: 'Microsoft YaHei', Arial, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;

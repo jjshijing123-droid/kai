@@ -1,5 +1,5 @@
 <template>
-  <Modal :open="open" :title="t('productManagement_batchUpload')" width="w-[520px]" @close="handleClose">
+  <Modal :open="open" :title="t('productManagement_batchUpload')" width="sm:max-w-md md:min-w-[640px]" @close="handleClose">
     <div class="batch-upload-content">
       <!-- 操作步骤指示器 -->
       <div class="step-indicator">
@@ -493,7 +493,6 @@ const startBatchZipUpload = async () => {
   font-size: 14px;
   color: var(--neutral-12);
   margin: 0;
-  font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
   letter-spacing: 0;
   font-weight: 400;
@@ -503,7 +502,6 @@ const startBatchZipUpload = async () => {
   font-size: 12px;
   color: var(--neutral-11);
   margin: 0;
-  font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
   letter-spacing: 0;
 }

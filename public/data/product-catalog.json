@@ -1,28 +1,6 @@
 {
   "products": [
     {
-      "id": 1,
-      "name": "9999",
-      "folderName": "9999",
-      "category": "general",
-      "description": "Product model: 9999",
-      "path": "Product/9999/",
-      "folder": "Product/9999/",
-      "mainImage": "/Product/9999/image_00.webp",
-      "totalSize": 8728116,
-      "fileCount": 135,
-      "views": {
-        "view1": "/Product/9999/view1/",
-        "view2": "/Product/9999/view2/",
-        "view3": "/Product/9999/view3/",
-        "view4": "/Product/9999/view4/"
-      },
-      "additionalImages": {
-        "sixViews": "/Product/9999/images_6Views/",
-        "other": "/Product/9999/images_other/"
-      }
-    },
-    {
       "id": 2,
       "name": "Cobi18+",
       "folderName": "Cobi18+",
@@ -288,7 +266,7 @@
       }
     }
   ],
-  "totalProducts": 13,
-  "lastUpdated": "2025-12-08T07:18:06.619Z",
+  "totalProducts": 12,
+  "lastUpdated": "2025-12-08T08:16:24.509Z",
   "version": "2.0"
 }
