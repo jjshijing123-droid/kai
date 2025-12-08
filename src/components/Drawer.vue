@@ -1,125 +1,128 @@
 <template>
   <div>
     <!-- 简约抽屉实现 -->
-    <div v-if="isOpen" class="drawer-overlay" @click="closeDrawer">
-      <div class="drawer-panel" @click.stop>
-        <div class="drawer-header">
-          <h3 class="drawer-title"></h3>
-          <Button @click="closeDrawer" variant="no" size="icon32">
-            <LucideIcon name="X" size="16" />
-          </Button>
-        </div>
-        <div class="drawer-content">
-          <!-- 管理员认证部分 -->
-          <div class="admin-section">
-            <h3 class="section-title">{{ t('common_admin') }}</h3>
-            <div class="admin-content">
-              <div v-if="!isAdminLoggedIn" class="admin-login-item" @click="handleOpenLoginModal">
-                <LucideIcon name="Lock" size="20" class="menu-icon" />
-                <span class="menu-text">{{ t('common_adminLogin') }}</span>
-              </div>
-              <div v-else class="admin-logged-in">
-                <div class="admin-info">
-                  <LucideIcon name="User" size="20" class="menu-icon" />
-                  <span class="menu-text">{{ t('common_loggedIn') }}</span>
+    <Transition name="drawer">
+      <div v-if="isOpen" class="drawer-container">
+        <div class="drawer-overlay" @click="closeDrawer"></div>
+        <div class="drawer-panel" @click.stop>
+          <div class="drawer-header">
+            <h3 class="drawer-title"></h3>
+            <Button @click="closeDrawer" variant="no" size="icon32">
+              <LucideIcon name="X" size="16" />
+            </Button>
+          </div>
+          <div class="drawer-content">
+            <!-- 管理员认证部分 -->
+            <div class="admin-section">
+              <h3 class="section-title">{{ t('common_admin') }}</h3>
+              <div class="admin-content">
+                <div v-if="!isAdminLoggedIn" class="admin-login-item" @click="handleOpenLoginModal">
+                  <LucideIcon name="Lock" size="20" class="menu-icon" />
+                  <span class="menu-text">{{ t('common_adminLogin') }}</span>
                 </div>
-                <Button variant="line" size="40" @click="handleLogout" class="logout-button">
-                  <LucideIcon name="LogOut" size="16" />
-                  {{ t('common_logout') }}
-                </Button>
+                <div v-else class="admin-logged-in">
+                  <div class="admin-info">
+                    <LucideIcon name="User" size="20" class="menu-icon" />
+                    <span class="menu-text">{{ t('common_loggedIn') }}</span>
+                  </div>
+                  <Button variant="line" size="40" @click="handleLogout" class="logout-button">
+                    <LucideIcon name="LogOut" size="16" />
+                    {{ t('common_logout') }}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- 导航菜单部分 -->
-          <div class="menu-section">
-            <h3 class="section-title">{{ t('drawer_navigation') }}</h3>
-            <div class="menu-list">
-              <div class="menu-item" @click="goToHome">
-                <LucideIcon name="Home" size="14" class="menu-icon" />
-                <span class="menu-text">{{ t('drawer_home') }}</span>
-              </div>
-              
-              <div
-                class="menu-item"
-                @click="goToI18nManager"
-              >
-                <LucideIcon name="Globe" size="14" class="menu-icon" />
-                <span class="menu-text">{{ t('header_i18nManager') }}</span>
-              </div>
-              
-              <div
-                class="menu-item"
-                @click="goToProductManager"
-              >
-                <LucideIcon name="Package" size="14" class="menu-icon" />
-                <span class="menu-text">{{ t('header_productManager') }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 语言切换部分 -->
-          <div class="language-section">
-            <h3 class="section-title">{{ t('header_language') }}</h3>
-            <div class="language-options">
-              <div
-                class="language-option"
-                :class="{ active: currentLanguage === 'zh-CN' }"
-                @click="switchLanguage('zh-CN')"
-              >
-                <span class="language-flag">🇨🇳</span>
-                <span class="language-text">{{ t('common_chinese') }}</span>
-                <div class="language-check" v-if="currentLanguage === 'zh-CN'">
-                  <LucideIcon name="Check" size="16" />
+            <!-- 导航菜单部分 -->
+            <div class="menu-section">
+              <h3 class="section-title">{{ t('drawer_navigation') }}</h3>
+              <div class="menu-list">
+                <div class="menu-item" @click="goToHome">
+                  <LucideIcon name="Home" size="14" class="menu-icon" />
+                  <span class="menu-text">{{ t('drawer_home') }}</span>
                 </div>
-              </div>
-              
-              <div
-                class="language-option"
-                :class="{ active: currentLanguage === 'en' }"
-                @click="switchLanguage('en')"
-              >
-                <span class="language-flag">🇺🇸</span>
-                <span class="language-text">{{ t('common_english') }}</span>
-                <div class="language-check" v-if="currentLanguage === 'en'">
-                  <LucideIcon name="Check" size="16" />
+                
+                <div
+                  class="menu-item"
+                  @click="goToI18nManager"
+                >
+                  <LucideIcon name="Globe" size="14" class="menu-icon" />
+                  <span class="menu-text">{{ t('header_i18nManager') }}</span>
+                </div>
+                
+                <div
+                  class="menu-item"
+                  @click="goToProductManager"
+                >
+                  <LucideIcon name="Package" size="14" class="menu-icon" />
+                  <span class="menu-text">{{ t('header_productManager') }}</span>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <!-- 主题切换部分 -->
-          <div class="theme-section">
-            <h3 class="section-title">{{ t('common_theme') }}</h3>
-            <div class="theme-options">
-              <div
-                class="theme-option"
-                :class="{ active: currentTheme === 'light' }"
-                @click="toggleTheme('light')"
-              >
-                <LucideIcon name="Sun" size="16" class="theme-icon" />
-                <span class="theme-text">{{ t('common_lightTheme') }}</span>
-                <div class="theme-check" v-if="currentTheme === 'light'">
-                  <LucideIcon name="Check" size="16" />
+            
+            <!-- 语言切换部分 -->
+            <div class="language-section">
+              <h3 class="section-title">{{ t('header_language') }}</h3>
+              <div class="language-options">
+                <div
+                  class="language-option"
+                  :class="{ active: currentLanguage === 'zh-CN' }"
+                  @click="switchLanguage('zh-CN')"
+                >
+                  <span class="language-flag">🇨🇳</span>
+                  <span class="language-text">{{ t('common_chinese') }}</span>
+                  <div class="language-check" v-if="currentLanguage === 'zh-CN'">
+                    <LucideIcon name="Check" size="16" />
+                  </div>
+                </div>
+                
+                <div
+                  class="language-option"
+                  :class="{ active: currentLanguage === 'en' }"
+                  @click="switchLanguage('en')"
+                >
+                  <span class="language-flag">🇺🇸</span>
+                  <span class="language-text">{{ t('common_english') }}</span>
+                  <div class="language-check" v-if="currentLanguage === 'en'">
+                    <LucideIcon name="Check" size="16" />
+                  </div>
                 </div>
               </div>
-              
-              <div
-                class="theme-option"
-                :class="{ active: currentTheme === 'dark' }"
-                @click="toggleTheme('dark')"
-              >
-                <LucideIcon name="Moon" size="16" class="theme-icon" />
-                <span class="theme-text">{{ t('common_darkTheme') }}</span>
-                <div class="theme-check" v-if="currentTheme === 'dark'">
-                  <LucideIcon name="Check" size="16" />
+            </div>
+            
+            <!-- 主题切换部分 -->
+            <div class="theme-section">
+              <h3 class="section-title">{{ t('common_theme') }}</h3>
+              <div class="theme-options">
+                <div
+                  class="theme-option"
+                  :class="{ active: currentTheme === 'light' }"
+                  @click="toggleTheme('light')"
+                >
+                  <LucideIcon name="Sun" size="16" class="theme-icon" />
+                  <span class="theme-text">{{ t('common_lightTheme') }}</span>
+                  <div class="theme-check" v-if="currentTheme === 'light'">
+                    <LucideIcon name="Check" size="16" />
+                  </div>
+                </div>
+                
+                <div
+                  class="theme-option"
+                  :class="{ active: currentTheme === 'dark' }"
+                  @click="toggleTheme('dark')"
+                >
+                  <LucideIcon name="Moon" size="16" class="theme-icon" />
+                  <span class="theme-text">{{ t('common_darkTheme') }}</span>
+                  <div class="theme-check" v-if="currentTheme === 'dark'">
+                    <LucideIcon name="Check" size="16" />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </Transition>
     
 
   </div>
@@ -330,26 +333,69 @@ const switchLanguage = (lang) => {
 </script>
 
 <style scoped>
-/* 抽屉遮罩 */
-.drawer-overlay {
+/* 抽屉容器 */
+.drawer-container {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
+  overflow: hidden;
+}
+
+/* 抽屉遮罩 */
+.drawer-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
 }
 
 /* 抽屉面板 */
 .drawer-panel {
+  position: relative;
   width: 320px;
   height: 100%;
   background: var(--neutral-1);
   display: flex;
   flex-direction: column;
+  transform: translateX(0);
+}
+
+/* 抽屉容器过渡动画 */
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: all 0.3s ease;
+}
+
+/* 遮罩层动画 */
+.drawer-enter-active .drawer-overlay,
+.drawer-leave-active .drawer-overlay {
+  transition: opacity 0.3s ease;
+}
+
+.drawer-enter-from .drawer-overlay,
+.drawer-leave-to .drawer-overlay {
+  opacity: 0;
+}
+
+/* 抽屉面板动画 */
+.drawer-enter-active .drawer-panel,
+.drawer-leave-active .drawer-panel {
+  transition: transform 0.3s ease;
+}
+
+.drawer-enter-from .drawer-panel {
+  transform: translateX(100%);
+}
+
+.drawer-leave-to .drawer-panel {
+  transform: translateX(100%);
 }
 
 /* 抽屉头部 */

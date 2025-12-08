@@ -283,44 +283,25 @@ onUnmounted(() => {
 
 
 
-
-
-
-
-
-
-
-
-
-
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .header {
-    padding: 0 16px;
-  }
+
   
-  .logo-image {
-    height: 50px;
-  }
+/* 导航按钮组 */
+.nav-buttons {
+  display: none;
+
+}
+
+
 }
 
 @media (max-width: 576px) {
-  .header {
-    padding: 0 16px;
-  }
-  
-  .logo-image {
-    height: 50px;
-  }
+
+
 }
 
 @media (max-width: 480px) {
-  .header {
-    padding: 0 8px;
-  }
-  
-  .logo-image {
-    height: 50px;
-  }
+
 }
 </style>

@@ -831,7 +831,6 @@ onMounted(() => {
 
   .ditu {
     border-radius: 20px;
-    border: 2.5px solid var(--neutral-9);
   }
 }
 
@@ -850,7 +849,6 @@ onMounted(() => {
 
   .ditu {
     border-radius: 24px;
-    border: 2.5px solid var(--neutral-9);
   }
 }
 

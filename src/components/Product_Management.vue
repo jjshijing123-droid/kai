@@ -1621,7 +1621,6 @@ const handleLoginSuccess = () => {
 
 .file-item:hover {
   background: var(--neutral-3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .file-content {
