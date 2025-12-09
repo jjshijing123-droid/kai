@@ -360,7 +360,7 @@ const getProgressColor = (percentage) => {
 }
 
 // 从实际的翻译数据加载 - 确保数据一致性
-const loadTranslations = async () => {
+const loadTranslations = async (showNotification = true) => {
   try {
     // 等待语言数据加载完成
     await nextTick()
@@ -423,11 +423,15 @@ const loadTranslations = async () => {
     await nextTick()
     
     // 显示刷新成功提示
-    showMessage('success', t('i18nManager_refreshSuccess'))
+    if (showNotification) {
+      showMessage('success', t('i18nManager_refreshSuccess'))
+    }
   } catch (error) {
     console.error('Error loading translations:', error)
     // 显示刷新失败提示
-    showMessage('error', t('i18nManager_refreshFailed'))
+    if (showNotification) {
+      showMessage('error', t('i18nManager_refreshFailed'))
+    }
   }
 }
 
@@ -642,8 +646,8 @@ export const languages = {
 onMounted(async () => {
   console.log('I18nManager mounted')
   
-  // 等待所有数据加载完成
-  await loadTranslations()
+  // 等待所有数据加载完成，不显示刷新提示
+  await loadTranslations(false)
   
   // 初始化新翻译对象
   if (availableLanguages.value) {
