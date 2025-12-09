@@ -131,6 +131,9 @@ onMounted(async () => {
     productName.value = route.params.name
     imageType.value = route.params.type || '6views'
     
+    // 设置浏览器标题为当前产品名称
+    document.title = productName.value
+    
     console.log('Product_Viewimages 初始化:', {
       productName: productName.value,
       imageType: imageType.value
@@ -724,6 +727,13 @@ const retryLoading = () => {
   images.value = []
   initGallery()
 }
+
+// 监听产品名称变化，更新浏览器标题
+watch(productName, (newName) => {
+  if (newName && newName.trim() !== '') {
+    document.title = newName
+  }
+})
 </script>
 
 <style scoped>

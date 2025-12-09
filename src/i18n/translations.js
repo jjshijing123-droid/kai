@@ -422,7 +422,7 @@ const baseTranslations = {
     "productViewimages_loadFailed": "Failed to load images: {message}"
   },
   "zh-CN": {
-    "header_i18nManager": "翻译管理器",
+    "header_i18nManager": "翻译管理",
     "header_productManager": "产品管理",
     "header_language": "语言",
     "drawer_navigation": "导航",

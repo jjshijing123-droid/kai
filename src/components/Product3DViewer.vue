@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import Product3DHeader from './Product3DHeader.vue'
@@ -290,6 +290,9 @@ let isHorizontalDrag = false
 onMounted(async () => {
   productName.value = route.params.name
   
+  // 设置浏览器标题为当前产品名称
+  document.title = productName.value
+  
   // 添加调试日志
   console.log('Product3DViewer 初始化:', {
     routeParams: route.params,
@@ -312,6 +315,13 @@ onMounted(async () => {
 
 onUnmounted(() => {
   cleanup()
+})
+
+// 监听产品名称变化，更新浏览器标题
+watch(productName, (newName) => {
+  if (newName && newName.trim() !== '') {
+    document.title = newName
+  }
 })
 
 // 方法
