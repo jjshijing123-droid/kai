@@ -275,34 +275,31 @@ async function initGallery() {
     }
 }
 
-// 基于文件命名规则的图片检测，避免调用本地API
+// 从后端API获取可用图片
 async function detectAvailableImages() {
   let validImages = []
   const folderName = imageType.value === 'other' ? 'images_other' : 'images_6Views'
   const basePath = `Product/${productName.value}/${folderName}`
   
-  console.log(`🔍 正在检测 ${folderName} 文件夹中的图片:`, basePath)
+  console.log(`🔍 正在从后端获取 ${folderName} 文件夹中的图片:`, basePath)
   
   try {
-    // 图片文件命名规则：image_00.webp 到 image_05.webp（6个视图）
-    const expectedImageNames = ['image_00.webp', 'image_01.webp', 'image_02.webp', 'image_03.webp', 'image_04.webp', 'image_05.webp']
+    // 调用后端API获取图片列表
+    const response = await fetch(`http://localhost:3000/api/get-images/${basePath}`)
+    const data = await response.json()
     
-    // 构建并验证图片URL
-    for (let i = 0; i < expectedImageNames.length; i++) {
-      const fileName = expectedImageNames[i]
-      const url = `/${basePath}/${fileName}`
-      
+    if (data.success && data.images && data.images.length > 0) {
       // 构建图片对象
-      validImages.push({
-        index: i,
-        url: url,
-        format: 'webp',
+      validImages = data.images.map((image, index) => ({
+        index: index,
+        url: image.url,
+        format: image.name.split('.').pop().toLowerCase(),
         loaded: false,
-        alt: `${fileName} (WEBP)`
-      })
+        alt: `${image.name} (${image.name.split('.').pop().toUpperCase()})`
+      }))
     }
     
-    console.log(`🎉 图片检测完成，共生成 ${validImages.length} 张图片URL`)
+    console.log(`🎉 图片检测完成，共获取 ${validImages.length} 张图片`)
     
     if (validImages.length === 0) {
       const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'

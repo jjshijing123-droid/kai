@@ -122,4 +122,28 @@ router.get('/download/:filePath/:fileName', async (req, res) => {
   }
 });
 
+// 获取文件夹内所有图片文件
+router.get('/get-images/:folderPath(.*)', async (req, res) => {
+  try {
+    const { folderPath } = req.params;
+    console.log(`🔍 获取文件夹内图片: ${folderPath}`);
+    
+    const images = await fileService.getImagesInFolder(folderPath);
+    
+    res.json({
+      success: true,
+      images: images,
+      folderPath: folderPath
+    });
+    
+  } catch (error) {
+    console.error('获取文件夹内图片失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取文件夹内图片失败',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

@@ -144,6 +144,45 @@ class FileService {
       throw new Error(`检测文件夹失败: ${error.message}`);
     }
   }
+
+  /**
+   * 获取文件夹内所有图片文件
+   */
+  async getImagesInFolder(folderPath) {
+    try {
+      const fullPath = path.join(this.serverPath, folderPath);
+      
+      if (!fs.existsSync(fullPath)) {
+        return [];
+      }
+      
+      const stats = fs.statSync(fullPath);
+      if (!stats.isDirectory()) {
+        return [];
+      }
+      
+      const items = fs.readdirSync(fullPath, { withFileTypes: true });
+      const images = [];
+      
+      for (const item of items) {
+        if (item.isFile() && this.isImageFile(item.name)) {
+          images.push({
+            name: item.name,
+            url: `/${folderPath}/${item.name}`,
+            path: `${folderPath}/${item.name}`
+          });
+        }
+      }
+      
+      // 按文件名排序
+      images.sort((a, b) => a.name.localeCompare(b.name));
+      
+      return images;
+    } catch (error) {
+      console.error('获取文件夹内图片失败:', error);
+      return [];
+    }
+  }
 }
 
 module.exports = FileService;
