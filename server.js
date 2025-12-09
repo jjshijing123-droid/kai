@@ -34,6 +34,8 @@ app.use(express.urlencoded({ extended: true }));
 // 静态文件服务 - 必须在API路由之前
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'dist')));
+// 产品图片静态文件服务
+app.use('/Product', express.static(path.join(__dirname, 'Product')));
 
 // ========== API路由 ==========
 

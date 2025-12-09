@@ -267,61 +267,39 @@ async function initGallery() {
     }
 }
 
-// 基于API的图片检测，支持任意命名的图片文件
+// 基于文件命名规则的图片检测，避免调用本地API
 async function detectAvailableImages() {
   let validImages = []
-  const folderPath = getImageFolderPath()
-  const expectedFolderName = imageType.value === 'other' ? 'images_other' : 'images_6Views'
+  const folderName = imageType.value === 'other' ? 'images_other' : 'images_6Views'
+  const basePath = `Product/${productName.value}/${folderName}`
   
-  console.log(`🔍 正在检测 ${expectedFolderName} 文件夹中的图片:`, folderPath)
+  console.log(`🔍 正在检测 ${folderName} 文件夹中的图片:`, basePath)
   
   try {
-    // 调用API获取文件夹详情
-    const encodedPath = encodeURIComponent(folderPath)
-    const response = await fetch(`http://localhost:3000/api/folder/${encodedPath}/details`)
+    // 图片文件命名规则：image_00.webp 到 image_05.webp（6个视图）
+    const expectedImageNames = ['image_00.webp', 'image_01.webp', 'image_02.webp', 'image_03.webp', 'image_04.webp', 'image_05.webp']
     
-    if (!response.ok) {
-      throw new Error(`获取文件夹详情失败: ${response.status}`)
-    }
-    
-    const result = await response.json()
-    
-    if (!result.success) {
-      throw new Error(result.message || '获取文件夹详情失败')
-    }
-    
-    const folderDetails = result.folder
-    console.log(`✅ 成功获取文件夹详情，共找到 ${folderDetails.files.length} 个文件`)
-    
-    // 图片扩展名列表
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg']
-    
-    // 筛选图片文件
-    const imageFiles = folderDetails.files.filter(file => {
-      const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
-      return imageExtensions.includes(ext)
-    })
-    
-    console.log(`✅ 筛选出 ${imageFiles.length} 张图片文件`)
-    
-    if (imageFiles.length === 0) {
-      const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
-      throw new Error(`${folderType}文件夹中未找到可用的图片文件`)
-    }
-    
-    // 构建有效的图片列表
-    validImages = imageFiles.map((file, index) => {
-      const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.') + 1)
-      return {
-        index,
-        url: `/${file.path}`,
-        format: ext,
+    // 构建并验证图片URL
+    for (let i = 0; i < expectedImageNames.length; i++) {
+      const fileName = expectedImageNames[i]
+      const url = `/${basePath}/${fileName}`
+      
+      // 构建图片对象
+      validImages.push({
+        index: i,
+        url: url,
+        format: 'webp',
         loaded: false,
-        alt: `${file.name} (${ext.toUpperCase()})`
-      }
-    })
+        alt: `${fileName} (WEBP)`
+      })
+    }
     
-    console.log(`🎉 图片检测完成，共找到 ${validImages.length} 张图片`)
+    console.log(`🎉 图片检测完成，共生成 ${validImages.length} 张图片URL`)
+    
+    if (validImages.length === 0) {
+      const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
+      throw new Error(`${folderType}文件夹为空或未找到可用图片`)
+    }
     
     return validImages
   } catch (error) {

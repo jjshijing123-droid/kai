@@ -215,27 +215,45 @@ const CONFIG = {
 // 计算属性
 const currentImageSrc = computed(() => {
   // 简化的验证逻辑
-  if (!productName.value) {
-    console.error('❌ Product3DViewer: productName 为空')
+  if (!productName.value || productName.value.trim() === '') {
+    console.error('❌ Product3DViewer: productName 为空或无效')
     return ''
   }
   
   if (!enabledViews.value || enabledViews.value.length === 0) {
     // 使用默认路径
     const frame = currentFrame.value.toString().padStart(2, '0')
-    return `/Product/${productName.value}/view1/image_${frame}${CONFIG.imageExtension}`
+    const url = `/Product/${productName.value}/view1/image_${frame}${CONFIG.imageExtension}`
+    console.debug('📸 生成默认图片URL:', url)
+    return url
   }
   
   const view = enabledViews.value[currentViewIndex.value]
   if (!view) {
     // 使用默认路径
     const frame = currentFrame.value.toString().padStart(2, '0')
-    return `/Product/${productName.value}/view1/image_${frame}${CONFIG.imageExtension}`
+    const url = `/Product/${productName.value}/view1/image_${frame}${CONFIG.imageExtension}`
+    console.debug('📸 生成默认图片URL:', url)
+    return url
   }
   
-  // 使用视图路径，但不做过于严格的验证
+  // 使用视图路径，并添加严格的验证
   const frame = currentFrame.value.toString().padStart(2, '0')
-  const imagePath = `${view.path}image_${frame}${CONFIG.imageExtension}`
+  
+  // 验证并修复视图路径
+  let basePath = view.path
+  if (!basePath || basePath.trim() === '' || !basePath.startsWith('/Product/')) {
+    // 路径无效，使用默认路径
+    basePath = `/Product/${productName.value}/${view.name}/`
+    console.debug('⚠️ 视图路径无效，使用默认路径:', basePath)
+  } else if (!basePath.endsWith('/')) {
+    // 确保路径以斜杠结尾
+    basePath += '/'
+    console.debug('📌 路径缺少斜杠，自动添加:', basePath)
+  }
+  
+  const imagePath = `${basePath}image_${frame}${CONFIG.imageExtension}`
+  console.debug('📸 生成图片URL:', imagePath)
   return imagePath
 })
 
