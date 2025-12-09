@@ -1,7 +1,7 @@
 <template>
   <div class="product-3d-viewer" :class="{ 'immersive-mode': isImmersiveMode }">
     <!-- 新的3D页面Header - 在沉浸模式下隐藏 -->
-    <Product3DHeader v-if="!isImmersiveMode" />
+  <Product3DHeader v-if="!isImmersiveMode" :visible="allImagesLoaded" />
     
 
     <!-- 3D查看器主容器 -->
@@ -56,7 +56,7 @@
     </div>
 
     <!-- 控制按钮容器 - 在沉浸模式下隐藏 -->
-    <div v-if="!isImmersiveMode" class="controls-container">
+    <div v-if="!isImmersiveMode && allImagesLoaded" class="controls-container">
       <button class="auto-rotate-btn" @click="toggleAutoRotation">
         {{ isAutoRotating ? t('product3dViewer_stopRotation') : t('product3dViewer_autoRotate') }}
       </button>
@@ -271,6 +271,11 @@ const enabledViews = computed(() => {
   return views
 })
 
+// 添加计算属性，判断是否所有图片都已加载完成
+const allImagesLoaded = computed(() => {
+  return loadedCount.value === totalImages.value && loadedCount.value > 0
+})
+
 
 // 动画相关变量
 let autoRotateId = null
@@ -291,6 +296,9 @@ onMounted(async () => {
     productName: productName.value,
     fullRoute: route.fullPath
   })
+  
+  // 立即初始化事件监听器，不等待图片加载完成
+  initializeEvents()
   
   // 验证产品名称
   if (!productName.value || productName.value.trim() === '') {

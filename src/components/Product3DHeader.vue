@@ -14,6 +14,7 @@
     <div class="right-buttons">
       <!-- 下载按钮 -->
       <Button 
+        v-if="props.visible"
         @click="handleDownload" 
         class="download-button"
         variant="no"
@@ -44,6 +45,14 @@ import LucideIcon from './ui/LucideIcon.vue'
 
 const { t } = useI18n()
 const router = useRouter()
+
+// 添加props
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    default: true
+  }
+})
 
 // 下载按钮点击事件
 const handleDownload = () => {

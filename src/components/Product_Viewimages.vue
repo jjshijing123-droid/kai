@@ -1,7 +1,7 @@
 <template>
   <div class="image-gallery">
     <!-- 使用Product3DHeader组件作为页面头部 -->
-    <Product3DHeader />
+  <Product3DHeader :visible="allImagesLoaded" />
     
     <!-- 主画廊容器 -->
     <div class="gallery-container">
@@ -114,6 +114,11 @@ const currentImageAlt = computed(() => {
   return images.value[currentIndex.value]?.alt || '主展示图'
 })
 
+// 添加计算属性，判断是否所有图片都已加载完成
+const allImagesLoaded = computed(() => {
+  return images.value.length > 0 && images.value.every(img => img.loaded)
+})
+
 // 处理下载事件
 const handleDownloadAllImages = () => {
   downloadAllImages()
@@ -131,6 +136,11 @@ onMounted(async () => {
       imageType: imageType.value
     })
     
+    // 立即添加事件监听，不等待图片加载完成
+    document.addEventListener('keydown', handleKeyboardNavigation)
+    document.addEventListener('download-all-images', handleDownloadAllImages)
+    document.addEventListener('toggle-3d-drawer', handleDrawerToggle)
+    
     if (!productName.value || productName.value.trim() === '') {
       console.error('Product_Viewimages: 产品名称为空或无效')
       router.push('/')
@@ -139,11 +149,6 @@ onMounted(async () => {
     
     // 初始化图片展示
     await initGallery()
-    
-    // 添加事件监听
-    document.addEventListener('keydown', handleKeyboardNavigation)
-    document.addEventListener('download-all-images', handleDownloadAllImages)
-    document.addEventListener('toggle-3d-drawer', handleDrawerToggle)
     
   } catch (error) {
     console.error('初始化失败:', error)
