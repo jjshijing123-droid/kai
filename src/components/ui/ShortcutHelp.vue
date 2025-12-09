@@ -66,7 +66,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { useKeyboardShortcuts, createShortcutRegistry } from '../../composables/useKeyboardShortcuts'
+import { createShortcutRegistry, getGlobalKeyboardShortcuts } from '../../composables/useKeyboardShortcuts'
 import LucideIcon from './LucideIcon.vue'
 
 // Props
@@ -86,8 +86,8 @@ const activeCategory = ref('navigation')
 const shortcuts = ref([])
 
 // 快捷键管理
-const { getShortcutsByCategory } = createShortcutRegistry()
-const { register, setEnabled } = useKeyboardShortcuts()
+const { getShortcutsByCategory, registerCommonShortcuts, registerProductShortcuts } = createShortcutRegistry()
+const { setEnabled } = getGlobalKeyboardShortcuts()
 
 // 分类定义
 const categories = [
@@ -153,8 +153,6 @@ const handleOverlayClick = () => {
 
 // 初始化预设快捷键
 const initializeShortcuts = () => {
-  const { registerCommonShortcuts, registerProductShortcuts } = createShortcutRegistry()
-  
   registerCommonShortcuts()
   registerProductShortcuts()
   

@@ -33,7 +33,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // 静态文件服务 - 必须在API路由之前
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'dist')));
 // 产品图片静态文件服务
 app.use('/Product', express.static(path.join(__dirname, 'Product')));
 
@@ -428,11 +427,6 @@ app.use((req, res, next) => {
     const indexPath = path.join(__dirname, 'index.html');
     if (fs.existsSync(indexPath)) {
       return res.sendFile(indexPath);
-    }
-    // 检查index.html是否存在于dist目录
-    const distIndexPath = path.join(__dirname, 'dist', 'index.html');
-    if (fs.existsSync(distIndexPath)) {
-      return res.sendFile(distIndexPath);
     }
   }
   next();

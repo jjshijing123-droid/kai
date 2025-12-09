@@ -19,14 +19,18 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from './components/Header.vue'
 import AdminLoginModal from './components/AdminLoginModal.vue'
 import { useAdminAuth } from './composables/useAdminAuth.js'
+import { createShortcutRegistry } from './composables/useKeyboardShortcuts.js'
 
 const route = useRoute()
 const { showLoginModal, closeLoginModal } = useAdminAuth()
+
+// 获取快捷键注册器实例并挂载事件监听器
+const { mount, unmount } = createShortcutRegistry()
 
 // 检测是否为3D查看器页面或图片展示页面（这些页面使用自己的header）
 const is3DViewerPage = computed(() => {
@@ -37,6 +41,15 @@ const is3DViewerPage = computed(() => {
 const handleLoginSuccess = () => {
   closeLoginModal()
 }
+
+// 挂载和卸载事件监听器
+onMounted(() => {
+  mount()
+})
+
+onBeforeUnmount(() => {
+  unmount()
+})
 </script>
 
 

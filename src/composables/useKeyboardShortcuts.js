@@ -197,9 +197,7 @@ export function useKeyboardShortcuts() {
     }
   }
 
-  // 自动挂载和卸载
-  onMounted(mount)
-  onBeforeUnmount(unmount)
+
 
   return {
     register,
@@ -253,10 +251,27 @@ export const CommonShortcuts = {
 }
 
 /**
- * 创建快捷键目录组件
+ * 快捷键注册器
+ * 用于管理和注册应用程序的快捷键
  */
-export function createShortcutRegistry() {
-  const { register, getShortcutsByCategory } = useKeyboardShortcuts()
+// 全局快捷键实例
+let globalKeyboardShortcuts = null
+
+/**
+ * 获取全局快捷键实例
+ */
+export function getGlobalKeyboardShortcuts() {
+  if (!globalKeyboardShortcuts) {
+    globalKeyboardShortcuts = useKeyboardShortcuts()
+  }
+  return globalKeyboardShortcuts
+}
+
+/**
+ * 注册通用快捷键
+ */
+export function registerCommonShortcuts() {
+  const { register } = getGlobalKeyboardShortcuts()
   
   const categories = {
     navigation: 'navigation',
@@ -267,140 +282,162 @@ export function createShortcutRegistry() {
     system: 'system'
   }
   
-  /**
-   * 注册通用快捷键
-   */
-  const registerCommonShortcuts = () => {
-    // 保存
-    register(CommonShortcuts.save, () => {
-      // 触发保存操作
-      document.dispatchEvent(new CustomEvent('shortcut:save'))
-    }, {
-      description: '保存当前文档',
-      category: categories.file
-    })
-    
-    // 复制
-    register(CommonShortcuts.copy, (e) => {
-      if (document.activeElement?.tagName === 'INPUT' || 
-          document.activeElement?.tagName === 'TEXTAREA') {
-        return // 不在输入框中处理
-      }
-      document.execCommand('copy')
-    }, {
-      description: '复制选中文本',
-      category: categories.editing
-    })
-    
-    // 粘贴
-    register(CommonShortcuts.paste, (e) => {
-      if (document.activeElement?.tagName === 'INPUT' || 
-          document.activeElement?.tagName === 'TEXTAREA') {
-        return // 不在输入框中处理
-      }
-      document.execCommand('paste')
-    }, {
-      description: '粘贴文本',
-      category: categories.editing
-    })
-    
-    // 取消/关闭
-    register(CommonShortcuts.escape, () => {
-      // 触发取消操作
-      document.dispatchEvent(new CustomEvent('shortcut:escape'))
-    }, {
-      description: '取消当前操作或关闭对话框',
-      category: categories.navigation
-    })
-    
-    // 搜索
-    register(CommonShortcuts.focusSearch, () => {
-      const searchInput = document.querySelector('input[type="search"], input[placeholder*="搜索"], input[placeholder*="search"]')
-      if (searchInput) {
-        searchInput.focus()
-      } else {
-        document.dispatchEvent(new CustomEvent('shortcut:search'))
-      }
-    }, {
-      description: '聚焦到搜索框',
-      category: categories.navigation
-    })
-    
-    // 主题切换
-    register(CommonShortcuts.toggleTheme, () => {
-      document.dispatchEvent(new CustomEvent('shortcut:toggle-theme'))
-    }, {
-      description: '切换深色/浅色主题',
-      category: categories.view
-    })
-    
-    // 语言切换
-    register(CommonShortcuts.switchLanguage, () => {
-      document.dispatchEvent(new CustomEvent('shortcut:switch-language'))
-    }, {
-      description: '切换界面语言',
-      category: categories.view
-    })
+  // 保存
+  register(CommonShortcuts.save, () => {
+    // 触发保存操作
+    document.dispatchEvent(new CustomEvent('shortcut:save'))
+  }, {
+    description: '保存当前文档',
+    category: categories.file
+  })
+  
+  // 复制
+  register(CommonShortcuts.copy, (e) => {
+    if (document.activeElement?.tagName === 'INPUT' || 
+        document.activeElement?.tagName === 'TEXTAREA') {
+      return // 不在输入框中处理
+    }
+    document.execCommand('copy')
+  }, {
+    description: '复制选中文本',
+    category: categories.editing
+  })
+  
+  // 粘贴
+  register(CommonShortcuts.paste, (e) => {
+    if (document.activeElement?.tagName === 'INPUT' || 
+        document.activeElement?.tagName === 'TEXTAREA') {
+      return // 不在输入框中处理
+    }
+    document.execCommand('paste')
+  }, {
+    description: '粘贴文本',
+    category: categories.editing
+  })
+  
+  // 取消/关闭
+  register(CommonShortcuts.escape, () => {
+    // 触发取消操作
+    document.dispatchEvent(new CustomEvent('shortcut:escape'))
+  }, {
+    description: '取消当前操作或关闭对话框',
+    category: categories.navigation
+  })
+  
+  // 搜索
+  register(CommonShortcuts.focusSearch, () => {
+    const searchInput = document.querySelector('input[type="search"], input[placeholder*="搜索"], input[placeholder*="search"]')
+    if (searchInput) {
+      searchInput.focus()
+    } else {
+      document.dispatchEvent(new CustomEvent('shortcut:search'))
+    }
+  }, {
+    description: '聚焦到搜索框',
+    category: categories.navigation
+  })
+  
+  // 主题切换
+  register(CommonShortcuts.toggleTheme, () => {
+    document.dispatchEvent(new CustomEvent('shortcut:toggle-theme'))
+  }, {
+    description: '切换深色/浅色主题',
+    category: categories.view
+  })
+  
+  // 语言切换
+  register(CommonShortcuts.switchLanguage, () => {
+    document.dispatchEvent(new CustomEvent('shortcut:switch-language'))
+  }, {
+    description: '切换界面语言',
+    category: categories.view
+  })
+}
+
+/**
+ * 注册产品管理相关快捷键
+ */
+export function registerProductShortcuts() {
+  const { register } = getGlobalKeyboardShortcuts()
+  
+  const categories = {
+    navigation: 'navigation',
+    editing: 'editing',
+    file: 'file',
+    view: 'view',
+    developer: 'developer',
+    system: 'system'
   }
   
-  /**
-   * 注册产品管理相关快捷键
-   */
-  const registerProductShortcuts = () => {
-    // 新建产品
-    register('ctrl+shift+n', () => {
-      document.dispatchEvent(new CustomEvent('shortcut:new-product'))
-    }, {
-      description: '新建产品',
-      category: categories.file
-    })
-    
-    // 编辑产品
-    register('ctrl+e', () => {
-      document.dispatchEvent(new CustomEvent('shortcut:edit-product'))
-    }, {
-      description: '编辑选中产品',
-      category: categories.editing
-    })
-    
-    // 删除产品
-    register('ctrl+delete', () => {
-      document.dispatchEvent(new CustomEvent('shortcut:delete-product'))
-    }, {
-      description: '删除选中产品',
-      category: categories.editing
-    })
-    
-    // 批量操作
-    register('ctrl+b', () => {
-      document.dispatchEvent(new CustomEvent('shortcut:batch-operation'))
-    }, {
-      description: '批量操作',
-      category: categories.editing
-    })
-    
-    // 3D 视图
-    register('ctrl+3', () => {
-      document.dispatchEvent(new CustomEvent('shortcut:toggle-3d-view'))
-    }, {
-      description: '切换 3D 视图',
-      category: categories.view
-    })
-    
-    // 列表视图
-    register('ctrl+1', () => {
-      document.dispatchEvent(new CustomEvent('shortcut:list-view'))
-    }, {
-      description: '列表视图',
-      category: categories.view
-    })
-  }
+  // 新建产品
+  register('ctrl+shift+n', () => {
+    document.dispatchEvent(new CustomEvent('shortcut:new-product'))
+  }, {
+    description: '新建产品',
+    category: categories.file
+  })
+  
+  // 编辑产品
+  register('ctrl+e', () => {
+    document.dispatchEvent(new CustomEvent('shortcut:edit-product'))
+  }, {
+    description: '编辑选中产品',
+    category: categories.editing
+  })
+  
+  // 删除产品
+  register('ctrl+delete', () => {
+    document.dispatchEvent(new CustomEvent('shortcut:delete-product'))
+  }, {
+    description: '删除选中产品',
+    category: categories.editing
+  })
+  
+  // 批量操作
+  register('ctrl+b', () => {
+    document.dispatchEvent(new CustomEvent('shortcut:batch-operation'))
+  }, {
+    description: '批量操作',
+    category: categories.editing
+  })
+  
+  // 3D 视图
+  register('ctrl+3', () => {
+    document.dispatchEvent(new CustomEvent('shortcut:toggle-3d-view'))
+  }, {
+    description: '切换 3D 视图',
+    category: categories.view
+  })
+  
+  // 列表视图
+  register('ctrl+1', () => {
+    document.dispatchEvent(new CustomEvent('shortcut:list-view'))
+  }, {
+    description: '列表视图',
+    category: categories.view
+  })
+}
+
+/**
+ * 创建快捷键目录组件（兼容旧代码）
+ */
+export function createShortcutRegistry() {
+  const keyboardShortcuts = getGlobalKeyboardShortcuts()
   
   return {
     registerCommonShortcuts,
     registerProductShortcuts,
-    categories,
-    getShortcutsByCategory
+    categories: {
+      navigation: 'navigation',
+      editing: 'editing',
+      file: 'file',
+      view: 'view',
+      developer: 'developer',
+      system: 'system'
+    },
+    getShortcutsByCategory: keyboardShortcuts.getShortcutsByCategory,
+    mount: keyboardShortcuts.mount,
+    unmount: keyboardShortcuts.unmount
   }
 }
 

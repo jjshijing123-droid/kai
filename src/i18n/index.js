@@ -179,7 +179,7 @@ class I18nService {
       console.log('Saving translations data to backend:', translationsData)
       
       // 调用后端API保存所有翻译
-      const response = await fetch('http://localhost:3000/api/i18n/translations', {
+      const response = await fetch('/api/i18n/translations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -212,7 +212,7 @@ class I18nService {
     try {
       console.log('Adding translation key:', key, translationsData)
       
-      const response = await fetch('http://localhost:3000/api/i18n/translations/keys', {
+      const response = await fetch('/api/i18n/translations/keys', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ class I18nService {
     try {
       console.log('Updating translation key:', key, lang, value)
       
-      const response = await fetch(`http://localhost:3000/api/i18n/translations/keys/${encodeURIComponent(key)}`, {
+      const response = await fetch(`/api/i18n/translations/keys/${encodeURIComponent(key)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -268,7 +268,7 @@ class I18nService {
     try {
       console.log('Deleting translation key:', key)
       
-      const response = await fetch(`http://localhost:3000/api/i18n/translations/keys/${encodeURIComponent(key)}`, {
+      const response = await fetch(`/api/i18n/translations/keys/${encodeURIComponent(key)}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
