@@ -728,7 +728,7 @@ const baseTranslations = {
     "common_documentation": "文档",
     "common_support": "支持",
     "common_feedback": "反馈",
-    "common_about": "关于",
+    "common_about": "关于888",
     "common_version": "版本",
     "common_copyright": "版权",
     "common_contact_us": "联系我们",
