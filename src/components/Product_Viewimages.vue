@@ -101,10 +101,7 @@ const drawerVisible = ref(false)
 
 // 配置
 const CONFIG = {
-  imagePrefix: 'image_',
-  imageExtensions: ['.webp', '.jpg', '.png'],
   preloadCount: 3,
-  maxFrames: 20,
   catalogUrl: '/data/product-catalog.json'
 }
 
@@ -270,218 +267,81 @@ async function initGallery() {
     }
 }
 
-// 基于catalog和检测的优化图片检测
+// 基于API的图片检测，支持任意命名的图片文件
 async function detectAvailableImages() {
-  const validImages = []
+  let validImages = []
   const folderPath = getImageFolderPath()
   const expectedFolderName = imageType.value === 'other' ? 'images_other' : 'images_6Views'
   
   console.log(`🔍 正在检测 ${expectedFolderName} 文件夹中的图片:`, folderPath)
   
-  // 首先检查文件夹是否存在
-  const folderExists = await checkFolderExists(folderPath)
-  
-  if (!folderExists) {
-    console.error(`❌ 指定图片文件夹不存在: ${folderPath}`)
+  try {
+    // 调用API获取文件夹详情
+    const encodedPath = encodeURIComponent(folderPath)
+    const response = await fetch(`http://localhost:3000/api/folder/${encodedPath}/details`)
+    
+    if (!response.ok) {
+      throw new Error(`获取文件夹详情失败: ${response.status}`)
+    }
+    
+    const result = await response.json()
+    
+    if (!result.success) {
+      throw new Error(result.message || '获取文件夹详情失败')
+    }
+    
+    const folderDetails = result.folder
+    console.log(`✅ 成功获取文件夹详情，共找到 ${folderDetails.files.length} 个文件`)
+    
+    // 图片扩展名列表
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg']
+    
+    // 筛选图片文件
+    const imageFiles = folderDetails.files.filter(file => {
+      const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
+      return imageExtensions.includes(ext)
+    })
+    
+    console.log(`✅ 筛选出 ${imageFiles.length} 张图片文件`)
+    
+    if (imageFiles.length === 0) {
+      const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
+      throw new Error(`${folderType}文件夹中未找到可用的图片文件`)
+    }
+    
+    // 构建有效的图片列表
+    validImages = imageFiles.map((file, index) => {
+      const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.') + 1)
+      return {
+        index,
+        url: `/${file.path}`,
+        format: ext,
+        loaded: false,
+        alt: `${file.name} (${ext.toUpperCase()})`
+      }
+    })
+    
+    console.log(`🎉 图片检测完成，共找到 ${validImages.length} 张图片`)
+    
+    return validImages
+  } catch (error) {
+    console.error(`❌ 检测图片失败:`, error.message)
     const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
-    throw new Error(`${folderType}文件夹不存在，请检查产品文件夹结构`)
+    throw new Error(`${folderType}文件夹检测失败: ${error.message}`)
   }
-  
-  console.log(`✅ 指定图片文件夹存在: ${folderPath}`)
-  
-  // 严格按指定的文件夹路径检测图片，不再尝试其他路径
-  const productInfo = getProductFromCatalog()
-  
-  if (productInfo) {
-    // 使用catalog信息快速生成图片列表
-    const targetFolder = imageType.value === 'other'
-      ? productInfo.additionalImages.other
-      : productInfo.additionalImages.sixViews
-    
-    console.log('📂 使用catalog信息:', targetFolder)
-    
-    // 验证catalog路径与实际检测的文件夹是否一致
-    if (!targetFolder.includes(expectedFolderName)) {
-      console.warn(`⚠️ Catalog路径与期望的文件夹不匹配，可能存在配置问题`)
-      console.warn(`期望: ${expectedFolderName}, 实际: ${targetFolder}`)
-    }
-    
-    // 基于catalog的fileCount生成预期的图片URL列表
-    const expectedCount = getExpectedImageCount(productInfo)
-    
-    for (let i = 0; i < expectedCount; i++) {
-      const paddedIndex = i.toString().padStart(2, '0')
-      
-      // 尝试不同的图片格式
-      const formats = ['webp', 'png', 'jpg']
-      let imageFound = false
-      
-      for (const format of formats) {
-        const url = `${targetFolder}${CONFIG.imagePrefix}${paddedIndex}.${format}`
-        
-        // 并行检查图片是否存在
-        try {
-          const exists = await checkImageExists(url)
-          if (exists) {
-            validImages.push({
-              index: i,
-              url: url,
-              format: format,
-              loaded: false,
-              alt: `${t('productViewimages_thumbnailAlt').replace('{index}', i + 1)} (${format.toUpperCase()})`
-            })
-            imageFound = true
-            console.log(`✅ 找到图片: ${url}`)
-            break
-          }
-        } catch (error) {
-          console.warn(`❌ 检查图片失败: ${url}`, error.message)
-        }
-      }
-      
-      // 更新进度
-      const progress = Math.round(((i + 1) / expectedCount) * 100)
-      // 确保进度不超过100%
-      loadingProgress.value = Math.min(progress, 100)
-      
-      // 每10张图片让出一次主线程
-      if (i % 10 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 0))
-      }
-    }
-  } else {
-    // Fallback: 如果没有catalog信息，使用原有的检测方法
-    console.log('🔍 使用fallback检测方法，直接检查文件夹:', folderPath)
-    
-    // 首先检测首张图片的格式
-    const firstImageWebp = `${folderPath}/${CONFIG.imagePrefix}00.webp`
-    const firstImagePng = `${folderPath}/${CONFIG.imagePrefix}00.png`
-    
-    const webpExists = await checkImageExists(firstImageWebp)
-    const pngExists = await checkImageExists(firstImagePng)
-    
-    if (!webpExists && !pngExists) {
-      console.error(`❌ 在指定文件夹中未找到任何图片: ${folderPath}`)
-      throw new Error('指定图片文件夹中未找到可用的图片文件')
-    }
-    
-    console.log(`✅ 找到可用图片格式: webp=${webpExists}, png=${pngExists}`)
-    
-    // 检测所有格式的图片
-    const formats = []
-    if (webpExists) formats.push({ format: 'webp', offset: 0 })
-    if (pngExists) formats.push({ format: 'png', offset: 100 })
-    
-    for (const { format, offset } of formats) {
-      console.log(`🔍 检测 ${format.toUpperCase()} 格式图片...`)
-      
-      for (let i = 0; i < CONFIG.maxFrames; i++) {
-        const paddedIndex = i.toString().padStart(2, '0')
-        const url = `${folderPath}/${CONFIG.imagePrefix}${paddedIndex}.${format}`
-        
-        const exists = await checkImageExists(url)
-        if (exists) {
-          validImages.push({
-            index: i + offset,
-            url: url,
-            format: format,
-            loaded: false,
-            alt: `${t('productViewimages_thumbnailAlt').replace('{index}', i + 1)} (${format.toUpperCase()})`
-          })
-          console.log(`✅ 找到图片: ${url}`)
-        }
-        
-        // 进度更新
-        if (i % 10 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 0))
-        }
-      }
-    }
-    
-    // 按索引排序
-    validImages.sort((a, b) => a.index - b.index)
-  }
-  
-  console.log(`🎉 图片检测完成，共找到 ${validImages.length} 张图片`)
-  
-  return validImages
 }
 
-// 从catalog获取预期的图片数量
-function getExpectedImageCount(productInfo) {
-  if (imageType.value === 'other') {
-    // 对于other类型，尝试从folder中读取文件数量
-    const otherSize = productInfo.totalSize || 0
-    return Math.min(Math.floor(otherSize / 100000), CONFIG.maxFrames) // 估算
-  } else {
-    // 对于6views类型，通常有固定数量的图片
-    return Math.min(productInfo.fileCount || CONFIG.maxFrames, CONFIG.maxFrames)
-  }
-}
+
 
 // 获取图片文件夹路径
 function getImageFolderPath() {
   const folderName = imageType.value === 'other' ? 'images_other' : 'images_6Views'
-  const path = `/Product/${productName.value}/${folderName}`
+  const path = `Product/${productName.value}/${folderName}`
   console.log('构建的图片路径:', path)
   return path
 }
 
-// 检查文件夹是否存在
-async function checkFolderExists(folderPath) {
-  try {
-    const encodedPath = encodeURIComponent(folderPath)
-    const response = await fetch(`/api/check-folder/${encodedPath}`)
-    if (response.ok) {
-      const result = await response.json()
-      return result.hasFiles || false
-    }
-    return false
-  } catch (error) {
-    console.warn(`检查文件夹 ${folderPath} 失败:`, error)
-    return false
-  }
-}
 
-// 检查图片是否存在（带缓存和重试机制）
-const imageExistsCache = new Map()
-
-async function checkImageExists(url, retryCount = 0) {
-  const maxRetries = 2
-  
-  // 检查缓存
-  if (imageExistsCache.has(url)) {
-    return imageExistsCache.get(url)
-  }
-  
-  try {
-    // 使用更轻量的HEAD请求，但添加超时和错误处理
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
-    
-    const response = await fetch(url, {
-      method: 'HEAD',
-      signal: controller.signal
-    })
-    
-    clearTimeout(timeoutId)
-    const exists = response.ok
-    imageExistsCache.set(url, exists)
-    
-    return exists
-  } catch (error) {
-    console.log(`图片检查失败 (${retryCount + 1}/${maxRetries + 1}):`, url, error.message)
-    imageExistsCache.set(url, false)
-    
-    // 重试机制
-    if (retryCount < maxRetries) {
-      await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1))) // 递增延迟
-      return checkImageExists(url, retryCount + 1)
-    }
-    
-    return false
-  }
-}
 
 // 创建缩略图
 async function createThumbnails() {
