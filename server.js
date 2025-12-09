@@ -19,6 +19,8 @@ const { ProductCatalogUtils, productCatalogUtils } = require('./server/utils/pro
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const isProduction = NODE_ENV === 'production';
 
 // 初始化服务实例
 const productService = new ProductService();
@@ -27,12 +29,30 @@ const folderService = new FolderService();
 const uploadService = new UploadService();
 
 // 中间件配置
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const corsOptions = {
+  origin: isProduction ? ['http://localhost:3000', 'https://yourdomain.com'] : '*',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 生产环境安全配置
+if (isProduction) {
+  app.set('trust proxy', 1);
+  // 隐藏Express版本信息
+  app.disable('x-powered-by');
+}
 
 // 静态文件服务 - 必须在API路由之前
-app.use(express.static(path.join(__dirname, 'public')));
+if (isProduction) {
+  // 生产环境使用dist目录
+  app.use(express.static(path.join(__dirname, 'dist')));
+} else {
+  // 开发环境使用public目录
+  app.use(express.static(path.join(__dirname, 'public')));
+}
 // 产品图片静态文件服务
 app.use('/Product', express.static(path.join(__dirname, 'Product')));
 
@@ -90,6 +110,74 @@ app.use('/api', filesRouter);
 
 // 上传管理路由
 app.use('/api', uploadsRouter);
+
+// 重新生成产品目录 - 新增
+app.post('/api/products/refresh-catalog', async (req, res) => {
+  try {
+    console.log('🔄 开始重新生成产品目录...');
+    
+    // 使用已创建的productService实例获取所有产品
+    const products = await productService.getProducts();
+    
+    // 生成新的产品目录
+    const catalogData = {
+      products: [],
+      totalProducts: 0,
+      lastUpdated: new Date().toISOString(),
+      version: '2.0'
+    };
+    
+    products.forEach((product, index) => {
+      catalogData.products.push({
+        id: product.id || index + 1,
+        name: product.name,
+        folderName: product.folderName,
+        model: product.model || product.name,
+        category: product.category || 'general',
+        description: product.description || `Product model: ${product.name}`,
+        path: product.path,
+        folder: product.path + '/',
+        totalSize: product.totalSize || 0,
+        fileCount: product.fileCount || 0,
+        mainImage: `/Product/${product.name}/image_00.webp`,
+        views: {
+          view1: `/Product/${product.name}/view1/`,
+          view2: `/Product/${product.name}/view2/`,
+          view3: `/Product/${product.name}/view3/`,
+          view4: `/Product/${product.name}/view4/`
+        },
+        additionalImages: {
+          sixViews: `/Product/${product.name}/images_6Views/`,
+          other: `/Product/${product.name}/images_other/`
+        }
+      });
+    });
+    
+    // 更新总数
+    catalogData.totalProducts = catalogData.products.length;
+    
+    // 保存产品目录
+    const saved = productCatalogUtils.saveProductCatalog(catalogData);
+    
+    if (saved) {
+      console.log(`✅ 产品目录重新生成成功，共 ${catalogData.products.length} 个产品`);
+      res.json({
+        success: true,
+        message: '产品目录重新生成成功',
+        productCount: catalogData.products.length
+      });
+    } else {
+      throw new Error('保存产品目录失败');
+    }
+  } catch (error) {
+    console.error('重新生成产品目录失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '重新生成产品目录失败',
+      error: error.message
+    });
+  }
+});
 
 // 翻译管理路由 - 新增
 app.use('/api/i18n', (req, res, next) => {
@@ -419,12 +507,16 @@ app.use((err, req, res, next) => {
 app.use((req, res, next) => {
   // 如果请求不是API请求，且不是静态资源，返回index.html
   if (!req.url.startsWith('/api') && 
+      !req.url.startsWith('/Product') && 
       !req.url.startsWith('/data') && 
       !req.url.startsWith('/assets') && 
       !req.url.startsWith('/@vite') && 
       req.method === 'GET') {
-    // 检查index.html是否存在于当前目录
-    const indexPath = path.join(__dirname, 'index.html');
+    // 根据环境选择index.html路径
+    const indexPath = isProduction 
+      ? path.join(__dirname, 'dist', 'index.html') 
+      : path.join(__dirname, 'index.html');
+    
     if (fs.existsSync(indexPath)) {
       return res.sendFile(indexPath);
     }
@@ -448,9 +540,9 @@ app.use((req, res) => {
  */
 async function startServer() {
   try {
-    console.log('='.repeat(50));
-    console.log('启动产品管理服务器');
-    console.log('='.repeat(50));
+    console.log('='.repeat(60));
+    console.log(`启动产品管理服务器 - 环境: ${NODE_ENV}`);
+    console.log('='.repeat(60));
     
     // 验证产品目录数据
     const catalogData = productCatalogUtils.getProductCatalog();
@@ -464,23 +556,19 @@ async function startServer() {
     
     // 启动Express服务器
     const server = app.listen(PORT, () => {
-      console.log('='.repeat(50));
+      console.log('='.repeat(60));
       console.log(`服务器已启动，端口: ${PORT}`);
+      console.log(`环境: ${NODE_ENV}`);
+      console.log(`静态文件目录: ${isProduction ? 'dist/' : 'public/'}`);
+      console.log(`服务访问地址: http://localhost:${PORT}`);
       console.log(`产品列表API: http://localhost:${PORT}/api/products`);
       console.log(`产品目录API: http://localhost:${PORT}/api/db/products`);
-      console.log(`创建产品API: POST http://localhost:${PORT}/api/products`);
-      console.log(`重命名产品API: PUT http://localhost:${PORT}/api/products/:productName`);
-      console.log(`删除产品API: DELETE http://localhost:${PORT}/api/products/:productName}`);
-      console.log(`文件夹详情API: http://localhost:${PORT}/api/folder/:folderPath/details`);
-      console.log(`删除文件API: POST http://localhost:${PORT}/api/delete-file`);
-      console.log(`检测文件夹API: http://localhost:${PORT}/api/check-folder/:folderPath`);
-      console.log(`批量替换API: POST http://localhost:${PORT}/api/batch-replace-products`);
-      console.log('='.repeat(50));
+      console.log('='.repeat(60));
       
       // 检查服务器是否真正在监听端口
       const address = server.address();
       if (address) {
-        console.log(`✅ 服务器确实在监听 ${address.address}:${address.port}`);
+        console.log(`✅ 服务器确实在监听 ${address.address === '::' ? '0.0.0.0' : address.address}:${address.port}`);
       } else {
         console.error('❌ 服务器未能获取监听地址');
       }

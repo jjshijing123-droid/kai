@@ -470,7 +470,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
-import { useAdminAuth } from '../composables/useAdminAuth.js'
+import { useAdminAuth, showMessage } from '../composables/useAdminAuth.js'
 import AdminLoginModal from './AdminLoginModal.vue'
 import Button from './ui/button.vue'
 import Input from './ui/input.vue'
@@ -550,9 +550,35 @@ const fetchProducts = async () => {
 
 const refreshProducts = async () => {
   try {
-    await fetchFolderContent()
+    loading.value = true
+    // 先调用API重新生成产品目录
+    const response = await fetch('/api/products/refresh-catalog', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      // 目录更新成功，直接刷新产品列表
+      await fetchProducts()
+      console.log('产品目录更新成功')
+      showMessage('success', t('productManagement_refreshSuccess'))
+    } else {
+      const errorData = await response.json().catch(() => ({ message: '未知错误' }))
+      const errorMessage = errorData.message || t('productManagement_refreshFailed')
+      console.error('产品目录更新失败:', errorMessage)
+      showMessage('error', errorMessage)
+      // 尝试直接刷新产品列表，获取最新数据
+      await fetchProducts()
+    }
   } catch (error) {
-    console.error('手动刷新失败:', error)
+    console.error('刷新操作失败:', error)
+    showMessage('error', t('productManagement_refreshFailed'))
+    // 出错时尝试直接刷新产品列表
+    await fetchProducts()
+  } finally {
+    loading.value = false
   }
 }
 

@@ -7,6 +7,7 @@ const fs = require('fs');
 class ProductCatalogUtils {
   constructor() {
     this.serverPath = __dirname.replace(/server\/utils$/, '');
+    this.isProduction = process.env.NODE_ENV === 'production';
   }
 
   /**
@@ -142,14 +143,9 @@ class ProductCatalogUtils {
           catalogData.totalProducts = catalogData.products.length;
           catalogData.lastUpdated = new Date().toISOString();
           
-          // 写回文件
-          try {
-            fs.writeFileSync(catalogPath, JSON.stringify(catalogData, null, 2), 'utf8');
-            console.log(`✅ 已在 product-catalog.json 中重命名产品: ${oldName} -> ${newName}`);
-          } catch (writeError) {
-            console.error('写入 product-catalog.json 文件失败:', writeError.message);
-            throw new Error('更新产品目录文件失败');
-          }
+          // 写回文件到所有目录
+          this.saveCatalogToAllPaths(catalogData);
+          console.log(`✅ 已在 product-catalog.json 中重命名产品: ${oldName} -> ${newName}`);
         } else {
           console.warn(`❌ 在 product-catalog.json 中未找到要重命名的产品: ${oldName}`);
           console.warn(`尝试查找可能的匹配项...`);
@@ -166,33 +162,80 @@ class ProductCatalogUtils {
   }
 
   /**
+   * 将产品目录保存到所有相关目录
+   */
+  saveCatalogToAllPaths(catalogData) {
+    try {
+      // 保存路径列表：public目录是源目录，dist目录是生产目录
+      const catalogPaths = [
+        path.join(this.serverPath, 'public/data/product-catalog.json')
+      ];
+      
+      // 如果是生产环境或dist目录存在，也保存到dist目录
+      const distCatalogPath = path.join(this.serverPath, 'dist/data/product-catalog.json');
+      if (this.isProduction || fs.existsSync(path.dirname(distCatalogPath))) {
+        catalogPaths.push(distCatalogPath);
+      }
+      
+      // 添加时间戳
+      catalogData.lastUpdated = new Date().toISOString();
+      catalogData.version = '2.0';
+      
+      // 保存到所有目录
+      catalogPaths.forEach(catalogPath => {
+        // 确保目录存在
+        const dir = path.dirname(catalogPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        
+        fs.writeFileSync(catalogPath, JSON.stringify(catalogData, null, 2), 'utf8');
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('保存产品目录到所有路径失败:', error);
+      return false;
+    }
+  }
+
+  /**
    * 获取产品目录数据
    */
   getProductCatalog() {
     try {
-      const catalogPath = path.join(this.serverPath, 'public/data/product-catalog.json');
+      // 优先读取路径列表：生产环境优先读dist，开发环境读public
+      const catalogPaths = [
+        path.join(this.serverPath, 'public/data/product-catalog.json')
+      ];
       
-      if (!fs.existsSync(catalogPath)) {
-        return {
-          products: [],
-          totalProducts: 0,
-          lastUpdated: new Date().toISOString(),
-          version: '2.0'
-        };
+      // 如果是生产环境，优先读取dist目录
+      const distCatalogPath = path.join(this.serverPath, 'dist/data/product-catalog.json');
+      if (this.isProduction && fs.existsSync(distCatalogPath)) {
+        catalogPaths.unshift(distCatalogPath);
       }
       
-      try {
-        const fileContent = fs.readFileSync(catalogPath, 'utf8');
-        return JSON.parse(fileContent);
-      } catch (parseError) {
-        console.error('解析 product-catalog.json 文件失败:', parseError.message);
-        return {
-          products: [],
-          totalProducts: 0,
-          lastUpdated: new Date().toISOString(),
-          version: '2.0'
-        };
+      // 尝试从第一个存在的路径读取
+      for (const catalogPath of catalogPaths) {
+        if (fs.existsSync(catalogPath)) {
+          try {
+            const fileContent = fs.readFileSync(catalogPath, 'utf8');
+            return JSON.parse(fileContent);
+          } catch (parseError) {
+            console.error(`解析 ${catalogPath} 文件失败:`, parseError.message);
+            // 继续尝试下一个路径
+            continue;
+          }
+        }
       }
+      
+      // 所有路径都不存在，返回默认数据
+      return {
+        products: [],
+        totalProducts: 0,
+        lastUpdated: new Date().toISOString(),
+        version: '2.0'
+      };
     } catch (error) {
       console.error('获取产品目录失败:', error);
       return {
@@ -209,22 +252,11 @@ class ProductCatalogUtils {
    */
   saveProductCatalog(catalogData) {
     try {
-      const catalogPath = path.join(this.serverPath, 'public/data/product-catalog.json');
-      
-      // 确保目录存在
-      const dir = path.dirname(catalogPath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+      const result = this.saveCatalogToAllPaths(catalogData);
+      if (result) {
+        console.log(`✅ 产品目录保存成功，共 ${catalogData.products.length} 个产品`);
       }
-      
-      // 添加时间戳
-      catalogData.lastUpdated = new Date().toISOString();
-      catalogData.version = '2.0';
-      
-      fs.writeFileSync(catalogPath, JSON.stringify(catalogData, null, 2), 'utf8');
-      console.log(`✅ 产品目录保存成功，共 ${catalogData.products.length} 个产品`);
-      
-      return true;
+      return result;
     } catch (error) {
       console.error('保存产品目录失败:', error);
       return false;
