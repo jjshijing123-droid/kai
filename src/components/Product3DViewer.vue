@@ -771,7 +771,7 @@ const handleMove = (clientX, clientY) => {
   }
   
   // 垂直拖拽切换视角，增加阈值减少频繁切换
-  if (Math.abs(deltaY) > 30) {
+  if (Math.abs(deltaY) > 5) {
     // 垂直拖拽 - 切换视角
     const direction = deltaY > 0 ? 'up' : 'down'
     switchView(direction)
