@@ -13,22 +13,27 @@
       @wheel.passive="handleWheel"
       @click="handleViewerClick"
     >
-      <!-- 产品图片 -->
-      <img
-        v-if="productName && productName.trim() !== ''"
-        id="product-image"
-        ref="productImage"
-        :src="currentImageSrc || ''"
-        :alt="productName + ' 3D展示'"
-        class="product-image"
-        :style="{
-          transform: `scale(${currentScale})`,
-          transformOrigin: 'center center'
-        }"
-        @click="handleImageClick"
-        @mousedown="handleImageMouseDown"
-        @touchstart.passive="handleImageTouchStart"
-      />
+      <!-- 产品图片容器 -->
+      <div class="product-images-container" ref="imagesContainer">
+        <!-- 主显示图片 -->
+        <img
+          v-if="productName && productName.trim() !== ''"
+          id="product-image"
+          ref="productImage"
+          :src="currentImageSrc || ''"
+          :alt="productName + ' 3D展示'"
+          class="product-image"
+          :style="{
+            transform: `scale(${currentScale})`,
+            transformOrigin: 'center center'
+          }"
+          @click="handleImageClick"
+          @mousedown="handleImageMouseDown"
+          @touchstart.passive="handleImageTouchStart"
+        />
+        <!-- 隐藏的预加载图片容器 -->
+        <div class="preloaded-images" ref="preloadedImages"></div>
+      </div>
       
       <!-- 加载状态容器 -->
       <div v-if="isLoading" class="loading-container">
@@ -157,6 +162,11 @@ const errorMessage = ref('')
 const showRetry = ref(false)
 const drawerVisible = ref(false)
 
+// 性能监控数据
+const fps = ref(60)
+const frameTime = ref(0)
+const isPerformanceMonitoring = ref(false)
+
 // 图片相关状态
 const imageCache = ref([])
 const loadedCount = ref(0)
@@ -174,6 +184,8 @@ const downloadProgressText = ref('')
 // DOM 引用
 const viewerContainer = ref(null)
 const productImage = ref(null)
+const imagesContainer = ref(null)
+const preloadedImages = ref(null)
 
 // 配置
 const CONFIG = {
@@ -558,6 +570,14 @@ const loadSingleImage = (index, viewIndex) => {
         
         img.onload = () => {
           cleanup(img, timer)
+          // 将图片添加到预加载容器
+          if (preloadedImages.value) {
+            img.style.display = 'none'
+            img.dataset.viewIndex = viewIndex
+            img.dataset.frameIndex = index
+            img.dataset.viewName = view.name
+            preloadedImages.value.appendChild(img)
+          }
           imgResolve(img)
         }
         
@@ -639,13 +659,16 @@ const updateFrame = (frameInput) => {
     if (currentViewCache && currentViewCache.length > 0) {
       const targetImg = currentViewCache[targetFrame]
       // 只有当图片存在且与当前显示的图片不同时才更新
-      if (targetImg && productImage.value && productImage.value.src !== targetImg.src) {
-        // 使用requestAnimationFrame确保DOM更新在动画帧中进行
-        requestAnimationFrame(() => {
-          if (productImage.value) {
-            productImage.value.src = targetImg.src
-          }
-        })
+      if (targetImg && productImage.value) {
+        // 直接使用缓存的图片对象，避免重复的图片加载
+        if (productImage.value.src !== targetImg.src) {
+          // 使用requestAnimationFrame确保DOM更新在动画帧中进行
+          requestAnimationFrame(() => {
+            if (productImage.value) {
+              productImage.value.src = targetImg.src
+            }
+          })
+        }
       }
     }
   }
@@ -737,14 +760,14 @@ const handleMoveStart = (x, y) => {
   viewerContainer.value.style.cursor = 'grabbing'
 }
 
-// 添加节流函数
+// 添加优化的节流函数
 const throttle = (func, limit) => {
-  let inThrottle = false;
+  let lastCall = 0;
   return function(...args) {
-    if (!inThrottle) {
+    const now = Date.now();
+    if (now - lastCall >= limit) {
       func.apply(this, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+      lastCall = now;
     }
   }
 };
@@ -753,33 +776,34 @@ const throttle = (func, limit) => {
 const handleMove = (clientX, clientY) => {
   if (!isDragging.value) return
   
-  const now = performance.now()
-  const deltaTime = now - lastTime
-  
   const deltaX = clientX - lastX
   const deltaY = clientY - lastY
   
-  // 同时处理水平旋转和垂直视角切换
-  if (Math.abs(deltaX) > 0) {
+  // 只处理有效拖动
+  if (Math.abs(deltaX) > 0 || Math.abs(deltaY) > 5) {
+    const now = performance.now()
+    const deltaTime = now - lastTime
+    
     // 水平拖拽 - 旋转
-    if (deltaTime > 0) {
-      velocity = -deltaX * CONFIG.rotationSpeed / deltaTime * 16
+    if (Math.abs(deltaX) > 0) {
+      // 简化速度计算
+      velocity = -deltaX * CONFIG.rotationSpeed
+      // 直接计算目标帧，减少不必要的计算
+      const targetFrame = currentFrame.value + velocity
+      updateFrame(targetFrame)
     }
-    // 直接计算目标帧，减少不必要的计算
-    const targetFrame = currentFrame.value - deltaX * CONFIG.rotationSpeed
-    updateFrame(targetFrame)
+    
+    // 垂直拖拽切换视角，增加阈值减少频繁切换
+    if (Math.abs(deltaY) > 5) {
+      // 垂直拖拽 - 切换视角
+      const direction = deltaY > 0 ? 'up' : 'down'
+      switchView(direction)
+      lastY = clientY
+    }
+    
+    lastX = clientX
+    lastTime = now
   }
-  
-  // 垂直拖拽切换视角，增加阈值减少频繁切换
-  if (Math.abs(deltaY) > 5) {
-    // 垂直拖拽 - 切换视角
-    const direction = deltaY > 0 ? 'up' : 'down'
-    switchView(direction)
-    lastY = clientY
-  }
-  
-  lastX = clientX
-  lastTime = now
 }
 
 const handleMoveEnd = () => {
@@ -794,18 +818,14 @@ const handleMoveEnd = () => {
 }
 
 const startInertiaAnimation = () => {
-  let lastFrameTime = performance.now()
-  
-  const animate = (timestamp) => {
-    const deltaTime = timestamp - lastFrameTime
-    lastFrameTime = timestamp
-    
+  // 使用简化的衰减算法，提高性能
+  const animate = () => {
     // 应用摩擦力 - 使用更高效的衰减算法
-    velocity *= 0.95
+    velocity *= 0.93
     
-    if (Math.abs(velocity) > 0.1) {
-      // 直接计算目标帧，减少不必要的计算
-      const targetFrame = currentFrame.value + velocity * (deltaTime / 16)
+    if (Math.abs(velocity) > 0.05) {
+      // 直接计算目标帧，简化计算
+      const targetFrame = currentFrame.value + velocity
       updateFrame(targetFrame)
       inertiaAnimationId = requestAnimationFrame(animate)
     } else {
@@ -993,6 +1013,47 @@ const retryLoading = () => {
   initializeViewer()
 }
 
+// 性能监控函数
+const startPerformanceMonitoring = () => {
+  if (isPerformanceMonitoring.value) return
+  
+  isPerformanceMonitoring.value = true
+  let frameCount = 0
+  let lastTime = performance.now()
+  let startTime = lastTime
+  
+  const updateFPS = () => {
+    frameCount++
+    const now = performance.now()
+    const deltaTime = now - lastTime
+    
+    // 更新帧时间
+    frameTime.value = deltaTime
+    
+    // 每秒更新一次FPS
+    if (now - startTime >= 1000) {
+      fps.value = Math.round((frameCount * 1000) / (now - startTime))
+      frameCount = 0
+      startTime = now
+      
+      // 只在开发环境输出FPS
+      if (import.meta.env.DEV) {
+        console.log(`🎮 FPS: ${fps.value}, 帧时间: ${frameTime.value.toFixed(2)}ms`)
+      }
+    }
+    
+    if (isPerformanceMonitoring.value) {
+      requestAnimationFrame(updateFPS)
+    }
+  }
+  
+  requestAnimationFrame(updateFPS)
+}
+
+const stopPerformanceMonitoring = () => {
+  isPerformanceMonitoring.value = false
+}
+
 const initializeEvents = () => {
   // 使用节流函数包装鼠标和触摸移动事件处理
   const throttledHandleMouseMove = throttle(handleMouseMove, 16) // 约60fps
@@ -1015,6 +1076,11 @@ const initializeEvents = () => {
   // 保存节流函数引用，以便清理
   initializeEvents.throttledMouseMove = throttledHandleMouseMove
   initializeEvents.throttledTouchMove = throttledHandleTouchMove
+  
+  // 启动性能监控（仅开发环境）
+  if (import.meta.env.DEV) {
+    startPerformanceMonitoring()
+  }
 }
 
 const handleMouseMove = (e) => {
@@ -1119,6 +1185,8 @@ const handleDownloadAllImages = () => {
 const cleanup = () => {
   stopAutoRotation()
   cancelInertiaAnimation()
+  // 停止性能监控
+  stopPerformanceMonitoring()
   
   // 移除事件监听器，使用节流包装后的函数引用
   document.removeEventListener('mousemove', initializeEvents.throttledMouseMove || handleMouseMove)
@@ -1174,6 +1242,15 @@ const cleanup = () => {
   justify-content: center;
 }
 
+.product-images-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
 .product-image {
   position: relative;
   max-width: 100%;
@@ -1181,6 +1258,14 @@ const cleanup = () => {
   object-fit: contain;
   opacity: 1;
   transition: opacity 0.3s ease;
+}
+
+.preloaded-images {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .loading-container {
