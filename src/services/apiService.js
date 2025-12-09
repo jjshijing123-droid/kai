@@ -1,7 +1,7 @@
 /**
  * API服务层 - 统一管理所有API调用
  */
-import { message } from 'ant-design-vue'
+// 不使用ant-design-vue的message，改用项目自定义的showMessage
 
 class ApiService {
   constructor() {

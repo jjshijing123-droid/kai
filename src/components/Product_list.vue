@@ -42,9 +42,9 @@
             @load="handleImageLoad(product, $event)"
             @error="handleImageError(product, $event)"
           />
-          <div class="ditu"></div>
+          <div class="ditu" :class="{ 'show': product.imageLoaded }"></div>
         </div>
-        <div class="product-info show">
+        <div class="product-info" :class="{ 'show': product.imageLoaded }">
           <h3 class="product-name">{{ product.name }}</h3>
         </div>
       </div>
@@ -72,80 +72,19 @@ const API_CONFIG = {
   PRODUCT_CATALOG_URL: '/data/product-catalog.json',
   DATABASE_API_URL: '/api/db/products',
   DEFAULT_IMAGE: '../images/Logo.png',
-  PRELOAD_DELAY: 100,
-  MAX_RETRY_COUNT: 3
+  PRELOAD_DELAY: 100
 }
-
-// 性能监控
-const performanceMetrics = ref({
-  dataFetchTime: 0,
-  imageLoadTime: 0,
-  totalLoadTime: 0
-})
 
 // 图片预加载队列
 const preloadQueue = ref([])
 const preloadIndex = ref(0)
 
-/**
- * 验证图片是否存在
- */
-const checkImageExists = async (imageUrl) => {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.onload = () => resolve(true)
-    img.onerror = () => resolve(false)
-    img.src = imageUrl
-  })
-}
 
-/**
- * 验证产品目录数据完整性
- */
-const validateCatalogProductData = (product) => {
-  const errors = []
-  
-  console.log(t('productList_validateCatalogData'), product)
-  
-  // 检查产品ID
-  if (product.id === undefined || product.id === null) {
-    console.log(t('productList_productIdValidationFailed'), product.id)
-    errors.push('缺少产品ID')
-  } else {
-    console.log(t('productList_productIdValidated'), product.id)
-  }
-  
-  // 检查产品文件夹名称
-  if (!product.folderName || product.folderName.trim() === '') {
-    console.log(t('productList_folderNameMissing'), product.folderName)
-    errors.push('缺少产品文件夹名称')
-  } else {
-    console.log(t('productList_folderNameValidated'), product.folderName)
-  }
-  
-  // 检查产品文件夹路径
-  if (!product.folder || product.folder.trim() === '') {
-    console.log(t('productList_folderPathMissing'), product.folder)
-    errors.push('缺少产品文件夹路径')
-  } else {
-    console.log('产品文件夹路径验证通过:', product.folder)
-  }
-  
-  console.log(t('productList_catalogDataValidationResult'), { isValid: errors.length === 0, errors })
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  }
-}
 
 /**
  * 从产品目录JSON文件获取产品数据
  */
 const fetchProductDataFromCatalog = async () => {
-  console.log(t('productList_startFetchingFromCatalog'))
-  console.log(t('productList_filePath'), API_CONFIG.PRODUCT_CATALOG_URL)
-  
   try {
     const response = await fetch(API_CONFIG.PRODUCT_CATALOG_URL)
     
@@ -153,13 +92,9 @@ const fetchProductDataFromCatalog = async () => {
       throw new Error(`HTTP错误! 状态码: ${response.status} - ${response.statusText}`)
     }
     
-    const data = await response.json()
-    console.log(t('productList_catalogDataSuccess'), data)
-    
-    return data
+    return await response.json()
     
   } catch (error) {
-    console.error(t('productList_catalogDataFailed'), error)
     throw error
   }
 }
@@ -168,11 +103,6 @@ const fetchProductDataFromCatalog = async () => {
  * 从数据库API获取产品数据
  */
 const fetchProductDataFromDatabase = async () => {
-  console.log(t('productList_startDatabaseFetch'))
-  console.log('🌐 API端点:', API_CONFIG.DATABASE_API_URL)
-  console.log(t('productList_currentPageUrl'), window.location.href)
-  console.log('🔗 请求发起时间:', new Date().toISOString())
-  
   try {
     const response = await fetch(API_CONFIG.DATABASE_API_URL, {
       method: 'GET',
@@ -182,44 +112,13 @@ const fetchProductDataFromDatabase = async () => {
       }
     })
     
-    console.log('📊 响应状态:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      headers: Object.fromEntries(response.headers.entries())
-    })
-    
     if (!response.ok) {
-      console.error('❌ HTTP错误详情:', {
-        status: response.status,
-        statusText: response.statusText,
-        url: response.url
-      })
       throw new Error(`HTTP错误! 状态码: ${response.status} - ${response.statusText}`)
     }
     
-    const contentType = response.headers.get('content-type')
-    console.log('📄 响应内容类型:', contentType)
-    
-    const responseText = await response.text()
-    console.log('📝 原始响应内容（前200字符）:', responseText.substring(0, 200))
-    
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error(`期望JSON响应，但收到: ${contentType}. 响应内容: ${responseText.substring(0, 100)}`)
-    }
-    
-    const data = JSON.parse(responseText)
-    console.log('✅ 数据库API成功返回的产品数据:', data)
-    
-    return data
+    return await response.json()
     
   } catch (error) {
-    console.error('🚨 fetchProductDataFromDatabase错误:', {
-      message: error.message,
-      stack: error.stack,
-      endpoint: API_CONFIG.DATABASE_API_URL,
-      timestamp: new Date().toISOString()
-    })
     throw error
   }
 }
@@ -227,52 +126,32 @@ const fetchProductDataFromDatabase = async () => {
 /**
  * 处理产品目录JSON数据
  */
-const processCatalogData = async (rawData) => {
+const processCatalogData = (rawData) => {
   const processedProducts = []
-  
-  console.log(t('productList_processingCatalogData'), rawData)
   
   // 处理产品目录API返回的数据结构
   const products = rawData.products || rawData
   
-  console.log(t('productList_processingProducts'), products)
-  
   for (const product of products) {
-    console.log(t('productList_processingProduct'), product)
-    
-    // 验证数据完整性
-    const validation = validateCatalogProductData(product)
-    if (!validation.isValid) {
-      console.warn(`产品数据验证失败: ${product.folderName}`, validation.errors)
+    // 只需要基本的字段检查
+    if (!product.folderName || product.folderName.trim() === '') {
       continue
     }
     
     // 从产品目录数据中提取主图片
-    let mainImage = product.mainImage
-    if (!mainImage) {
-      mainImage = API_CONFIG.DEFAULT_IMAGE
-    }
-    
-    console.log(`产品 ${product.folderName} 的主图片:`, mainImage)
-    
-    // 检查图片是否存在
-    const imageExists = await checkImageExists(mainImage)
+    let mainImage = product.mainImage || API_CONFIG.DEFAULT_IMAGE
     
     processedProducts.push({
-      id: product.id,
-      name: product.folderName, // 使用folderName作为产品名称
-      model: product.folderName, // 型号也使用folderName
+      id: product.id || Date.now(),
+      name: product.folderName,
+      model: product.folderName,
       mainImage: mainImage,
       imageLoaded: false,
-      hasValidImage: imageExists,
-      category: 'product', // 默认分类
+      category: 'product',
       description: `Product folder: ${product.folderName}`,
-      // 保留原始数据以供后续使用
       originalData: product
     })
   }
-  
-  console.log('处理后的产品列表:', processedProducts)
   
   return processedProducts.sort((a, b) => a.name.localeCompare(b.name))
 }
@@ -280,23 +159,16 @@ const processCatalogData = async (rawData) => {
 /**
  * 处理产品数据
  */
-const processProductData = async (rawData) => {
+const processProductData = (rawData) => {
   const processedProducts = []
-  
-  console.log(t('productList_rawData'), rawData)
   
   // 处理数据库API返回的数据结构
   const products = rawData.products || rawData
   
-  console.log(t('productList_processingProducts'), products)
-  
   for (const product of products) {
-    console.log(t('productList_processingProduct'), product)
-    
     // 验证数据完整性 - 优先使用folderName，如果没有则回退到name
     const displayName = product.folderName || product.name
     if (!displayName || displayName.trim() === '') {
-      console.warn(`产品数据验证失败: 缺少产品名称 (folderName: ${product.folderName}, name: ${product.name})`, product)
       continue
     }
     
@@ -318,23 +190,15 @@ const processProductData = async (rawData) => {
       mainImage = API_CONFIG.DEFAULT_IMAGE
     }
     
-    console.log(`产品 ${displayName} 的主图片:`, mainImage)
-    
-    // 检查图片是否存在
-    const imageExists = await checkImageExists(mainImage)
-    
     processedProducts.push({
-      id: product.id,
-      name: displayName, // 使用统一的产品名称
+      id: product.id || Date.now(),
+      name: displayName,
       mainImage: mainImage,
       imageLoaded: false,
-      hasValidImage: imageExists,
-      category: product.category,
-      description: product.folderName ? `Product folder: ${product.folderName}` : product.description
+      category: product.category || 'product',
+      description: product.folderName ? `Product folder: ${product.folderName}` : product.description || ''
     })
   }
-  
-  console.log('处理后的产品列表:', processedProducts)
   
   return processedProducts.sort((a, b) => a.name.localeCompare(b.name))
 }
@@ -343,22 +207,18 @@ const processProductData = async (rawData) => {
  * 加载产品列表 - 优先使用产品目录JSON文件
  */
 const loadProducts = async () => {
-  const startTime = performance.now()
-  
   try {
-    console.log(t('productList_startLoadingProductList'))
     loading.value = true
     error.value = null
     loadingProgress.value = 30
     
     // 优先尝试从产品目录JSON文件获取数据
     try {
-      console.log(t('productList_catalogDataPriority'))
       const catalogData = await fetchProductDataFromCatalog()
       loadingProgress.value = 60
       
       // 处理产品目录数据
-      const processedProducts = await processCatalogData(catalogData)
+      const processedProducts = processCatalogData(catalogData)
       loadingProgress.value = 80
       
       // 更新产品列表
@@ -371,14 +231,9 @@ const loadProducts = async () => {
       }
       
       loading.value = false
-      performanceMetrics.value.dataFetchTime = performance.now() - startTime
-      
-      console.log(`✅ 成功从产品目录文件加载 ${processedProducts.length} 个产品`)
       return
       
     } catch (catalogError) {
-      console.warn(t('productList_catalogReadFailed'), catalogError.message)
-      
       // 如果产品目录文件读取失败，尝试数据库API
       loadingProgress.value = 40
       
@@ -386,7 +241,7 @@ const loadProducts = async () => {
       loadingProgress.value = 60
       
       // 获取产品数据并处理
-      const processedProducts = await processProductData(rawData)
+      const processedProducts = processProductData(rawData)
       loadingProgress.value = 80
       
       // 更新产品列表
@@ -399,13 +254,9 @@ const loadProducts = async () => {
       }
       
       loading.value = false
-      performanceMetrics.value.dataFetchTime = performance.now() - startTime
-      
-      console.log(`✅ 成功从数据库API加载 ${processedProducts.length} 个产品`)
     }
     
   } catch (err) {
-    console.error(t('productList_loadProductListFailed'), err)
     error.value = err.message
     loading.value = false
   }
@@ -450,15 +301,10 @@ const preloadNextImage = () => {
  * 事件处理函数
  */
 const handleProductClick = (product) => {
-  console.log('点击了产品:', product.name)
-  console.log('产品数据:', product)
-  
   // 导航到产品详情页，传递产品文件夹名称
   if (product.originalData && product.originalData.folderName) {
-    // 如果有原始数据，传递产品文件夹名称
     router.push(`/product/${encodeURIComponent(product.originalData.folderName)}`)
   } else {
-    // 否则传递产品名称
     router.push(`/product/${encodeURIComponent(product.name)}`)
   }
 }
@@ -476,31 +322,16 @@ const handleImageError = (product, event) => {
   // 图片加载失败时，隐藏图片并显示错误状态
   event.target.style.display = 'none'
   container.classList.add('image-error')
-  
-  console.warn(`图片加载失败: ${product.mainImage}`)
-}
-
-/**
- * 性能监控
- */
-const logPerformance = () => {
-  console.log(t('productList_performanceMetrics'), {
-    dataFetchTime: `${performanceMetrics.value.dataFetchTime.toFixed(2)}ms`,
-    totalProducts: products.value.length,
-    validImages: products.value.filter(p => p.hasValidImage).length
-  })
 }
 
 /**
  * 生命周期
  */
 onMounted(() => {
-  console.log(t('productList_productListComponentMounted'))
   loadProducts()
   
   // 监听语言变化
   const unsubscribe = useI18n().addListener(() => {
-    console.log(t('productList_languageChanged'))
     loadProducts()
   })
   
@@ -509,7 +340,6 @@ onMounted(() => {
     if (unsubscribe) {
       unsubscribe()
     }
-    logPerformance()
   })
 })
 </script>
@@ -679,6 +509,12 @@ onMounted(() => {
   justify-content: center;
   z-index: 0;
   transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ditu.show {
+  opacity: 1;
 }
 
 /* ===== 产品图片容器 ===== */
@@ -799,8 +635,12 @@ onMounted(() => {
   flex-direction: column;
   justify-content: center;
   background-color: #626262;
-  opacity: 1;
+  opacity: 0;
   transition: opacity 0.3s ease;
+}
+
+.product-info.show {
+  opacity: 1;
 }
 
 .product-name {

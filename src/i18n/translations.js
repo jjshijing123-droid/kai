@@ -1,7 +1,6 @@
 // 基础翻译配置 - 按组件组织翻译键
 const baseTranslations = {
   "en": {
-    "5656565": "",
     "header_i18nManager": "Translation Manager",
     "header_productManager": "Product Manager",
     "header_language": "Language",
@@ -178,6 +177,8 @@ const baseTranslations = {
     "productManagement_createFolderFailed": "Create Folder Failed",
     "productManagement_renameFolderFailed": "Rename Folder Failed",
     "productManagement_deleteFailedText": "Delete Failed",
+    "productManagement_deleteFailed": "Delete failed",
+    "productManagement_deleteSuccess": "Delete successful",
     "productManagement_refreshSuccess": "Product catalog refreshed successfully",
     "productManagement_refreshFailed": "Failed to refresh product catalog",
     "shortcut.help.title": "Keyboard Shortcuts",
@@ -427,7 +428,6 @@ const baseTranslations = {
     "productViewimages_loadFailed": "Failed to load images: {message}"
   },
   "zh-CN": {
-    "5656565": "",
     "header_i18nManager": "翻译管理",
     "header_productManager": "产品管理",
     "header_language": "语言",
@@ -604,6 +604,8 @@ const baseTranslations = {
     "productManagement_createFolderFailed": "创建文件夹失败",
     "productManagement_renameFolderFailed": "重命名文件夹失败",
     "productManagement_deleteFailedText": "删除失败",
+    "productManagement_deleteFailed": "删除失败",
+    "productManagement_deleteSuccess": "删除成功",
     "productManagement_refreshSuccess": "产品目录刷新成功",
     "productManagement_refreshFailed": "产品目录刷新失败",
     "shortcut.help.title": "键盘快捷键",
@@ -734,7 +736,7 @@ const baseTranslations = {
     "common_documentation": "文档",
     "common_support": "支持",
     "common_feedback": "反馈",
-    "common_about": "关于///9990888000999666",
+    "common_about": "关于",
     "common_version": "版本",
     "common_copyright": "版权",
     "common_contact_us": "联系我们",

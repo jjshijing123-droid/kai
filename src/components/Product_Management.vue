@@ -142,7 +142,7 @@
                 <Button variant="ghost" size="sm" :title="t('productManagement_download')">
                   <LucideIcon name="Download" class="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" :title="t('productManagement_delete')">
+                <Button variant="ghost" size="sm" :title="t('productManagement_delete')" @click="deleteFile(file)">
                   <LucideIcon name="Trash2" class="h-4 w-4" />
                 </Button>
               </div>
@@ -259,7 +259,13 @@
       @ok="confirmDeleteFolder"
       :showFooter="true"
     >
-      <p>{{ t('productManagement_deleteConfirmContent', { folderName: folderToDelete }) }}</p>
+      <!-- 根据要删除的是文件还是文件夹显示不同的确认文本 -->
+      <p v-if="products.find(p => p.name === folderToDelete && !p.isDirectory)">
+        {{ t('productManagement_deleteConfirmContent', { folderName: folderToDelete }) }}
+      </p>
+      <p v-else>
+        {{ t('productManagement_deleteConfirmContent', { folderName: folderToDelete }) }}
+      </p>
       
       <template #footer>
         <Button @click="cancelDelete" variant="line" size="40">
@@ -480,6 +486,7 @@ import SearchInput from './ui/search-input.vue'
 import ProductFolderUploader from './ProductFolderUploader.vue'
 import BatchUploadModal from './BatchUploadModal.vue'
 import Functionaldescription from './Functionaldescription.vue'
+import apiService from '../services/apiService.js'
 
 
 
@@ -750,6 +757,11 @@ const confirmRenameFolder = async () => {
   }
 }
 
+const deleteFile = (file) => {
+  folderToDelete.value = file.name
+  showDeleteConfirm.value = true
+}
+
 const deleteFolder = (folderName) => {
   folderToDelete.value = folderName
   showDeleteConfirm.value = true
@@ -757,28 +769,52 @@ const deleteFolder = (folderName) => {
 
 const confirmDeleteFolder = async () => {
   try {
-    console.log(`开始删除产品: ${folderToDelete.value}`)
+    const itemName = folderToDelete.value
+    console.log(`开始删除: ${itemName}`)
 
-    const response = await fetch(`${API_CONFIG.DELETE_PRODUCT}/${encodeURIComponent(folderToDelete.value)}`, {
-      method: 'DELETE'
-    })
+    // 检查当前要删除的是文件还是文件夹
+    const item = products.value.find(p => p.name === itemName)
+    if (!item) {
+      throw new Error('要删除的项目不存在')
+    }
+    
+    const isFile = !item.isDirectory
+    const folderPath = currentPath.value.join('/')
+    
+    let result
+    if (isFile) {
+      // 删除文件：构建完整的文件路径
+      const fullFilePath = `${folderPath}/${itemName}`
+      result = await apiService.deleteFile(fullFilePath)
+    } else {
+      // 删除文件夹：判断是顶级产品还是子文件夹
+      if (currentPath.value.length === 1 && currentPath.value[0] === 'Product') {
+        // 顶级产品文件夹
+        result = await apiService.deleteProduct(itemName)
+      } else {
+        // 子文件夹
+        result = await apiService.deleteSubfolder(folderPath, itemName)
+      }
+    }
 
-    const data = await response.json()
-
-    if (response.ok && data.success) {
-      console.log(`产品删除成功: ${folderToDelete.value}`)
+    if (result.success) {
+      console.log(`${isFile ? '文件' : '文件夹'}删除成功: ${itemName}`)
       
       // 先关闭确认对话框，再刷新产品列表
       cancelDelete()
-      // 重新生成并获取产品列表
-      await refreshProducts()
-
+      // 重新获取产品列表
+      await fetchProducts()
+      
+      // 显示成功消息
+      showMessage('success', t('productManagement_deleteSuccess'))
     } else {
-      const errorMsg = data.message || data.error || `${t('productManagement_deleteFailedText')}${response.status})`
+      const errorMsg = result.message || result.error || t('productManagement_deleteFailed')
       console.error(`删除失败:`, errorMsg)
+      showMessage('error', errorMsg)
     }
   } catch (err) {
     console.error('删除操作失败:', err)
+    showMessage('error', err.message || t('productManagement_deleteFailed'))
   }
 }
 
