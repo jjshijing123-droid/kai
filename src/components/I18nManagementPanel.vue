@@ -1066,13 +1066,15 @@ const goBack = () => {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .i18n-manager {
-    padding: 16px;
+    padding: 20px 0;
   }
   
   .page-header {
-    padding: 16px;
   }
   
+
+
+
   /* Frame 330 - 搜索和操作区域 */
   .frame330 {
     display: grid;
@@ -1081,8 +1083,8 @@ const goBack = () => {
   }
 
   .header-actions {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row-reverse;
+    align-items: center;
     gap: 12px;
     width: 100%;
   }
@@ -1098,6 +1100,24 @@ const goBack = () => {
     font-size: 20px;
   }
   
+  .frame348 {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 12px;
+
+  }
+
+  /* 卡片头部样式 */
+  .card-header {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 12px;
+  }
+
+  .input-wrapper {
+    width: 100% !important;
+  }
+
   .form-row {
     grid-template-columns: 1fr;
   }
