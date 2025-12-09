@@ -1,6 +1,7 @@
 // 基础翻译配置 - 按组件组织翻译键
 const baseTranslations = {
   "en": {
+    "5656565": "",
     "header_i18nManager": "Translation Manager",
     "header_productManager": "Product Manager",
     "header_language": "Language",
@@ -106,6 +107,8 @@ const baseTranslations = {
     "i18nManager_errorDeletingTranslation": "Error occurred while deleting translation",
     "i18nManager_errorDuringSave": "Error occurred during save",
     "i18nManager_keys": "translation keys",
+    "i18nManager_refreshSuccess": "Translations refreshed successfully",
+    "i18nManager_refreshFailed": "Failed to refresh translations",
     "productManagement_title": "Product Folder Management",
     "productManagement_back": "Back",
     "productManagement_pleaseInput": "Please input",
@@ -424,6 +427,7 @@ const baseTranslations = {
     "productViewimages_loadFailed": "Failed to load images: {message}"
   },
   "zh-CN": {
+    "5656565": "",
     "header_i18nManager": "翻译管理",
     "header_productManager": "产品管理",
     "header_language": "语言",
@@ -529,6 +533,8 @@ const baseTranslations = {
     "i18nManager_errorDeletingTranslation": "删除翻译时发生错误",
     "i18nManager_errorDuringSave": "保存过程中发生错误",
     "i18nManager_keys": "翻译键",
+    "i18nManager_refreshSuccess": "翻译刷新成功",
+    "i18nManager_refreshFailed": "翻译刷新失败",
     "productManagement_title": "产品文件夹管理",
     "productManagement_back": "返回",
     "productManagement_pleaseInput": "请输入",
@@ -728,7 +734,7 @@ const baseTranslations = {
     "common_documentation": "文档",
     "common_support": "支持",
     "common_feedback": "反馈",
-    "common_about": "关于888",
+    "common_about": "关于///9990888000999666",
     "common_version": "版本",
     "common_copyright": "版权",
     "common_contact_us": "联系我们",

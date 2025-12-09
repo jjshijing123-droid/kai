@@ -6,8 +6,9 @@ export const showMessage = (type, text) => {
   messageDiv.className = `message-${type}`
   messageDiv.style.cssText = `
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
     padding: 12px 20px;
     border-radius: 6px;
     color: white;
@@ -18,6 +19,7 @@ export const showMessage = (type, text) => {
     word-wrap: break-word;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
+    text-align: center;
   `
   
   if (type === 'warning') {
@@ -33,10 +35,15 @@ export const showMessage = (type, text) => {
   messageDiv.textContent = text
   document.body.appendChild(messageDiv)
   
+  // 滑入动画
+  setTimeout(() => {
+    messageDiv.style.transform = 'translateX(-50%) translateY(20px)'
+  }, 10)
+  
   // 3秒后自动移除
   setTimeout(() => {
+    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
     messageDiv.style.opacity = '0'
-    messageDiv.style.transform = 'translateX(100%)'
     setTimeout(() => {
       if (messageDiv.parentNode) {
         document.body.removeChild(messageDiv)

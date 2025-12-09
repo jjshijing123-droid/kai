@@ -1,7 +1,9 @@
 const express = require('express');
 const FileService = require('../services/fileService');
+const UploadService = require('../services/uploadService');
 const router = express.Router();
 const fileService = new FileService();
+const uploadService = new UploadService();
 
 /**
  * 文件操作路由
@@ -20,6 +22,12 @@ router.post('/delete-file', async (req, res) => {
     }
     
     await fileService.deleteFile(filePath);
+    
+    // 如果删除的是Product目录下的文件，重新生成产品目录
+    if (filePath.startsWith('Product/')) {
+      console.log('🔄 检测到删除Product目录下的文件，重新生成产品目录...');
+      await uploadService.regenerateProductCatalog();
+    }
     
     res.json({
       success: true,

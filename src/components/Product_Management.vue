@@ -770,8 +770,8 @@ const confirmDeleteFolder = async () => {
       
       // 先关闭确认对话框，再刷新产品列表
       cancelDelete()
-      // 重新获取产品列表
-      await fetchProducts()
+      // 重新生成并获取产品列表
+      await refreshProducts()
 
     } else {
       const errorMsg = data.message || data.error || `${t('productManagement_deleteFailedText')}${response.status})`
@@ -920,13 +920,13 @@ const closeBatchUploadModal = () => {
 
 const handleBatchUploadComplete = async (result) => {
   if (result.success) {
-    // 刷新产品列表
-    await fetchProducts()
+    // 重新生成并获取产品列表
+    await refreshProducts()
     console.log('批量上传成功完成!')
   } else {
     console.error('批量上传失败:', result.error)
-    // 刷新产品列表以显示当前状态
-    await fetchProducts()
+    // 重新生成并获取产品列表以显示当前状态
+    await refreshProducts()
   }
 }
 
@@ -938,8 +938,8 @@ const handleUploadStart = (uploadData) => {
 const handleUploadComplete = (result) => {
   uploading.value = false
   if (result.success) {
-    // 上传成功，重新获取产品列表
-    fetchProducts()
+    // 上传成功，重新生成并获取产品列表
+    refreshProducts()
     closeUploadFolderModal()
     closeUploadFileModal()
   }

@@ -4,18 +4,26 @@ import i18n from '../i18n/index.js'
 // 现代化的多语言 composable - 统一使用 I18nManager
 export function useI18n() {
   const currentLanguage = ref(i18n.getCurrentLanguage())
+  // 用于触发翻译完整性重新计算的响应式触发器
+  const completenessTrigger = ref(0)
 
   // 监听语言变化 - 确保响应式更新
   const unsubscribe = i18n.addListener((lang) => {
     console.log('Language changed to:', lang)
     currentLanguage.value = lang
+    // 语言变化时，触发翻译完整性重新计算
+    completenessTrigger.value++
   })
 
   // 计算属性：支持的语言列表
   const availableLanguages = computed(() => i18n.getLanguages())
 
   // 计算属性：翻译完整性检查
-  const translationCompleteness = computed(() => i18n.checkTranslationCompleteness())
+  const translationCompleteness = computed(() => {
+    // 依赖于 completenessTrigger，确保每次 completenessTrigger 更新时都会重新计算
+    completenessTrigger.value
+    return i18n.checkTranslationCompleteness()
+  })
 
   // 创建响应式翻译函数
   const t = (key, params = {}, lang) => {
@@ -63,6 +71,11 @@ export function useI18n() {
     if (unsubscribe) unsubscribe()
   })
 
+  // 触发翻译完整性重新计算的方法
+  const refreshCompleteness = () => {
+    completenessTrigger.value++
+  }
+
   return {
     // 响应式状态
     currentLanguage,
@@ -78,6 +91,7 @@ export function useI18n() {
     deleteTranslation,
     getTranslationKeys,
     addListener,
+    refreshCompleteness,
     
     // 快捷方法
     isLanguage: (lang) => currentLanguage.value === lang,

@@ -240,12 +240,16 @@ class I18nService {
     try {
       console.log('Updating translation key:', key, lang, value)
       
+      // 构建后端期望的请求体格式
+      const translationsData = {}
+      translationsData[lang] = value
+      
       const response = await fetch(`/api/i18n/translations/keys/${encodeURIComponent(key)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ lang, value }),
+        body: JSON.stringify({ translations: translationsData }),
       })
       
       if (!response.ok) {

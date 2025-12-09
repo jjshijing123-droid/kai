@@ -17,9 +17,9 @@
               <LucideIcon name="Upload" class="h-4 w-4" />
               {{ t('i18nManager_export') }}
             </Button>
-            <Button @click="saveAllTranslations" :loading="saving" variant="line" size="40">
-              <LucideIcon name="Save" class="h-4 w-4" />
-              {{ t('i18nManager_saveAll') }}
+            <Button @click="loadTranslations" variant="line" size="40">
+              <LucideIcon name="RefreshCw" class="h-4 w-4" />
+              {{ t('component_empty_refresh') }}
             </Button>
           </div>
         </div>
@@ -263,7 +263,7 @@ const showMessage = (type, text) => {
 }
 
 // 使用实际的 i18n 数据
-const { currentLanguage, availableLanguages, translationCompleteness, t, getTranslationKeys, addTranslations, updateTranslation, deleteTranslation, setLanguage } = useI18n()
+const { currentLanguage, availableLanguages, translationCompleteness, t, getTranslationKeys, addTranslations, updateTranslation, deleteTranslation, setLanguage, refreshCompleteness } = useI18n()
 
 // 使用管理员认证
 const { isAdminLoggedIn } = useAdminAuth()
@@ -273,7 +273,7 @@ const searchTerm = ref('')
 const showLoginModal = ref(!isAdminLoggedIn.value)
 const newKey = ref('')
 const newTranslations = reactive({})
-const saving = ref(false)
+const refreshTrigger = ref(0) // 用于触发列表刷新的响应式触发器
 
 // 临时存储当前编辑的翻译值
 const editingValues = reactive({})
@@ -359,22 +359,51 @@ const getProgressColor = (percentage) => {
   return 'var(--red-9)'
 }
 
-// 从实际的翻译数据加载
+// 从实际的翻译数据加载 - 确保数据一致性
 const loadTranslations = async () => {
   try {
     // 等待语言数据加载完成
     await nextTick()
     
-    const keys = getAllTranslationKeys()
+    // 从服务器获取最新的翻译数据
+    let serverLoadSuccess = false
+    try {
+      const response = await fetch('/api/i18n/translations')
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success && result.data) {
+          // 更新全局 translations 对象
+          Object.keys(result.data).forEach(lang => {
+            translations[lang] = result.data[lang]
+          })
+          console.log('Loaded translations from server:', Object.keys(result.data).map(lang => `${lang}: ${Object.keys(result.data[lang]).length} keys`))
+          serverLoadSuccess = true
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load translations from server, using local data:', error)
+    }
+    
+    // 重新获取所有翻译键，确保获取到最新的键列表
+    const keys = getTranslationKeys()
     console.log('Loaded translation keys:', keys.length)
     
-    // 确保 translations 对象结构完整
+    // 确保 translations 对象结构完整，与服务器数据保持一致
     if (availableLanguages.value && Array.isArray(availableLanguages.value)) {
       availableLanguages.value.forEach(lang => {
         if (!translations[lang.code]) {
           translations[lang.code] = {}
         }
-        // 验证数据完整性
+        
+        // 移除不再存在的翻译键（如果有）
+        const existingKeys = Object.keys(translations[lang.code])
+        existingKeys.forEach(existingKey => {
+          if (!keys.includes(existingKey)) {
+            delete translations[lang.code][existingKey]
+          }
+        })
+        
+        // 添加新的翻译键，确保数据完整性
         keys.forEach(key => {
           if (translations[lang.code][key] === undefined) {
             translations[lang.code][key] = ''
@@ -385,16 +414,27 @@ const loadTranslations = async () => {
       console.log('Available languages:', availableLanguages.value.map(l => `${l.code}: ${translations[l.code] ? Object.keys(translations[l.code]).length : 0} keys`))
     }
     
-    // 强制重新渲染表格
+    // 触发刷新触发器，确保列表自动更新
+    refreshTrigger.value++
+    // 触发翻译完整性重新计算
+    refreshCompleteness()
+    
+    // 强制重新渲染表格，确保界面显示最新数据
     await nextTick()
+    
+    // 显示刷新成功提示
+    showMessage('success', t('i18nManager_refreshSuccess'))
   } catch (error) {
     console.error('Error loading translations:', error)
+    // 显示刷新失败提示
+    showMessage('error', t('i18nManager_refreshFailed'))
   }
 }
 
 // 获取所有翻译键
 const allKeys = computed(() => {
-  return getAllTranslationKeys()
+  refreshTrigger.value // 依赖于refreshTrigger，确保每次refreshTrigger更新时都会重新计算
+  return getTranslationKeys()
 })
 
 // 过滤翻译键
@@ -431,7 +471,6 @@ const updateTranslationValue = (lang, key, value) => {
 const commitTranslation = async (lang, key) => {
   const value = editingValues[`${lang}_${key}`] || ''
   
-  updateTranslationValue(lang, key, value)
   editingCell.value = null
   delete editingValues[`${lang}_${key}`]
   
@@ -440,14 +479,19 @@ const commitTranslation = async (lang, key) => {
   
   if (updateResult) {
     showMessage('success', t('i18nManager_translationSaved'))
-  } else {
-    // 如果API调用失败，尝试保存所有翻译
-    const saveResult = await i18n.saveTranslationsToFile()
-    if (saveResult) {
-      showMessage('success', t('i18nManager_translationSaved'))
-    } else {
-      showMessage('warning', t('i18nManager_translationUpdatedLocally'))
+    // 直接更新本地 translations 对象，确保数据一致性
+    if (!translations[lang]) {
+      translations[lang] = {}
     }
+    translations[lang][key] = value
+    // 同时调用 i18n.updateTranslation() 方法，确保 i18n 实例中的翻译数据也被更新
+    i18n.updateTranslation(lang, key, value)
+    // 触发刷新触发器，确保列表自动更新
+    refreshTrigger.value++
+    // 触发翻译完整性重新计算
+    refreshCompleteness()
+  } else {
+    showMessage('error', t('i18nManager_errorSavingTranslation'))
   }
 }
 
@@ -462,41 +506,43 @@ const addTranslation = async () => {
       translationsData[lang.code] = newTranslations[lang.code] || ''
     })
     
-    // 使用实际的 i18n 系统保存
-    addTranslations({
-      [newKey.value]: translationsData
-    })
-    
-    // 更新本地数据 - 使用Vue的响应式方法
-    availableLanguages.value.forEach(lang => {
-      if (!translations[lang.code]) {
-        translations[lang.code] = {}
-      }
-      // 使用展开运算符确保响应式更新
-      translations[lang.code] = {
-        ...translations[lang.code],
-        [newKey.value]: newTranslations[lang.code] || ''
-      }
-    })
-    
     // 调用后端API添加翻译键
     const addResult = await i18n.addTranslationKey(newKey.value, translationsData)
     
-    // 重置表单
-    newKey.value = ''
-    availableLanguages.value.forEach(lang => {
-      newTranslations[lang.code] = ''
-    })
-    
-    // 重新加载翻译数据
-    setTimeout(() => {
-      loadTranslations()
-    }, 100)
-    
     if (addResult) {
+      // 保存新翻译键的名称，因为我们稍后会重置表单
+      const newTranslationKey = newKey.value;
+      
+      // 重置表单
+      newKey.value = ''
+      availableLanguages.value.forEach(lang => {
+        newTranslations[lang.code] = ''
+      })
+      
+      // 直接更新本地 translations 对象，确保数据一致性
+      Object.keys(translationsData).forEach(lang => {
+        if (!translations[lang]) {
+          translations[lang] = {}
+        }
+        translations[lang][newTranslationKey] = translationsData[lang]
+      })
+      // 同时更新 i18n 实例中的翻译数据，确保 getTranslationKeys() 函数返回最新的翻译键
+      // 构建正确格式的翻译数据，其中键是语言代码，值是包含新翻译键的对象
+      const newTranslationsForI18n = {};
+      Object.keys(translationsData).forEach(lang => {
+        if (!newTranslationsForI18n[lang]) {
+          newTranslationsForI18n[lang] = {};
+        }
+        newTranslationsForI18n[lang][newTranslationKey] = translationsData[lang];
+      });
+      i18n.addTranslations(newTranslationsForI18n);
+      // 触发刷新触发器，确保列表自动更新
+      refreshTrigger.value++
+      // 触发翻译完整性重新计算
+      refreshCompleteness()
       showMessage('success', t('i18nManager_newTranslationAdded'))
     } else {
-      showMessage('warning', t('i18nManager_newTranslationAddedLocally'))
+      showMessage('error', t('i18nManager_errorAddingTranslation'))
     }
   } catch (error) {
     console.error('Error adding translation:', error)
@@ -509,23 +555,23 @@ const addTranslation = async () => {
 // 删除翻译
 const handleDeleteTranslation = async (key) => {
   try {
-    // 使用实际的 i18n 系统删除
-    deleteTranslation(key)
-    
-    // 更新本地数据
-    availableLanguages.value.forEach(lang => {
-      if (translations[lang.code] && translations[lang.code][key]) {
-        delete translations[lang.code][key]
-      }
-    })
-    
     // 调用后端API删除翻译键
     const deleteResult = await i18n.deleteTranslationKey(key)
     
     if (deleteResult) {
       showMessage('success', t('i18nManager_translationDeleted'))
+      // 直接更新本地 translations 对象，确保数据一致性
+      Object.keys(translations).forEach(lang => {
+        if (translations[lang] && translations[lang][key] !== undefined) {
+          delete translations[lang][key]
+        }
+      })
+      // 同时调用 i18n.deleteTranslation() 方法，确保 i18n 实例中的翻译数据也被更新
+      i18n.deleteTranslation(key)
+      // 触发刷新触发器，确保列表自动更新
+      refreshTrigger.value++
     } else {
-      showMessage('warning', t('i18nManager_translationDeletedLocally'))
+      showMessage('error', t('i18nManager_errorDeletingTranslation'))
     }
   } catch (error) {
     console.error('Error deleting translation:', error)
@@ -533,40 +579,7 @@ const handleDeleteTranslation = async (key) => {
   }
 }
 
-// 保存所有翻译
-const saveAllTranslations = async () => {
-  console.log('Starting to save all translations...')
-  
-  // 设置加载状态
-  saving.value = true
-  
-  try {
-    // 遍历所有翻译键和语言，保存每个翻译
-    allKeys.value.forEach(key => {
-      availableLanguages.value.forEach(lang => {
-        const value = translations[lang.code][key]
-        if (value !== undefined) {
-          updateTranslation(lang.code, key, value)
-        }
-      })
-    })
-    
-    // 保存所有更改到文件 - 使用静默保存
-    await i18n.saveTranslationsToFile()
-    
-    // 显示成功消息
-    showMessage('success', t('i18nManager_saveSuccess'))
-    
-    // 强制重新加载翻译数据以确保界面显示最新内容
-    setTimeout(() => {
-      loadTranslations()
-    }, 200)
-  } catch (error) {
-    showMessage('error', t('i18nManager_errorDuringSave'))
-  } finally {
-    saving.value = false
-  }
-}
+
 
 // 导出翻译 - 导出为可直接替换 translations.js 的格式
 const exportTranslations = () => {
