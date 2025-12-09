@@ -1,6 +1,28 @@
 {
   "products": [
     {
+      "id": 1,
+      "name": "111",
+      "folderName": "111",
+      "category": "general",
+      "description": "Product model: 111",
+      "path": "Product/111/",
+      "folder": "Product/111/",
+      "mainImage": "/Product/111/image_00.webp",
+      "totalSize": 0,
+      "fileCount": 0,
+      "views": {
+        "view1": "/Product/111/view1/",
+        "view2": "/Product/111/view2/",
+        "view3": "/Product/111/view3/",
+        "view4": "/Product/111/view4/"
+      },
+      "additionalImages": {
+        "sixViews": "/Product/111/images_6Views/",
+        "other": "/Product/111/images_other/"
+      }
+    },
+    {
       "id": 2,
       "name": "Cobi18+",
       "folderName": "Cobi18+",
@@ -42,6 +64,28 @@
       "additionalImages": {
         "sixViews": "/Product/Cobi18_v1/images_6Views/",
         "other": "/Product/Cobi18_v1/images_other/"
+      }
+    },
+    {
+      "id": 4,
+      "name": "Cobi18_v1333",
+      "folderName": "Cobi18_v1333",
+      "category": "general",
+      "description": "Product model: Cobi18_v1333",
+      "path": "Product/Cobi18_v1333/",
+      "folder": "Product/Cobi18_v1333/",
+      "mainImage": "/Product/Cobi18_v1333/image_00.webp",
+      "totalSize": 8726708,
+      "fileCount": 135,
+      "views": {
+        "view1": "/Product/Cobi18_v1333/view1/",
+        "view2": "/Product/Cobi18_v1333/view2/",
+        "view3": "/Product/Cobi18_v1333/view3/",
+        "view4": "/Product/Cobi18_v1333/view4/"
+      },
+      "additionalImages": {
+        "sixViews": "/Product/Cobi18_v1333/images_6Views/",
+        "other": "/Product/Cobi18_v1333/images_other/"
       }
     },
     {
@@ -241,32 +285,9 @@
         "sixViews": "/Product/RS32Y-OB/images_6Views/",
         "other": "/Product/RS32Y-OB/images_other/"
       }
-    },
-    {
-      "id": 1,
-      "name": "6666655",
-      "folderName": "6666655",
-      "model": "6666655",
-      "category": "general",
-      "description": "Product model: 6666655",
-      "path": "Product/6666655",
-      "folder": "Product/6666655/",
-      "totalSize": 0,
-      "fileCount": 0,
-      "mainImage": "/Product/6666655/image_00.webp",
-      "views": {
-        "view1": "/Product/6666655/view1/",
-        "view2": "/Product/6666655/view2/",
-        "view3": "/Product/6666655/view3/",
-        "view4": "/Product/6666655/view4/"
-      },
-      "additionalImages": {
-        "sixViews": "/Product/6666655/images_6Views/",
-        "other": "/Product/6666655/images_other/"
-      }
     }
   ],
-  "totalProducts": 12,
-  "lastUpdated": "2025-12-08T08:16:24.509Z",
+  "totalProducts": 13,
+  "lastUpdated": "2025-12-09T00:48:22.084Z",
   "version": "2.0"
 }

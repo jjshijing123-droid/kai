@@ -19,7 +19,7 @@
     <div v-if="selectedFile" class="folder-name-section">
       <div class="form-item">
         <label class="form-label">{{ t('common_productFolderName') }}</label>
-        <Input v-model:value="folderName" :placeholder="t('common_folderNamePlaceholder')" :disabled="uploading"
+        <Input v-model="folderName" :placeholder="t('common_folderNamePlaceholder')" :disabled="uploading"
           @input="validateFolderName" />
         <div v-if="folderNameError" class="error-text">
           {{ folderNameError }}
