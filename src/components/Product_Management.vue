@@ -1271,7 +1271,6 @@ const handleLoginSuccess = () => {
 .stats-right {
   font-size: 12px;
   color: var(--neutral-11);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 13px;
   letter-spacing: 0;
 }
@@ -1340,7 +1339,6 @@ const handleLoginSuccess = () => {
   font-size: 14px;
   font-weight: 600;
   color: var(--neutral-12);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 1.1;
 }
 
@@ -1429,7 +1427,6 @@ const handleLoginSuccess = () => {
   font-size: 14px;
   font-weight: 400;
   color: var(--neutral-12);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -1451,7 +1448,6 @@ const handleLoginSuccess = () => {
   gap: 12px;
   font-size: 12px;
   color: var(--neutral-11);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 1.1;
 }
 
@@ -1541,7 +1537,6 @@ const handleLoginSuccess = () => {
   font-size: 14px;
   color: var(--neutral-12);
   margin: 0;
-  font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
   letter-spacing: 0;
   text-align: center;
@@ -1551,7 +1546,6 @@ const handleLoginSuccess = () => {
   font-size: 12px;
   color: var(--neutral-11);
   margin: 0;
-  font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 21px;
   letter-spacing: 0;
   text-align: center;
@@ -1617,7 +1611,6 @@ const handleLoginSuccess = () => {
 .breadcrumb-link {
   color: inherit;
   font-size: 12px;
-  font-family: inherit;
   cursor: pointer;
   line-height: 18px;
   height: 18px;
@@ -1635,7 +1628,6 @@ const handleLoginSuccess = () => {
 .breadcrumb-separator {
   color: var(--neutral-8);
   font-size: 14px;
-  font-family: inherit;
   margin: 0;
   line-height: 18px;
   height: 18px;
@@ -1699,7 +1691,6 @@ const handleLoginSuccess = () => {
   font-size: 14px;
   font-weight: 400;
   color: var(--neutral-12);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
@@ -1711,7 +1702,6 @@ const handleLoginSuccess = () => {
   gap: 6px;
   font-size: 12px;
   color: var(--neutral-11);
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 1.1;
   white-space: nowrap;
 }
@@ -1808,7 +1798,6 @@ const handleLoginSuccess = () => {
   font-weight: 700;
   color: var(--neutral-12);
   margin: 0;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 1.1;
   letter-spacing: 0;
   overflow: hidden;
@@ -1822,7 +1811,6 @@ const handleLoginSuccess = () => {
   font-size: 12px;
   color: var(--neutral-11);
   margin: 0;
-  font-family: "DIN 2014", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
   line-height: 1.1;
   letter-spacing: 0;
 }
