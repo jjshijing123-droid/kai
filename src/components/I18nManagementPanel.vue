@@ -173,7 +173,9 @@
               <Button
                 @click="addTranslation"
                 :disabled="!newKey"
-                variant="primary"
+                variant="fill"
+                size="40"
+                style="width: 100%;"
                 block
               >
                 <LucideIcon name="Plus" size="16" />
