@@ -256,4 +256,40 @@ router.get('/name/:productName', async (req, res) => {
   }
 });
 
+// 获取产品图片列表
+router.get('/:productName/images/:imageType', async (req, res) => {
+  try {
+    const { productName, imageType } = req.params;
+    console.log(`🔍 获取产品图片列表: ${productName} - ${imageType}`);
+    
+    // 验证图片类型参数
+    if (!['6views', 'other'].includes(imageType)) {
+      return res.status(400).json({
+        success: false,
+        message: '无效的图片类型，支持的类型为: 6views, other'
+      });
+    }
+    
+    const images = await productService.getProductImages(productName, imageType);
+    
+    console.log(`✅ 获取产品图片列表成功，共 ${images.length} 张图片`);
+    
+    res.json({
+      success: true,
+      images: images,
+      total: images.length,
+      productName: productName,
+      imageType: imageType
+    });
+    
+  } catch (error) {
+    console.error('获取产品图片列表失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取产品图片列表失败',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

@@ -184,6 +184,13 @@ class ApiService {
   }
 
   /**
+   * 获取产品图片列表
+   */
+  async getProductImages(productName, imageType) {
+    return this.get(`/products/${encodeURIComponent(productName)}/images/${imageType}`)
+  }
+
+  /**
    * 获取产品目录（兼容性）
    */
   async getProductCatalog() {

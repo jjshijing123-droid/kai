@@ -82,6 +82,7 @@ import Drawer from './Drawer.vue'
 import LoadingState from './ui/LoadingState.vue'
 import Button from './ui/button.vue'
 import { showMessage } from '../composables/useAdminAuth.js'
+import apiService from '../services/apiService.js'
 
 const { t, currentLanguage, toggleLanguage } = useI18n()
 const route = useRoute()
@@ -275,45 +276,40 @@ async function initGallery() {
     }
 }
 
-// 基于文件命名规则的图片检测，避免调用本地API
+// 使用API获取图片列表
 async function detectAvailableImages() {
-  let validImages = []
-  const folderName = imageType.value === 'other' ? 'images_other' : 'images_6Views'
-  const basePath = `Product/${productName.value}/${folderName}`
-  
-  console.log(`🔍 正在检测 ${folderName} 文件夹中的图片:`, basePath)
-  
   try {
-    // 图片文件命名规则：image_00.webp 到 image_05.webp（6个视图）
-    const expectedImageNames = ['image_00.webp', 'image_01.webp', 'image_02.webp', 'image_03.webp', 'image_04.webp', 'image_05.webp']
+    console.log(`🔍 正在调用API获取 ${imageType.value} 类型的图片列表`)
     
-    // 构建并验证图片URL
-    for (let i = 0; i < expectedImageNames.length; i++) {
-      const fileName = expectedImageNames[i]
-      const url = `/${basePath}/${fileName}`
+    // 调用API获取图片列表
+    const response = await apiService.getProductImages(productName.value, imageType.value)
+    
+    if (response && response.success && response.images) {
+      console.log(`🎉 API返回 ${response.images.length} 张图片`)
       
-      // 构建图片对象
-      validImages.push({
-        index: i,
-        url: url,
-        format: 'webp',
+      // 转换API返回的图片数据格式，适配现有组件
+      const validImages = response.images.map((img, index) => ({
+        index: index,
+        url: img.url,
+        format: img.format,
         loaded: false,
-        alt: `${fileName} (WEBP)`
-      })
+        alt: img.name
+      }))
+      
+      if (validImages.length === 0) {
+        const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
+        throw new Error(`${folderType}文件夹为空或未找到可用图片`)
+      }
+      
+      return validImages
+    } else {
+      console.error(`❌ API返回数据格式错误:`, response)
+      throw new Error('获取图片列表失败，API返回格式错误')
     }
-    
-    console.log(`🎉 图片检测完成，共生成 ${validImages.length} 张图片URL`)
-    
-    if (validImages.length === 0) {
-      const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
-      throw new Error(`${folderType}文件夹为空或未找到可用图片`)
-    }
-    
-    return validImages
   } catch (error) {
-    console.error(`❌ 检测图片失败:`, error.message)
+    console.error(`❌ 获取图片列表失败:`, error.message)
     const folderType = imageType.value === '6views' ? '6视图图片' : '其他图片'
-    throw new Error(`${folderType}文件夹检测失败: ${error.message}`)
+    throw new Error(`${folderType}图片获取失败: ${error.message}`)
   }
 }
 

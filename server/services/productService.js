@@ -295,6 +295,53 @@ class ProductService {
       throw new Error(`获取产品详情失败: ${error.message}`);
     }
   }
+
+  /**
+   * 获取产品图片列表
+   */
+  async getProductImages(productName, imageType) {
+    try {
+      // 确定图片文件夹类型
+      const folderType = imageType === '6views' ? 'images_6Views' : 'images_other';
+      const productImagesPath = path.join(this.serverPath, 'Product', productName, folderType);
+      
+      if (!fs.existsSync(productImagesPath)) {
+        throw new Error('图片文件夹不存在');
+      }
+      
+      // 获取文件夹中的所有图片文件
+      const items = fs.readdirSync(productImagesPath, { withFileTypes: true });
+      const images = [];
+      
+      for (const item of items) {
+        if (item.isFile()) {
+          // 检查是否为图片文件
+          const fileExtension = path.extname(item.name).toLowerCase();
+          if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(fileExtension)) {
+            const filePath = path.join(productImagesPath, item.name);
+            const stats = fs.statSync(filePath);
+            
+            images.push({
+              name: item.name,
+              url: `/Product/${productName}/${folderType}/${item.name}`,
+              path: `Product/${productName}/${folderType}/${item.name}`,
+              size: stats.size,
+              modified: stats.mtime,
+              format: fileExtension.slice(1) // 去掉点号，获取格式
+            });
+          }
+        }
+      }
+      
+      // 按文件名排序
+      images.sort((a, b) => a.name.localeCompare(b.name));
+      
+      return images;
+    } catch (error) {
+      console.error('获取产品图片列表失败:', error);
+      throw new Error(`获取产品图片列表失败: ${error.message}`);
+    }
+  }
 }
 
 module.exports = ProductService;
