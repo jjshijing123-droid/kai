@@ -220,7 +220,7 @@ defineExpose({
   border: none;
   outline: none;
   background: transparent;
-  padding:  0 var(--input-padding-default) ;
+  padding: 0;
   font-size: 14px;
   color: var(--neutral-12);
   line-height: 1.5;
@@ -246,7 +246,7 @@ defineExpose({
 
 .input-small .password-input {
   font-size: 13px;
-  padding: 0 var(--input-padding-small);
+  padding: 0;
 }
 
 .input-small .input-prefix,
@@ -261,7 +261,7 @@ defineExpose({
 
 .input-large .password-input {
   font-size: 15px;
-  padding: 0 var(--input-padding-large);
+  padding: 0;
 }
 
 .input-large .input-prefix,

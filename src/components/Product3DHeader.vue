@@ -78,18 +78,7 @@ const toggleDrawer = () => {
   document.dispatchEvent(event)
 }
 
-// 监听抽屉切换事件
-const handleDrawerToggle = () => {
-  toggleDrawer()
-}
 
-onMounted(() => {
-  document.addEventListener('toggle-3d-drawer', handleDrawerToggle)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('toggle-3d-drawer', handleDrawerToggle)
-})
 </script>
 
 <style scoped>

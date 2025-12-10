@@ -18,10 +18,10 @@
           type="text"
           :placeholder="t('common_enterUsername')"
           size="large"
+          paddingX="0" 
           :disabled="loading"
           @keypress.enter="handleLogin"
           class="form-input"
-          style="--input-padding-large: 0;"
         >
           <template #prefix>
             <LucideIcon name="User" size="14" class="input-icon" />
@@ -38,7 +38,6 @@
           size="large"
           @pressEnter="handleLogin"
           class="form-input"
-          style="--input-padding-large: 0;"
         >
           <template #prefix>
             <LucideIcon name="Lock" size="14" class="input-icon" />
