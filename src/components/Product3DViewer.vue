@@ -86,6 +86,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
+import apiService from '../services/apiService.js'
 import Product3DHeader from './Product3DHeader.vue'
 import Drawer from './Drawer.vue'
 import LoadingState from './ui/LoadingState.vue'
@@ -300,9 +301,6 @@ onMounted(async () => {
     fullRoute: route.fullPath
   })
   
-  // 立即初始化事件监听器，不等待图片加载完成
-  initializeEvents()
-  
   // 验证产品名称
   if (!productName.value || productName.value.trim() === '') {
     console.error('Product3DViewer: 产品名称为空或无效')
@@ -339,7 +337,7 @@ const initializeViewer = async () => {
     
     console.log('✅ 产品名称验证通过:', productName.value)
     
-    // 从JSON文件获取产品配置（包含4个旋转视角的路径）
+    // 从API获取产品配置（包含4个旋转视角的路径）
     await fetchProductCatalog()
     
     // 确保所有视图路径都已正确设置
@@ -399,52 +397,49 @@ const fetchProductInfo = async () => {
   }
 }
 
-// 从JSON文件获取产品配置
-const fetchProductCatalog = async () => {
+// 从API获取产品配置（带重试机制）
+const fetchProductCatalog = async (retryCount = 0) => {
   try {
-    console.log('从JSON文件获取产品配置...')
-    const response = await fetch('/data/product-catalog.json')
+    console.log('从API获取产品配置... (重试次数: ' + retryCount + ')')
     
-    if (!response.ok) {
-      throw new Error(`获取产品目录失败: ${response.status} ${response.statusText}`)
-    }
+    // 先尝试获取单个产品的详细信息
+    const productData = await apiService.getProductByName(productName.value)
+    console.log('API返回的产品数据:', productData)
     
-    const data = await response.json()
-    console.log('JSON文件返回的产品数据:', data)
-    
-    if (data.products && Array.isArray(data.products)) {
-      // 根据产品名称查找产品配置
-      const product = data.products.find(p => p.folderName === productName.value)
+    if (productData && productData.success && productData.product) {
+      const product = productData.product
+      console.log('✅ 找到产品配置:', product)
       
-      if (product && product.views) {
-        console.log('✅ 找到产品配置:', product)
-        
-        // 更新CONFIG中的视图路径
-        CONFIG.views.forEach((view, index) => {
-          if (product.views[view.name]) {
-            view.path = product.views[view.name]
-            console.log(`   从JSON更新视图路径 ${view.name}: ${view.path}`)
-          } else {
-            console.warn(`⚠️ JSON中未找到视图 ${view.name}，使用默认路径`)
-            view.path = `/Product/${productName.value}/${view.name}/`
-          }
-        })
-        
-        console.log('✅ 从JSON文件成功更新所有视图路径')
-        return product
-      } else {
-        console.warn('⚠️ 未在JSON中找到产品配置，使用默认路径')
-        updateViewPaths()
-        return null
-      }
+      // 更新CONFIG中的视图路径
+      CONFIG.views.forEach((view, index) => {
+        if (product.views && product.views[view.name]) {
+          view.path = product.views[view.name]
+          console.log(`   从API更新视图路径 ${view.name}: ${view.path}`)
+        } else {
+          console.warn(`⚠️ API中未找到视图 ${view.name}，使用默认路径`)
+          view.path = `/Product/${productName.value}/${view.name}/`
+        }
+      })
+      
+      console.log('✅ 从API成功更新所有视图路径')
+      return product
     } else {
-      console.warn('⚠️ JSON文件格式不正确，使用默认路径')
+      console.warn('⚠️ 未在API中找到产品配置，使用默认路径')
       updateViewPaths()
       return null
     }
   } catch (error) {
-    console.error('从JSON文件获取产品配置失败:', error)
-    console.log('回退到默认路径构建...')
+    console.error('从API获取产品配置失败:', error)
+    
+    // 如果重试次数未达到上限，进行重试
+    if (retryCount < CONFIG.retryCount) {
+      console.log(`⏳ 重试获取产品配置，等待 ${CONFIG.retryDelay}ms...`)
+      await new Promise(resolve => setTimeout(resolve, CONFIG.retryDelay))
+      return fetchProductCatalog(retryCount + 1)
+    }
+    
+    // 重试次数达到上限，回退到默认路径
+    console.log('❌ 所有重试都失败，回退到默认路径构建...')
     updateViewPaths()
     return null
   }
@@ -584,13 +579,19 @@ const loadSingleImage = (index, viewIndex) => {
     
     const frame = index.toString().padStart(2, '0')
     const view = enabledViews.value[viewIndex]
-    const path = view.path
+    let path = view.path
     
     // 验证路径格式
     if (!path || path === '') {
       console.error('❌ Product3DViewer: loadSingleImage - 无效的视图路径:', path)
-      reject(new Error(t('product3dViewer_invalidViewPath')))
-      return
+      // 使用产品名称构建默认路径
+      path = `/Product/${productName.value}/${view.name}/`
+      console.log(`⚠️  使用默认路径: ${path}`)
+    }
+    
+    // 确保路径以斜杠结尾
+    if (!path.endsWith('/')) {
+      path += '/'
     }
     
     const cleanup = (img, timer) => {
@@ -631,15 +632,18 @@ const loadSingleImage = (index, viewIndex) => {
       })
     }
     
+    // 使用API返回的路径构建图片URL
     const webpUrl = `${path}image_${frame}${CONFIG.imageExtension}`
     const pngUrl = `${path}image_${frame}.png`
+    
+    console.log(`📥 尝试加载图片: ${webpUrl}`)
     
     // 首先尝试加载WebP格式
     loadImage(webpUrl, 'WebP')
       .then(img => {
         imageCache.value[viewIndex][index] = img
         loadedCount.value++
-        console.log(`✅ WebP图片加载成功: [${index}]`)
+        console.log(`✅ WebP图片加载成功: [${view.name}-${index}]`)
         updateProgress()
         // 如果是当前显示的帧，立即更新图片
         if (viewIndex === currentViewIndex.value && index === currentFrame.value && productImage.value) {
@@ -648,13 +652,13 @@ const loadSingleImage = (index, viewIndex) => {
         resolve(true)
       })
       .catch(webpError => {
-        console.log(`WebP加载失败，尝试加载PNG格式: ${pngUrl}`)
+        console.log(`⚠️ WebP加载失败，尝试加载PNG格式: ${pngUrl}`)
         // WebP加载失败，尝试加载PNG格式
         return loadImage(pngUrl, 'PNG')
           .then(img => {
             imageCache.value[viewIndex][index] = img
             loadedCount.value++
-            console.log(`✅ PNG图片加载成功: [${index}]`)
+            console.log(`✅ PNG图片加载成功: [${view.name}-${index}]`)
             updateProgress()
             // 如果是当前显示的帧，立即更新图片
             if (viewIndex === currentViewIndex.value && index === currentFrame.value && productImage.value) {
@@ -664,8 +668,11 @@ const loadSingleImage = (index, viewIndex) => {
           })
       })
       .catch(pngError => {
-        console.error(`PNG加载也失败: ${pngUrl}`)
-        reject(new Error(t('product3dViewer_frameLoadFailed', { frame })))
+        console.error(`❌ PNG加载也失败: ${pngUrl}`)
+        failedLoads.value++
+        // 记录失败的图片信息，但不中断整体加载流程
+        console.warn(`⚠️ 图片加载失败，继续加载其他图片: ${pngError.message}`)
+        resolve(false) // 返回false表示加载失败，但继续执行
       })
   })
 }

@@ -671,6 +671,10 @@ const goBack = () => {
 
 <style scoped>
 
+.admin-content{
+  width: 100%;
+}
+
 /* 页面头部 */
 .page-header {
   margin-bottom: 20px;

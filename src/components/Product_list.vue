@@ -1,5 +1,5 @@
 <template>
-  <div class="product-list">
+  <div class="containeruser">
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
@@ -345,10 +345,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.product-list {
-  width: 100%;
-  padding-top: 20px;
-}
+
 
 /* ===== 加载状态样式 ===== */
 .loading-container {

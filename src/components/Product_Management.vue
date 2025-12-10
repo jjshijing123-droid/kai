@@ -1228,6 +1228,7 @@ const handleLoginSuccess = () => {
 
 /* 页面头部 */
 .page-header {
+  width: 100%;
   margin-bottom: 20px;
   padding: 0;
   background: transparent;
@@ -1572,7 +1573,8 @@ const handleLoginSuccess = () => {
 /* 文件夹网格 */
 .folder-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  /* grid-template-columns: repeat(5, 1fr); */
   gap: 10px;
   width: 100%;
 }
@@ -1888,6 +1890,7 @@ const handleLoginSuccess = () => {
 
   
   .page-header {
+    width: 100%;
   }
   
   /* Frame 330 - 搜索和操作区域 */

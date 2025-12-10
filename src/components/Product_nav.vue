@@ -1,7 +1,7 @@
 <template>
-  <div class="product-detail">
+  <div class="containeruser">
     
-    <div class="container">
+    <div class="container1">
       <div class="header-container">
         <div class="lazy-load" :class="{ 'loaded': imageLoaded }" id="imageContainer">
           <img
@@ -280,17 +280,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.product-detail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 0;
-  padding-top: 10%;
-  background-color: var(--neutral-1);
-  overflow-x: hidden;
-}
 
-.container {
+.container1 {
+  margin-top: 10%;
   width: 100%;
   max-width: 400px;
   text-align: center;
@@ -405,14 +397,7 @@ h1 {
 
 
 @media (min-width: 320px) and (max-width: 480px) {
-  .product-detail {
-    padding: 10px 20px;
-  }
+
   
-
-
-  .container {
-    margin-top: 10%;
-  }
 }
 </style>
