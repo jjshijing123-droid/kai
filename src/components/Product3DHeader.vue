@@ -5,7 +5,7 @@
       @click="handleBack" 
       class="back-button"
       variant="no"
-      size="icon40"
+      size="icon32"
     >
       <LucideIcon name="ChevronLeft" size="18" />
     </Button>
@@ -18,16 +18,16 @@
         @click="handleDownload" 
         class="download-button"
         variant="no"
-        size="40"
+        size="32"
       >
-        <LucideIcon name="Download" size="18" />
+        <LucideIcon name="Download" size="16" />
         {{ t('product3dHeader_downloadAllImages') }}
       </Button>
       
       <!-- 抽屉按钮 -->
       <Button 
         variant="no"
-        size="icon40"
+        size="icon32"
         @click="toggleDrawer" 
       >
         <LucideIcon name="Menu" size="18" />

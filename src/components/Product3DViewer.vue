@@ -1,9 +1,8 @@
 <template>
   <div class="product-3d-viewer" :class="{ 'immersive-mode': isImmersiveMode }">
     <!-- 新的3D页面Header - 在沉浸模式下隐藏 -->
-  <Product3DHeader v-if="!isImmersiveMode" :visible="allImagesLoaded" />
-    
-
+  <Product3DHeader v-if="!isImmersiveMode && !isAutoRotating" :visible="allImagesLoaded" />
+  
     <!-- 3D查看器主容器 -->
     <div 
       class="viewer-container"
@@ -56,7 +55,7 @@
     </div>
 
     <!-- 控制按钮容器 - 在沉浸模式下隐藏 -->
-    <div v-if="!isImmersiveMode && allImagesLoaded" class="controls-container">
+    <div v-if="!isImmersiveMode && allImagesLoaded && !isAutoRotating" class="controls-container">
       <button class="auto-rotate-btn" @click="toggleAutoRotation">
         {{ isAutoRotating ? t('product3dViewer_stopRotation') : t('product3dViewer_autoRotate') }}
       </button>
