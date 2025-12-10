@@ -1517,7 +1517,7 @@ const handleLoginSuccess = () => {
   justify-content: center;
   border: 1px dashed var(--neutral-7);
   border-radius: 8px;
-  padding: 30px;
+  padding: 20px 30px;
   cursor: pointer;
   transition: all 0.2s ease;
   gap: 10px;
@@ -1534,7 +1534,7 @@ const handleLoginSuccess = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
 }
 
 .upload-title {
