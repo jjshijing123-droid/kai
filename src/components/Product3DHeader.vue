@@ -5,7 +5,7 @@
       @click="handleBack" 
       class="back-button"
       variant="no"
-      size="icon32"
+      size="icon40"
     >
       <LucideIcon name="ChevronLeft" size="18" />
     </Button>
@@ -27,7 +27,7 @@
       <!-- 抽屉按钮 -->
       <Button 
         variant="no"
-        size="icon32"
+        size="icon40"
         @click="toggleDrawer" 
       >
         <LucideIcon name="Menu" size="18" />

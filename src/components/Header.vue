@@ -29,7 +29,7 @@
       </div>
       
       <!-- 通用抽屉菜单按钮（在所有屏幕尺寸下显示） -->
-      <Button @click="toggleMenu" class="Menu-button" variant="no" size="icon32" >
+      <Button @click="toggleMenu" class="Menu-button" variant="no" size="icon40" >
          <LucideIcon name="Menu" size="18" />
       </Button>
     </div>
