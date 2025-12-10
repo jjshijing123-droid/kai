@@ -470,9 +470,10 @@ onMounted(() => {
 /* ===== 产品网格布局 ===== */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  /* grid-template-columns: repeat(5, 1fr); */
   gap: 12px;
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 20px 0;
 }
@@ -641,7 +642,7 @@ onMounted(() => {
 }
 
 .product-name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: #ffffff;
   margin: 0px 16px;
@@ -653,52 +654,13 @@ onMounted(() => {
   text-overflow: ellipsis;
 }
 
-/* ===== 响应式设计 - 移动设备 ===== */
-@media (min-width: 320px) and (max-width: 480px) {
+@media (max-width: 768px){
   .product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    padding: 15px 0;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
   
   .product-name {
-    font-size: 13px;
-    margin: 0px 12px;
-  }
-
-  .ditu {
-    border-radius: 20px;
-  }
-}
-
-/* ===== 响应式设计 - 平板设备 ===== */
-@media (min-width: 481px) and (max-width: 767px) {
-  .product-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    padding: 18px 0;
-  }
-
-  .product-name {
-    font-size: 16px;
-    margin: 0px 13px;
-  }
-
-  .ditu {
-    border-radius: 24px;
-  }
-}
-
-/* ===== 响应式设计 - 中等屏幕 ===== */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .product-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    padding: 20px 0;
-  }
-  
-  .product-name {
-    font-size: 16px;
+    font-size: 14px;
     margin: 0px 13px;
   }
 
@@ -707,21 +669,5 @@ onMounted(() => {
   }
 }
 
-/* ===== 响应式设计 - 大屏幕 ===== */
-@media (min-width: 1024px) {
-  .product-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 20px;
-    padding: 20px 0;
-  }
-  
-  .product-name {
-    font-size: 16px;
-    margin: 0px 14px;
-  }
 
-  .ditu {
-    border-radius: 30px;
-  }
-}
 </style>
