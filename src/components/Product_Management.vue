@@ -34,8 +34,9 @@
               {{ t('productManagement_createFolder') }}
             </Button>
             <Button @click="showBatchUploadModal = true" variant="fill" size="32">
-              {{ t('productManagement_batchUpload') }}
-            </Button>
+            <LucideIcon name="Upload" class="h-4 w-4" />
+            {{ t('productManagement_batchUpload') }}
+          </Button>
           </div>
         </div>
         

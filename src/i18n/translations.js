@@ -512,7 +512,7 @@ const baseTranslations = {
     "productDetail_productOther": "其他图片",
     "i18nManager_title": "翻译管理器",
     "i18nManager_saveAll": "保存全部",
-    "i18nManager_export": "导出",
+    "i18nManager_export": "导出翻译",
     "i18nManager_completeness": "翻译完整性",
     "i18nManager_allTranslations": "所有翻译",
     "i18nManager_search": "搜索翻译...",

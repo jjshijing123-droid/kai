@@ -250,7 +250,7 @@ onUnmounted(() => {
   padding: 0 16px;
   height: 64px;
   background-color: var(--background);
-  border-bottom: 1px solid var(--neutral-6);
+  border-bottom: 1px solid var(--neutral-3);
   position: relative;
 }
 
