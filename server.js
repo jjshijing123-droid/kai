@@ -19,6 +19,8 @@ const { ProductCatalogUtils, productCatalogUtils } = require('./server/utils/pro
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const isProduction = NODE_ENV === 'production';
 
 // 初始化服务实例
 const productService = new ProductService();
@@ -26,40 +28,9 @@ const fileService = new FileService();
 const folderService = new FolderService();
 const uploadService = new UploadService();
 
-// 环境判断
-const isProduction = process.env.NODE_ENV === 'production';
-
-// 日志记录函数
-function logRequest(req, res, next) {
-  const start = Date.now();
-  
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    const logData = {
-      timestamp: new Date().toISOString(),
-      method: req.method,
-      url: req.url,
-      status: res.statusCode,
-      duration: `${duration}ms`,
-      ip: req.ip,
-      userAgent: req.get('User-Agent')
-    };
-    
-    if (isProduction) {
-      // 生产环境：输出JSON格式日志，便于日志系统解析
-      console.log(JSON.stringify(logData));
-    } else {
-      // 开发环境：输出易读格式日志
-      console.log(`${logData.timestamp} ${logData.method} ${logData.url} ${logData.status} ${logData.duration}`);
-    }
-  });
-  
-  next();
-}
-
 // 中间件配置
 const corsOptions = {
-  origin: isProduction ? ['http://localhost:3000', 'http://yourdomain.com'] : '*',
+  origin: isProduction ? ['http://localhost:3000', 'https://yourdomain.com'] : '*',
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -67,19 +38,23 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 应用日志记录中间件
-app.use(logRequest);
+// 生产环境安全配置
+if (isProduction) {
+  app.set('trust proxy', 1);
+  // 隐藏Express版本信息
+  app.disable('x-powered-by');
+}
 
 // 静态文件服务 - 必须在API路由之前
-// 生产环境使用dist目录，开发环境使用public目录
-const staticDir = isProduction ? 'dist' : 'public';
-app.use(express.static(path.join(__dirname, staticDir)));
+if (isProduction) {
+  // 生产环境使用dist目录
+  app.use(express.static(path.join(__dirname, 'dist')));
+} else {
+  // 开发环境使用public目录
+  app.use(express.static(path.join(__dirname, 'public')));
+}
 // 产品图片静态文件服务
 app.use('/Product', express.static(path.join(__dirname, 'Product')));
-// 构建后的资源文件服务（生产环境）
-if (isProduction) {
-  app.use('/assets', express.static(path.join(__dirname, 'dist/assets')));
-}
 
 // ========== API路由 ==========
 
@@ -206,20 +181,7 @@ app.post('/api/products/refresh-catalog', async (req, res) => {
 
 // 翻译管理路由 - 新增
 app.use('/api/i18n', (req, res, next) => {
-  // 确保在生产环境中也能正确找到翻译文件
-  let translationsPath = path.join(__dirname, 'src/i18n/translations.js');
-  
-  // 如果文件不存在，尝试从项目根目录查找
-  if (!fs.existsSync(translationsPath)) {
-    translationsPath = path.join(__dirname, '../src/i18n/translations.js');
-  }
-  
-  // 如果仍然不存在，尝试另一种路径
-  if (!fs.existsSync(translationsPath)) {
-    translationsPath = path.resolve(__dirname, 'src/i18n/translations.js');
-  }
-  
-  console.log('Translations file path:', translationsPath, 'Exists:', fs.existsSync(translationsPath));
+  const translationsPath = path.join(__dirname, 'src/i18n/translations.js');
   req.translationsPath = translationsPath;
   next();
 });
@@ -537,7 +499,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({
     success: false,
     message: '服务器内部错误',
-    error: err.message
+    error: process.env.NODE_ENV === 'development' ? err.message : '服务器错误'
   });
 });
 
@@ -550,8 +512,10 @@ app.use((req, res, next) => {
       !req.url.startsWith('/assets') && 
       !req.url.startsWith('/@vite') && 
       req.method === 'GET') {
-    // 生产环境使用dist目录的index.html，开发环境使用根目录的index.html
-    const indexPath = isProduction ? path.join(__dirname, 'dist/index.html') : path.join(__dirname, 'index.html');
+    // 根据环境选择index.html路径
+    const indexPath = isProduction 
+      ? path.join(__dirname, 'dist', 'index.html') 
+      : path.join(__dirname, 'index.html');
     
     if (fs.existsSync(indexPath)) {
       return res.sendFile(indexPath);
@@ -577,7 +541,7 @@ app.use((req, res) => {
 async function startServer() {
   try {
     console.log('='.repeat(60));
-    console.log(`启动产品管理服务器 - ${isProduction ? '生产环境' : '开发环境'}`);
+    console.log(`启动产品管理服务器 - 环境: ${NODE_ENV}`);
     console.log('='.repeat(60));
     
     // 验证产品目录数据
@@ -594,7 +558,7 @@ async function startServer() {
     const server = app.listen(PORT, () => {
       console.log('='.repeat(60));
       console.log(`服务器已启动，端口: ${PORT}`);
-      console.log(`环境: ${isProduction ? 'production' : 'development'}`);
+      console.log(`环境: ${NODE_ENV}`);
       console.log(`静态文件目录: ${isProduction ? 'dist/' : 'public/'}`);
       console.log(`服务访问地址: http://localhost:${PORT}`);
       console.log(`产品列表API: http://localhost:${PORT}/api/products`);

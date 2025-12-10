@@ -1,5 +1,5 @@
 <template>
-  <div class="i18n-manager">
+  <div class="containeruser">
     <!-- 管理员内容 -->
     <div v-if="isAdminLoggedIn" class="admin-content">
       <!-- 页面头部 -->
@@ -670,15 +670,6 @@ const goBack = () => {
 </script>
 
 <style scoped>
-.i18n-manager {
-  padding: 20px;
-  max-width: 1160px;
-  margin: 0 auto;
-  background-color: var(--background);
-  /* 利用App.vue中已经计算好的高度空间，确保减去header后充分利用可用空间 */
-  min-height: calc(100vh - 64px); /* 与App.vue的main-content保持一致 */
-  box-sizing: border-box;
-}
 
 /* 页面头部 */
 .page-header {
@@ -1082,9 +1073,7 @@ const goBack = () => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .i18n-manager {
-    padding: 20px 0;
-  }
+
   
   .page-header {
   }

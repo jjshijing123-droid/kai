@@ -75,8 +75,8 @@ onBeforeUnmount(() => {
   margin-top: 64px; /* 为固定头部留出空间 */
   padding: 0px 0;
   flex: 1; /* 使用 flex 布局占据剩余空间 */
-  min-height: calc(100vh - 64px); /* 仍然保留 min-height 作为 fallback */
-  /* 移除固定高度和overflow属性，让浏览器处理滚动 */
+  height: calc(100vh - 64px); 
+  overflow-y: auto;
 }
 
 /* 3D查看器页面全屏样式 */
@@ -87,12 +87,7 @@ onBeforeUnmount(() => {
   overflow: hidden; /* 防止滚动条影响3D体验 */
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-  min-height: 100%; /* 确保容器填满内容区域 */
-}
+
 
 /* 3D查看器页面容器全屏样式 */
 .main-content.full-screen .container {

@@ -7,19 +7,18 @@ export default {
     "./src/**/*.{vue,js,ts,jsx,tsx}", //  src 目录下的所有 Vue、JS、TS、JSX、TSX 文件
   ],
   
-  // 主题配置
-  theme: {
-    // 容器配置
-    container: {
-      center: true, // 容器居中
-      padding: "2rem", // 容器内边距
-      screens: {
-        "2xl": "1400px", // 2xl 屏幕尺寸下的容器最大宽度
+    // 主题配置
+    theme: {
+      container: {
+        center: true, // 容器居中 
+        padding: "0rem", // 容器内边距 
+        screens: {
+          // "2xl": "1400px", // 2xl 屏幕尺寸下的容器最大宽度 
+        }, 
       },
-    },
-    
-    // 扩展默认主题
-    extend: {
+      
+      // 扩展默认主题
+      extend: {
       // 颜色配置，使用 CSS 变量实现主题切换
         colors: {
           border: "var(--border)", // 边框颜色

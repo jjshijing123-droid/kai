@@ -1,6 +1,6 @@
 <template>
   <!-- 管理员内容 -->
-  <div v-if="isAdminLoggedIn" class="file-manager">
+  <div v-if="isAdminLoggedIn" class="containeruser">
     <!-- 页面头部 -->
     <div class="page-header">
       <!-- Frame 348 -->
@@ -1187,12 +1187,7 @@ const handleLoginSuccess = () => {
 </script>
 
 <style scoped>
-.file-manager {
-  padding: 20px;
-  max-width: 1160px;
-  margin: 0 auto;
-  width: 100%;
-}
+
 
 /* Frame 348 - 页面头部 */
 .frame348 {
@@ -1890,9 +1885,7 @@ const handleLoginSuccess = () => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .file-manager {
-    padding: 16px 0;
-  }
+
   
   .page-header {
   }
