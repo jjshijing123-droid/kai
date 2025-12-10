@@ -474,8 +474,7 @@ onMounted(() => {
   /* grid-template-columns: repeat(5, 1fr); */
   gap: 12px;
   width: 100%;
-  margin: 0 auto;
-  padding: 20px 0;
+  padding-bottom: 44px;
 }
 
 /* ===== 产品卡片样式 ===== */

@@ -29,11 +29,13 @@ const buttonVariants = cva(
       // 按钮类型变体
       variant: {
         // 填充32
+        fillcai: "bg-anniu-1 text-white hover:bg-primary-9" ,
+
         fill: "bg-primary-9 text-white hover:bg-primary-8 active:bg-primary-7 active:text-white/90" ,
         // 描边32
-        line: "border-neutral-6 text-neutral-12 border hover:bg-neutral-2 hover:border-neutral-7 active:border-neutral-5 active:text-neutral-11",
+        line: "border-neutral-6 text-neutral-12 border hover:bg-neutral-4 hover:border-neutral-7 active:border-neutral-5 active:text-neutral-11",
         // 幽灵
-        no: "text-neutral-12 hover:bg-neutral-2 active:bg-neutral-1 active:text-neutral-11",
+        no: "text-neutral-12 hover:bg-neutral-4 active:bg-neutral-2 active:text-neutral-11",
 
 
         // 默认主要按钮样式

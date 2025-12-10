@@ -1193,10 +1193,8 @@ const handleLoginSuccess = () => {
 /* Frame 348 - 页面头部 */
 .frame348 {
   display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  align-self: stretch;
-  justify-content: space-between;
+  justify-content: space-between; /* 左右对齐 */
+  align-items: center; /* 垂直居中 */
   border-radius: 12px;
   width: 100%;
   height: auto;
@@ -1536,7 +1534,7 @@ const handleLoginSuccess = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
 }
 
 .upload-title {
@@ -1894,6 +1892,12 @@ const handleLoginSuccess = () => {
     width: 100%;
   }
   
+  .frame348 {
+  display:grid;
+  grid-template-columns: 1fr; /* 单列 */
+  gap: 16px;
+}
+
   /* Frame 330 - 搜索和操作区域 */
   .frame330 {
     grid-template-columns: repeat(1, 1fr);

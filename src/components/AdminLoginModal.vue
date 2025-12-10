@@ -48,8 +48,8 @@
       <div class="form-actions">
         <Button
           type="submit"
-          variant="primary"
-          size="large"
+          variant="fill"
+          size="40"
           :loading="loading"
           block
           class="login-submit-btn"
@@ -244,6 +244,10 @@ const resetForm = () => {
   line-height: 1.5;
 }
 
+.login-submit-btn{
+  width: 100%;
+}
+
 .form-input {
   /* 覆盖默认样式 */
 }
@@ -257,62 +261,16 @@ const resetForm = () => {
   margin-top: 20px;
 }
 
-.login-submit-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  background: linear-gradient(135deg, var(--primary-9), var(--green-8));
-  border: none;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px var(--primary-opacity-4);
-  width: 100%;
-  height: 44px;
-}
 
-.login-submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--primary-10), var(--green-9));
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--primary-opacity-6);
-}
 
-.login-submit-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
 
-.login-submit-btn:disabled {
-  background: var(--neutral-3);
-  color: var(--neutral-8);
-  border: none;
-  box-shadow: none;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.login-submit-btn .icon {
-  font-size: 16px;
-}
 
 /* 响应式设计 */
 @media (max-width: 480px) {
   .login-form-container {
     padding: 20px;
   }
-  
-  .login-submit-btn {
-    font-size: 13px;
-    height: 38px;
-  }
-  
-  .login-submit-btn .icon {
-    font-size: 14px;
-  }
+
 }
 
 @media (max-width: 768px) {

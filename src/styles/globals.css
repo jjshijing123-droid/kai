@@ -296,13 +296,13 @@ html, body {
 
 /* 滚动条样式 */
 ::-webkit-scrollbar {
-  width: 6px; /* 滚动条宽度 */
-  height: 6px; /* 滚动条高度 */
+  width: 8px; /* 滚动条宽度 */
+  height: 8px; /* 滚动条高度 */
 }
 
 /* 滚动条轨道样式 */
 ::-webkit-scrollbar-track {
-  background: var(--neutral-1); /* 轨道背景色：浅灰色 */
+  background: var(--neutral-2); /* 轨道背景色：浅灰色 */
   border-radius: 3px; /* 轨道边框半径：3px */
 }
 
@@ -364,6 +364,10 @@ input:focus, textarea:focus, select:focus {
 
 /* 响应式断点 - 小屏设备（小于 768px） */
 @media (max-width: 768px) {
+
+  .page-title {
+    font-size: 20px;
+  }
 
   .containeruser {
     padding: 20px 16px;

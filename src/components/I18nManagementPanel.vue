@@ -688,10 +688,8 @@ const goBack = () => {
 /* Frame 348 - 页面头部 */
 .frame348 {
   display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  align-self: stretch;
-  justify-content: space-between;
+  justify-content: space-between; /* 左右对齐 */
+  align-items: center; /* 垂直居中 */
   border-radius: 12px;
   background: var(--background);
   width: 100%;
@@ -707,15 +705,7 @@ const goBack = () => {
   column-gap: 12px;
 }
 
-/* 页面标题 */
-.page-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--neutral-12);
-  margin: 0;
-  line-height: 24px;
-  letter-spacing: 0;
-}
+
 
 
 
@@ -1106,14 +1096,12 @@ const goBack = () => {
 }
 
 @media (max-width: 576px) {
-  .page-title {
-    font-size: 20px;
-  }
+
   
   .frame348 {
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  gap: 12px;
+  display:grid;
+  grid-template-columns: 1fr; /* 单列 */
+  gap: 16px;
 
   }
 
