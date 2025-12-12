@@ -738,7 +738,6 @@ watch(productName, (newName) => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: #ffffff;
   position: relative;
   padding-top: 64px;
 }
@@ -747,7 +746,6 @@ watch(productName, (newName) => {
 .gallery-container {
   width: 100%;
   max-width: 1200px;
-  background: white;
   height: calc(90vh - 80px);
   display: flex;
   flex-direction: column;
@@ -761,7 +759,6 @@ watch(productName, (newName) => {
   justify-content: center;
   align-items: center;
   touch-action: none;
-  background: white;
 }
 
 .main-viewer img {
@@ -811,7 +808,6 @@ watch(productName, (newName) => {
   overflow: hidden;
   position: relative;
   flex-shrink: 0;
-  background: white;
 }
 
 .thumbnails {
@@ -1053,11 +1049,9 @@ watch(productName, (newName) => {
 /* 打印样式 */
 @media print {
   .image-gallery {
-    background: white;
   }
   
   .gallery-container {
-    border: 1px solid #000;
   }
   
   .nav-button {
