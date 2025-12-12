@@ -159,7 +159,46 @@ DELETE /api/products/{productName}
 }
 ```
 
-#### 1.5 根据名称获取产品详情
+#### 1.5 根据ID获取产品详情
+```http
+GET /api/products/{id}
+```
+
+**描述**: 根据产品ID获取详细信息
+
+**路径参数**:
+- `id` (string): 产品ID
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "product": {
+    "id": "1",
+    "name": "产品名称",
+    "folderName": "产品名称",
+    "category": "general",
+    "description": "Product model: 产品名称",
+    "path": "Product/产品名称",
+    "totalSize": 1024000,
+    "fileCount": 128,
+    "mainImage": "/Product/产品名称/image_00.webp",
+    "folder": "Product/产品名称/",
+    "views": {
+      "view1": "/Product/产品名称/view1/",
+      "view2": "/Product/产品名称/view2/",
+      "view3": "/Product/产品名称/view3/",
+      "view4": "/Product/产品名称/view4/"
+    },
+    "additionalImages": {
+      "sixViews": "/Product/产品名称/images_6Views/",
+      "other": "/Product/产品名称/images_other/"
+    }
+  }
+}
+```
+
+#### 1.6 根据名称获取产品详情
 ```http
 GET /api/products/name/{productName}
 ```
@@ -198,7 +237,7 @@ GET /api/products/name/{productName}
 }
 ```
 
-#### 1.6 获取产品图片列表
+#### 1.7 获取产品图片列表
 ```http
 GET /api/products/{productName}/images/{imageType}
 ```
@@ -229,7 +268,7 @@ GET /api/products/{productName}/images/{imageType}
 }
 ```
 
-#### 1.7 重新生成产品目录
+#### 1.8 重新生成产品目录
 ```http
 POST /api/products/refresh-catalog
 ```
@@ -537,7 +576,7 @@ GET /api/download/{filePath}/{fileName}
 
 ### 4. 文件上传接口
 
-#### 4.1 上传文件
+#### 4.1 上传文件到指定文件夹
 ```http
 POST /api/upload-files
 ```
@@ -547,7 +586,7 @@ POST /api/upload-files
 **请求类型**: `multipart/form-data`
 
 **请求参数**:
-- `file` (File): 上传的文件
+- `file` (File[]): 上传的文件列表（支持多文件）
 - `folderPath` (string): 目标文件夹路径
 
 **响应示例**:
@@ -569,17 +608,18 @@ POST /api/upload-files
 }
 ```
 
-#### 4.2 上传文件夹
+#### 4.2 上传单个产品文件夹
 ```http
-POST /api/upload-folder
+POST /api/upload-product-folder
 ```
 
-**描述**: 上传产品文件夹（ZIP格式）
+**描述**: 上传单个产品文件夹（ZIP格式）
 
 **请求类型**: `multipart/form-data`
 
 **请求参数**:
 - `file` (File): ZIP文件
+- `folderName` (string): 目标文件夹名称
 
 **响应示例**:
 ```json
@@ -596,7 +636,7 @@ POST /api/upload-folder
 
 #### 4.3 批量替换产品
 ```http
-POST /api/upload/batch-replace
+POST /api/batch-replace-products
 ```
 
 **描述**: 批量替换所有产品（危险操作）
@@ -604,7 +644,7 @@ POST /api/upload/batch-replace
 **请求类型**: `multipart/form-data`
 
 **请求参数**:
-- `file` (File): 包含所有产品的ZIP文件
+- `zipFile` (File): 包含所有产品的ZIP文件
 
 **响应示例**:
 ```json
@@ -622,6 +662,43 @@ POST /api/upload/batch-replace
     }
   ],
   "backupPath": "Product_backup_1704067200000"
+}
+```
+
+#### 4.4 手动重新生成产品目录
+```http
+POST /api/regenerate-catalog
+```
+
+**描述**: 手动重新生成产品目录（替代方法）
+
+**请求参数**: 无
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "产品目录重新生成成功",
+  "data": {}
+}
+```
+
+#### 4.5 获取上传进度
+```http
+GET /api/upload-progress/:uploadId
+```
+
+**描述**: 获取大文件上传进度
+
+**路径参数**:
+- `uploadId` (string): 上传任务ID
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "progress": 100,
+  "message": "上传完成"
 }
 ```
 

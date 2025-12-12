@@ -325,14 +325,26 @@ const handleImageError = (product, event) => {
 }
 
 /**
+ * 设置浏览器标题
+ */
+const setBrowserTitle = () => {
+  document.title = t('common_browserTitle')
+}
+
+/**
  * 生命周期
  */
 onMounted(() => {
   loadProducts()
   
+  // 设置初始浏览器标题
+  setBrowserTitle()
+  
   // 监听语言变化
   const unsubscribe = useI18n().addListener(() => {
     loadProducts()
+    // 语言变化时更新浏览器标题
+    setBrowserTitle()
   })
   
   // 清理监听器

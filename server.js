@@ -18,9 +18,9 @@ const uploadsRouter = require('./server/routes/uploads');
 const { ProductCatalogUtils, productCatalogUtils } = require('./server/utils/productCatalogUtils');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProduction = NODE_ENV === 'production';
+const PORT = process.env.PORT || (isProduction ? 8000 : 3000);
 
 // 初始化服务实例
 const productService = new ProductService();

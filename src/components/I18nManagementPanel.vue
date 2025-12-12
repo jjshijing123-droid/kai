@@ -196,7 +196,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import i18n from '../i18n/index.js'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
@@ -435,6 +435,9 @@ const loadTranslations = async (showNotification = true) => {
       showMessage('error', t('i18nManager_refreshFailed'))
     }
   }
+  
+  // 更新浏览器标题
+  setPageTitle()
 }
 
 // 获取所有翻译键
@@ -645,11 +648,19 @@ export const languages = {
   URL.revokeObjectURL(url)
 }
 
+// 设置浏览器标题
+const setPageTitle = () => {
+  document.title = t('i18nManager_title')
+}
+
 onMounted(async () => {
   console.log('I18nManager mounted')
   
   // 等待所有数据加载完成，不显示刷新提示
   await loadTranslations(false)
+  
+  // 设置初始标题
+  setPageTitle()
   
   // 初始化新翻译对象
   if (availableLanguages.value) {
@@ -669,6 +680,14 @@ const handleLoginSuccess = () => {
 const goBack = () => {
   window.history.back()
 }
+
+// 监听语言变化，更新浏览器标题
+watch(
+  () => currentLanguage.value,
+  () => {
+    setPageTitle()
+  }
+)
 </script>
 
 <style scoped>

@@ -4,7 +4,7 @@
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Node.js](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)
+![Node.js](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen.svg)
 ![Vue](https://img.shields.io/badge/vue-3.5.24-blue.svg)
 
 ## 📋 项目简介
@@ -41,24 +41,35 @@ ICE图片查看器是一个现代化的产品管理系统，采用前后端分�
 - **Vite** - 下一代前端构建工具
 - **Vue Router** - Vue.js官方路由管理器
 - **Tailwind CSS** - 实用优先的CSS框架
-- **Lucide Vue** - 现代化图标库
+- **lucide-vue-next** - 现代化图标库
+- **class-variance-authority** - 组件变体管理
+- **clsx** - 条件类名工具
+- **tailwind-merge** - Tailwind类名合并
+- **tailwindcss-animate** - Tailwind动画扩展
+- **axios** - HTTP客户端
+- **file-saver** - 文件下载工具
+- **JSZip** - 前端ZIP文件处理
 
 ### 后端技术
 - **Node.js** - JavaScript运行时环境
 - **Express.js** - Node.js Web应用框架
 - **Multer** - Node.js文件上传中间件
 - **CORS** - 跨域资源共享中间件
+- **Archiver** - 压缩文件处理
+- **Unzipper** - ZIP文件解压
+- **node-fetch** - HTTP客户端
 
 ### 开发工具
 - **ESBuild** - 极快的JavaScript打包器
 - **PostCSS** - CSS后处理器
 - **Autoprefixer** - CSS浏览器兼容性处理
 - **Concurrently** - 并行运行多个npm脚本
+- **terser** - JavaScript压缩器
 
 ## 🚀 快速开始
 
 ### 环境要求
-- Node.js >= 14.0.0
+- Node.js >= 16.0.0
 - npm 或 yarn
 - 现代浏览器
 
@@ -67,7 +78,7 @@ ICE图片查看器是一个现代化的产品管理系统，采用前后端分�
 1. **克隆项目**
 ```bash
 git clone <repository-url>
-cd product-management-system
+cd kai
 ```
 
 2. **安装依赖**
@@ -107,57 +118,113 @@ npm run prod
 ## 📁 项目结构
 
 ```
-product-management-system/
-├── public/                    # 静态资源目录
-│   └── data/                 # 数据文件
-│       └── product-catalog.json
-├── server/                   # 后端服务
-│   ├── routes/              # 路由文件
-│   │   ├── products.js      # 产品管理路由
-│   │   ├── folders.js       # 文件夹管理路由
-│   │   ├── files.js         # 文件操作路由
-│   │   └── uploads.js       # 文件上传路由
-│   ├── services/            # 业务逻辑服务
-│   │   ├── productService.js
-│   │   ├── fileService.js
-│   │   ├── folderService.js
-│   │   └── uploadService.js
-│   └── utils/               # 工具函数
-│       ├── generateProductCatalog.js
-│       └── productCatalogUtils.js
-├── src/                     # 前端源码
-│   ├── components/          # Vue组件
-│   │   ├── ui/              # 基础UI组件
-│   │   ├── AdminLoginModal.vue
-│   │   ├── BatchUploadModal.vue
-│   │   ├── Product_list.vue
-│   │   ├── Product_Management.vue
-│   │   ├── Product3DViewer.vue
-│   │   └── ...
-│   ├── composables/         # Vue组合式函数
-│   │   ├── useAdminAuth.js
-│   │   ├── useDataFetch.js
-│   │   ├── useI18n.js
-│   │   └── ...
-│   ├── i18n/               # 国际化配置
-│   │   ├── index.js
-│   │   └── translations.js
-│   ├── services/           # 前端服务
-│   │   ├── apiService.js
-│   │   └── productService.js
-│   ├── stores/             # 状态管理
-│   │   └── notificationStore.js
-│   ├── styles/             # 样式文件
-│   │   └── globals.css
-│   ├── utils/              # 前端工具函数
-│   └── router/             # 路由配置
-├── Product/                # 产品文件存储目录
-├── uploads/                # 上传文件存储目录
-├── package.json            # 项目依赖配置
-├── vite.config.js          # Vite配置
-├── tailwind.config.js      # Tailwind CSS配置
-├── postcss.config.js       # PostCSS配置
-└── server.js               # Express服务器入口
+kai/
+├── .gitignore                          # Git忽略文件配置
+├── API接口文档.md                      # API接口文档
+├── README.md                           # 项目说明文档
+├── index.html                          # HTML入口文件
+├── package-lock.json                   # 依赖版本锁定文件
+├── package.json                        # 项目依赖和脚本配置
+├── postcss.config.js                   # PostCSS配置
+├── server.js                           # Express服务器入口文件
+├── tailwind.config.js                  # Tailwind CSS配置
+├── vite.config.js                      # Vite构建工具配置
+├── 文档索引.md                         # 文档索引
+├── 部署和配置指南.md                   # 部署和配置指南
+├── 项目目录结构说明.md                 # 目录结构说明
+├── 项目详细文档.md                     # 详细项目文档
+├── public/                             # 静态资源目录
+│   └── data/                           # 数据文件
+│       └── product-catalog.json        # 产品目录数据
+├── server/                             # 后端服务目录
+│   ├── routes/                         # API路由定义
+│   │   ├── files.js                    # 文件操作路由
+│   │   ├── folders.js                  # 文件夹管理路由
+│   │   ├── products.js                 # 产品管理路由
+│   │   └── uploads.js                  # 文件上传路由
+│   ├── services/                       # 业务逻辑服务层
+│   │   ├── fileService.js              # 文件服务
+│   │   ├── folderService.js            # 文件夹服务
+│   │   ├── productService.js           # 产品服务
+│   │   └── uploadService.js            # 上传服务
+│   └── utils/                          # 工具函数
+│       ├── generateProductCatalog.js   # 产品目录生成工具
+│       └── productCatalogUtils.js      # 产品目录工具
+├── src/                                # 前端源代码目录
+│   ├── App.vue                         # 根组件
+│   ├── main.js                         # Vue应用入口
+│   ├── components/                     # Vue组件目录
+│   │   ├── ui/                         # 基础UI组件
+│   │   │   ├── Alert.vue               # 警告组件
+│   │   │   ├── Badge.vue               # 徽章组件
+│   │   │   ├── Breadcrumb.vue          # 面包屑导航
+│   │   │   ├── Button.vue              # 按钮组件
+│   │   │   ├── Card.vue                # 卡片组件
+│   │   │   ├── CardHeader.vue          # 卡片头部组件
+│   │   │   ├── Drawer.vue              # 抽屉组件
+│   │   │   ├── EmptyState.vue          # 空状态组件
+│   │   │   ├── ErrorHandler.vue        # 错误处理组件
+│   │   │   ├── ErrorState.vue          # 错误状态组件
+│   │   │   ├── Input.vue               # 输入框组件
+│   │   │   ├── LazyImage.vue           # 懒加载图片组件
+│   │   │   ├── LoadingState.vue        # 加载状态组件
+│   │   │   ├── LucideIcon.vue          # 图标组件
+│   │   │   ├── Modal.vue               # 模态框组件
+│   │   │   ├── NotificationContainer.vue # 通知容器
+│   │   │   ├── Pagination.vue          # 分页组件
+│   │   │   ├── PasswordInput.vue       # 密码输入框
+│   │   │   ├── Progress.vue            # 进度条组件
+│   │   │   ├── SearchInput.vue         # 搜索输入框
+│   │   │   ├── ShortcutHelp.vue        # 快捷键帮助
+│   │   │   ├── Table.vue               # 表格组件
+│   │   │   ├── Tabs.vue                # 标签页组件
+│   │   │   └── VirtualList.vue         # 虚拟列表组件
+│   │   ├── AdminLoginModal.vue         # 管理员登录模态框
+│   │   ├── BatchUploadModal.vue        # 批量上传模态框
+│   │   ├── Drawer.vue                  # 抽屉菜单组件
+│   │   ├── Functionaldescription.vue   # 功能说明组件
+│   │   ├── Header.vue                  # 页面头部组件
+│   │   ├── I18nManagementPanel.vue     # 国际化管理面板
+│   │   ├── Product3DHeader.vue         # 3D查看器头部
+│   │   ├── Product3DViewer.vue         # 3D查看器组件
+│   │   ├── ProductFolderUploader.vue   # 文件夹上传组件
+│   │   ├── Product_Management.vue      # 产品管理组件
+│   │   ├── Product_Viewimages.vue      # 产品图片查看组件
+│   │   ├── Product_list.vue            # 产品列表组件
+│   │   └── Product_nav.vue             # 产品导航组件
+│   ├── composables/                    # Vue组合式函数
+│   │   ├── useAdminAuth.js             # 管理员认证
+│   │   ├── useDataFetch.js             # 数据获取
+│   │   ├── useErrorMonitoring.js       # 错误监控
+│   │   ├── useI18n.js                  # 国际化
+│   │   ├── useKeyboardShortcuts.js     # 键盘快捷键
+│   │   ├── useNotifications.js         # 通知管理
+│   │   └── useTooltip.js               # 工具提示
+│   ├── i18n/                           # 国际化配置
+│   │   ├── index.js                    # 国际化入口
+│   │   └── translations.js             # 翻译内容
+│   ├── images/                         # 图片资源
+│   │   ├── Logo.png                    # 项目Logo
+│   │   └── icelogo.webp                # ICE Logo
+│   ├── lib/                            # 第三方库
+│   │   └── utils.js                    # 工具函数
+│   ├── router/                         # 路由配置
+│   │   └── index.js                    # 路由定义
+│   ├── services/                       # 前端服务层
+│   │   ├── apiService.js               # API服务
+│   │   └── productService.js           # 产品服务
+│   ├── stores/                         # 状态管理
+│   │   └── notificationStore.js        # 通知状态管理
+│   ├── styles/                         # 样式文件
+│   │   └── globals.css                 # 全局样式
+│   ├── theme/                          # 主题配置
+│   │   └── index.js                    # 主题入口
+│   └── utils/                          # 工具函数
+│       ├── errorHandler.js             # 错误处理
+│       ├── logger.js                   # 日志工具
+│       └── responsive.js               # 响应式工具
+├── Product/                            # 产品文件存储目录
+└── uploads/                            # 上传文件存储目录
 ```
 
 ## 🔌 API接口
@@ -169,9 +236,34 @@ product-management-system/
 GET /api/products
 ```
 
+#### 创建新产品
+```http
+POST /api/products
+```
+
+#### 重命名产品
+```http
+PUT /api/products/{productName}
+```
+
+#### 删除产品
+```http
+DELETE /api/products/{productName}
+```
+
+#### 根据ID获取产品详情
+```http
+GET /api/products/{id}
+```
+
 #### 根据产品名称获取详情
 ```http
-GET /api/products/name/:productName
+GET /api/products/name/{productName}
+```
+
+#### 获取产品图片列表
+```http
+GET /api/products/{productName}/images/{imageType}
 ```
 
 #### 重新生成产品目录
@@ -184,43 +276,90 @@ POST /api/products/refresh-catalog
 GET /api/db/products
 ```
 
+#### 根据名称获取产品详情（兼容模式）
+```http
+GET /api/db/products/name/{productName}
+```
+
 ### 文件夹管理 API
 
-#### 获取文件夹列表
+#### 获取文件夹详情
 ```http
-GET /api/folder
+GET /api/folder/{folderPath}/details
 ```
 
-#### 创建文件夹
+#### 创建子文件夹
 ```http
-POST /api/folder
+POST /api/folder/{parentPath}/create-subfolder
 ```
 
-#### 删除文件夹
+#### 删除子文件夹
 ```http
-DELETE /api/folder/:folderName
+DELETE /api/folder/{parentPath}/subfolder/{folderName}
+```
+
+#### 重命名子文件夹
+```http
+PUT /api/folder/{parentPath}/subfolder/{folderName}
+```
+
+#### 获取文件夹树结构
+```http
+GET /api/folder/{folderPath}/tree?maxDepth=3
+```
+
+#### 搜索文件
+```http
+GET /api/folder/{folderPath}/search?searchTerm=关键词&fileTypes=jpg,png
 ```
 
 ### 文件操作 API
 
-#### 获取文件列表
-```http
-GET /api/files
-```
-
-#### 文件上传
-```http
-POST /api/upload
-```
-
-#### 下载文件
-```http
-GET /api/download/:filename
-```
-
 #### 删除文件
 ```http
-DELETE /api/files/:filename
+POST /api/delete-file
+```
+
+#### 检查文件夹是否有文件
+```http
+GET /api/check-folder/{folderPath}
+```
+
+#### 获取文件信息
+```http
+GET /api/file-info/{filePath}
+```
+
+#### 获取文件下载链接
+```http
+GET /api/download/{filePath}/{fileName}
+```
+
+### 文件上传 API
+
+#### 上传文件到指定文件夹
+```http
+POST /api/upload-files
+```
+
+#### 上传单个产品文件夹
+```http
+POST /api/upload-product-folder
+```
+
+#### 批量替换产品
+```http
+POST /api/batch-replace-products
+```
+
+#### 手动重新生成产品目录
+```http
+POST /api/regenerate-catalog
+```
+
+#### 获取上传进度
+```http
+GET /api/upload-progress/{uploadId}
 ```
 
 ### 国际化 API
@@ -242,12 +381,12 @@ POST /api/i18n/translations/keys
 
 #### 更新翻译键
 ```http
-PUT /api/i18n/translations/keys/:key
+PUT /api/i18n/translations/keys/{key}
 ```
 
 #### 删除翻译键
 ```http
-DELETE /api/i18n/translations/keys/:key
+DELETE /api/i18n/translations/keys/{key}
 ```
 
 ## 🎮 使用说明

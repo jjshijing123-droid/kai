@@ -2,25 +2,25 @@
   "products": [
     {
       "id": 1,
-      "name": "Cobi18+",
-      "folderName": "Cobi18+",
-      "model": "Cobi18+",
+      "name": "Cobi18+111",
+      "folderName": "Cobi18+111",
+      "model": "Cobi18+111",
       "category": "general",
-      "description": "Product model: Cobi18+",
-      "path": "Product/Cobi18+",
-      "folder": "Product/Cobi18+/",
+      "description": "Product model: Cobi18+111",
+      "path": "Product/Cobi18+111",
+      "folder": "Product/Cobi18+111/",
       "totalSize": 9167402,
       "fileCount": 135,
-      "mainImage": "/Product/Cobi18+/image_00.webp",
+      "mainImage": "/Product/Cobi18+111/image_00.webp",
       "views": {
-        "view1": "/Product/Cobi18+/view1/",
-        "view2": "/Product/Cobi18+/view2/",
-        "view3": "/Product/Cobi18+/view3/",
-        "view4": "/Product/Cobi18+/view4/"
+        "view1": "/Product/Cobi18+111/view1/",
+        "view2": "/Product/Cobi18+111/view2/",
+        "view3": "/Product/Cobi18+111/view3/",
+        "view4": "/Product/Cobi18+111/view4/"
       },
       "additionalImages": {
-        "sixViews": "/Product/Cobi18+/images_6Views/",
-        "other": "/Product/Cobi18+/images_other/"
+        "sixViews": "/Product/Cobi18+111/images_6Views/",
+        "other": "/Product/Cobi18+111/images_other/"
       }
     },
     {
@@ -252,9 +252,32 @@
         "sixViews": "/Product/RS32Y-OB/images_6Views/",
         "other": "/Product/RS32Y-OB/images_other/"
       }
+    },
+    {
+      "id": 12,
+      "name": "i15y",
+      "folderName": "i15y",
+      "model": "i15y",
+      "category": "general",
+      "description": "Product model: i15y",
+      "path": "Product/i15y",
+      "folder": "Product/i15y/",
+      "totalSize": 11216936,
+      "fileCount": 135,
+      "mainImage": "/Product/i15y/image_00.webp",
+      "views": {
+        "view1": "/Product/i15y/view1/",
+        "view2": "/Product/i15y/view2/",
+        "view3": "/Product/i15y/view3/",
+        "view4": "/Product/i15y/view4/"
+      },
+      "additionalImages": {
+        "sixViews": "/Product/i15y/images_6Views/",
+        "other": "/Product/i15y/images_other/"
+      }
     }
   ],
-  "totalProducts": 11,
-  "lastUpdated": "2025-12-10T10:46:16.486Z",
+  "totalProducts": 12,
+  "lastUpdated": "2025-12-12T03:04:26.467Z",
   "version": "2.0"
 }

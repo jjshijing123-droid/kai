@@ -253,6 +253,9 @@ onMounted(async () => {
     return
   }
   
+  // 设置浏览器标题
+  document.title = productName.value
+  
   // 获取文件夹名称
   folderName.value = await getFolderName(productName.value)
   

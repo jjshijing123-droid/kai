@@ -474,7 +474,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth, showMessage } from '../composables/useAdminAuth.js'
@@ -491,7 +491,7 @@ import apiService from '../services/apiService.js'
 
 
 
-const { t } = useI18n()
+const { t, currentLanguage } = useI18n()
 const router = useRouter()
 const { isAdminLoggedIn } = useAdminAuth()
 
@@ -535,6 +535,11 @@ const filteredProducts = computed(() => {
   )
 })
 
+// 设置浏览器标题
+const setPageTitle = () => {
+  document.title = t('productManagement_title')
+}
+
 // API接口配置
 const API_CONFIG = {
   GET_PRODUCTS: '/api/products',
@@ -548,11 +553,15 @@ const fetchProducts = async () => {
   try {
     // 初始加载时，获取当前路径下的内容
     await fetchFolderContent()
+    // 更新浏览器标题
+    setPageTitle()
   } catch (err) {
     console.error('获取产品列表失败:', err)
     error.value = err.message
     products.value = []
     loading.value = false
+    // 即使获取失败也更新浏览器标题
+    setPageTitle()
   }
 }
 
@@ -1176,6 +1185,9 @@ const goBack = () => {
 onMounted(() => {
   fetchProducts()
   
+  // 设置浏览器标题
+  setPageTitle()
+  
   // 点击页面其他地方隐藏右键菜单
   document.addEventListener('click', hideContextMenu)
 })
@@ -1185,6 +1197,14 @@ const handleLoginSuccess = () => {
   // 重新加载产品列表
   fetchProducts()
 }
+
+// 监听语言变化，更新浏览器标题
+watch(
+  () => currentLanguage.value,
+  () => {
+    setPageTitle()
+  }
+)
 </script>
 
 <style scoped>
