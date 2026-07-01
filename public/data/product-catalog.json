@@ -6,12 +6,11 @@
       "folderName": "cobi18",
       "category": "general",
       "description": "Product model: cobi18",
-      "path": "Product/cobi18",
+      "path": "Product/cobi18/",
       "folder": "Product/cobi18/",
+      "mainImage": "/Product/cobi18/image_00.webp",
       "totalSize": 9441264,
       "fileCount": 137,
-      "isDirectory": true,
-      "mainImage": "/Product/cobi18/image_00.webp",
       "views": {
         "view1": "/Product/cobi18/view1/",
         "view2": "/Product/cobi18/view2/",
@@ -29,12 +28,11 @@
       "folderName": "cobi18 - 副本",
       "category": "general",
       "description": "Product model: cobi18 - 副本",
-      "path": "Product/cobi18 - 副本",
+      "path": "Product/cobi18 - 副本/",
       "folder": "Product/cobi18 - 副本/",
+      "mainImage": "/Product/cobi18 - 副本/image_00.webp",
       "totalSize": 9441264,
       "fileCount": 137,
-      "isDirectory": true,
-      "mainImage": "/Product/cobi18 - 副本/image_00.webp",
       "views": {
         "view1": "/Product/cobi18 - 副本/view1/",
         "view2": "/Product/cobi18 - 副本/view2/",
@@ -52,12 +50,11 @@
       "folderName": "view2",
       "category": "general",
       "description": "Product model: view2",
-      "path": "Product/view2",
+      "path": "Product/view2/",
       "folder": "Product/view2/",
+      "mainImage": "/Product/view2/image_00.webp",
       "totalSize": 9441264,
       "fileCount": 137,
-      "isDirectory": true,
-      "mainImage": "/Product/view2/image_00.webp",
       "views": {
         "view1": "/Product/view2/view1/",
         "view2": "/Product/view2/view2/",
@@ -71,6 +68,6 @@
     }
   ],
   "totalProducts": 3,
-  "lastUpdated": "2026-07-01T02:04:01.717Z",
+  "lastUpdated": "2026-07-01T03:17:13.309Z",
   "version": "2.0"
 }

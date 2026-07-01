@@ -62,17 +62,35 @@
 
     <!-- 移除内部按钮，改为通过emit让父组件在Modal footer中处理 -->
 
-    <!-- 上传当个产品文件夹提示信息 -->
+    <!-- 上传单个产品文件夹提示信息 -->
     <Functionaldescription
       :displayTitle="t('common_usageInstructions')"
       iconName="AlertCircle"
-      :instructions="[  
+      :instructions="[
       { icon: 'FileArchive', text: t('common_uploadZipInstructions') },
       { icon: 'FolderTree', text: t('common_rootFolderRequirement') },
       { icon: 'AlertCircle', text: t('common_folderNameConflict') },
       { icon: 'HardDrive', text: t('common_maxFileSize') }
       ]"
-    />
+    >
+      <!-- 文件夹结构说明 -->
+      <div class="folder-structure-section">
+        <div class="folder-structure-header">
+          <LucideIcon name="FolderTree" size="14" />
+          <span>{{ t('common_folderStructureTitle') }}</span>
+        </div>
+        <div class="folder-structure-code">
+          <div class="folder-line">{{ t('common_folderRoot') }}</div>
+          <div class="folder-line indent-1">{{ t('common_folderMainImage') }}</div>
+          <div class="folder-line indent-1 folder-toggle">view1/  view2/  view3/  view4/</div>
+          <div class="folder-line indent-1 folder-toggle">images_6Views/</div>
+          <div class="folder-line indent-1 folder-toggle">images_other/</div>
+        </div>
+        <div class="folder-structure-notes">
+          <span v-html="t('common_folderStructureNote')"></span>
+        </div>
+      </div>
+    </Functionaldescription>
 
   </div>
 </template>
@@ -547,6 +565,52 @@ defineExpose({
 /* 上传结果 */
 .upload-result {
   margin-top: 20px;
+}
+
+/* 文件夹结构说明 */
+.folder-structure-section {
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--neutral-1);
+  border: 1px solid var(--neutral-4);
+  border-radius: 8px;
+}
+
+.folder-structure-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neutral-12);
+}
+
+.folder-structure-code {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  background: var(--neutral-3);
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: var(--neutral-11);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.folder-line {
+  display: block;
+}
+
+.folder-line.indent-1 {
+  padding-left: 18px;
+}
+
+.folder-structure-notes {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--neutral-10);
+  line-height: 1.5;
 }
 
 /* 上传按钮区域 */

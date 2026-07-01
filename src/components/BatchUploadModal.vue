@@ -29,15 +29,32 @@
         <!-- 批量上传使用说明 -->
         <Functionaldescription
             :displayTitle="t('common_usageInstructions')"
-            iconName="AlertCircle"  
-            :instructions="[        
+            iconName="AlertCircle"
+            :instructions="[
             { icon: 'FileArchive', text: t('common_uploadZipInstructions') },
             { icon: 'AlertCircle', text: t('common_maxFileSize') },
             { icon: 'FolderTree', text: t('common_rootFolderRequirement') },
             { icon: 'RefreshCw', text: t('common_batchReplaceInstructions') }
             ]"
-        />
-        
+        >
+          <!-- 文件夹结构说明 -->
+          <div class="folder-structure-section">
+            <div class="folder-structure-header">
+              <LucideIcon name="FolderTree" size="14" />
+              <span>{{ t('common_folderStructureTitle') }}</span>
+            </div>
+            <div class="folder-structure-code">
+              <div class="folder-line">{{ t('common_folderRoot') }}</div>
+              <div class="folder-line indent-1">{{ t('common_folderMainImage') }}</div>
+              <div class="folder-line indent-1 folder-toggle">view1/  view2/  view3/  view4/</div>
+              <div class="folder-line indent-1 folder-toggle">images_6Views/</div>
+              <div class="folder-line indent-1 folder-toggle">images_other/</div>
+            </div>
+            <div class="folder-structure-notes">
+              <span v-html="t('common_folderStructureNote')"></span>
+            </div>
+          </div>
+        </Functionaldescription>
 
       </div>
 
@@ -251,87 +268,87 @@ const prevStep = () => {
 
 const startBatchZipUpload = async () => {
   if (selectedZipFiles.value.length === 0) return
-  
+
   currentUploadStep.value = 2
   uploading.value = true
   uploadProgress.value = 0
-  
+
   try {
     const zipFile = selectedZipFiles.value[0]
-    
+
     // 阶段1: 准备上传
     uploadStatus.value = t('productManagement_preparingUpload')
     currentStageText.value = t('productManagement_stagePreparing')
     uploadProgress.value = 10
     await new Promise(resolve => setTimeout(resolve, 800))
-    
+
     // 阶段2: 上传文件
     uploadStatus.value = t('productManagement_uploadingFile')
     currentStageText.value = t('productManagement_stageUploading')
     uploadProgress.value = 30
-    
+
     const formData = new FormData()
     formData.append('zipFile', zipFile)
-    
+
     // 模拟文件上传进度
     for (let i = 30; i <= 60; i += 5) {
       uploadProgress.value = i
       await new Promise(resolve => setTimeout(resolve, 200))
     }
-    
+
     // 阶段3: 处理文件
     uploadStatus.value = t('productManagement_processingFiles')
     currentStageText.value = t('productManagement_stageProcessing')
     uploadProgress.value = 65
-    
+
     // 调用批量替换API
     const response = await fetch('/api/batch-replace-products', {
       method: 'POST',
       body: formData
     })
-    
+
     if (!response.ok) {
       const errorData = await response.json()
       throw new Error(`处理压缩包失败: ${zipFile.name} - ${errorData.message || response.status}`)
     }
-    
+
     const result = await response.json()
     if (!result.success) {
       throw new Error(`处理压缩包失败: ${zipFile.name} - ${result.message}`)
     }
-    
+
     // 更新处理统计
     processedFiles.value = result.fileCount || 0
     totalFiles.value = result.fileCount || 0
     processedFolders.value = result.folderCount || 0
     totalFolders.value = result.folderCount || 0
-    
+
     // 阶段4: 完成
     uploadStatus.value = t('productManagement_completingUpload')
     currentStageText.value = t('productManagement_stageCompleting')
     uploadProgress.value = 90
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     // 刷新产品列表
     uploadStatus.value = t('productManagement_refreshingList')
     currentStageText.value = t('productManagement_stageRefreshing')
-    
+
     uploadProgress.value = 100
     uploadStatus.value = t('productManagement_uploadComplete')
     currentStageText.value = t('productManagement_stageComplete')
-    
+
     // 通知父组件上传完成
     setTimeout(() => {
       emit('upload-complete', { success: true, result })
       handleClose()
     }, 1500)
-    
+
   } catch (err) {
     console.error('批量压缩包上传错误:', err)
     uploadStatus.value = t('productManagement_uploadFailed') + ': ' + err.message
     currentStageText.value = t('productManagement_stageFailed')
     uploadProgress.value = 0
-    
+
     emit('upload-complete', { success: false, error: err.message })
   } finally {
     uploading.value = false
@@ -445,8 +462,6 @@ const startBatchZipUpload = async () => {
 
 
 
-
-
 /* ZIP上传区域样式 */
 .zip-upload-section {
   margin: 16px 0;
@@ -557,13 +572,59 @@ const startBatchZipUpload = async () => {
   line-height: 1.5;
 }
 
+/* 文件夹结构说明 */
+.folder-structure-section {
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--neutral-1);
+  border: 1px solid var(--neutral-4);
+  border-radius: 8px;
+}
+
+.folder-structure-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neutral-12);
+}
+
+.folder-structure-code {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  background: var(--neutral-3);
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: var(--neutral-11);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.folder-line {
+  display: block;
+}
+
+.folder-line.indent-1 {
+  padding-left: 18px;
+}
+
+.folder-structure-notes {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--neutral-10);
+  line-height: 1.5;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .step-indicator {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .step-item:not(:last-child)::after {
     display: none;
   }
