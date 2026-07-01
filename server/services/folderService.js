@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const FileService = require('./fileService')
 const { calculateFolderSize } = require('../utils/fsHelpers')
+const { safeJoin } = require('../utils/safePath')
 
 /**
  * 文件夹管理服务类 - 负责文件夹相关的业务逻辑
@@ -9,6 +10,7 @@ const { calculateFolderSize } = require('../utils/fsHelpers')
 class FolderService {
   constructor() {
     this.serverPath = path.resolve(__dirname, '../../')
+    this.productBasePath = safeJoin(this.serverPath, 'Product')
     this.fileService = new FileService()
   }
 
@@ -22,14 +24,11 @@ class FolderService {
       // 构建完整的文件夹路径
       let fullPath;
       if (folderPath === 'Product') {
-        // 当路径是Product时，直接使用
-        fullPath = path.join(this.serverPath, folderPath);
+        fullPath = this.productBasePath;
       } else if (folderPath.startsWith('Product/')) {
-        // 当路径以Product/开头时，直接使用
-        fullPath = path.join(this.serverPath, folderPath);
+        fullPath = safeJoin(this.productBasePath, folderPath.replace('Product/', ''));
       } else {
-        // 其他情况，添加Product/前缀
-        fullPath = path.join(this.serverPath, `Product/${folderPath}`);
+        fullPath = safeJoin(this.productBasePath, folderPath);
       }
       console.log('完整路径:', fullPath);
       
@@ -87,16 +86,19 @@ class FolderService {
    */
   async createSubfolder(parentPath, folderName) {
     try {
-      const fullPath = path.join(this.serverPath, parentPath, folderName);
-      
+      const parentFolder = parentPath.startsWith('Product/')
+        ? safeJoin(this.productBasePath, parentPath.replace('Product/', ''))
+        : safeJoin(this.productBasePath, parentPath);
+      const fullPath = safeJoin(parentFolder, folderName);
+
       // 检查父文件夹是否存在
-      if (!fs.existsSync(fullPath.replace(new RegExp(`/[^/]+$`), ''))) {
+      if (!fs.existsSync(parentFolder)) {
         throw new Error('父文件夹不存在');
       }
-      
+
       // 创建子文件夹
       fs.mkdirSync(fullPath, { recursive: true });
-      
+
       return {
         name: folderName,
         path: path.join(parentPath, folderName),
@@ -113,7 +115,10 @@ class FolderService {
    */
   async deleteSubfolder(parentPath, folderName) {
     try {
-      const fullPath = path.join(this.serverPath, parentPath, folderName);
+      const parentFolder = parentPath.startsWith('Product/')
+        ? safeJoin(this.productBasePath, parentPath.replace('Product/', ''))
+        : safeJoin(this.productBasePath, parentPath);
+      const fullPath = safeJoin(parentFolder, folderName);
       
       if (!fs.existsSync(fullPath)) {
         throw new Error('文件夹不存在');
@@ -138,8 +143,11 @@ class FolderService {
    */
   async renameSubfolder(parentPath, oldName, newName) {
     try {
-      const oldPath = path.join(this.serverPath, parentPath, oldName);
-      const newPath = path.join(this.serverPath, parentPath, newName);
+      const parentFolder = parentPath.startsWith('Product/')
+        ? safeJoin(this.productBasePath, parentPath.replace('Product/', ''))
+        : safeJoin(this.productBasePath, parentPath);
+      const oldPath = safeJoin(parentFolder, oldName);
+      const newPath = safeJoin(parentFolder, newName);
       
       if (!fs.existsSync(oldPath)) {
         throw new Error('原文件夹不存在');
@@ -172,8 +180,11 @@ class FolderService {
       if (currentDepth >= maxDepth) {
         return null;
       }
-      
-      const fullPath = path.join(this.serverPath, folderPath);
+
+      const folderBase = folderPath.startsWith('Product/')
+        ? safeJoin(this.productBasePath, folderPath.replace('Product/', ''))
+        : safeJoin(this.productBasePath, folderPath);
+      const fullPath = folderBase;
       
       if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isDirectory()) {
         return null;
@@ -220,13 +231,16 @@ class FolderService {
    */
   async searchFiles(folderPath, searchTerm, fileTypes = null) {
     try {
-      const fullPath = path.join(this.serverPath, folderPath);
+      const folderBase = folderPath.startsWith('Product/')
+        ? safeJoin(this.productBasePath, folderPath.replace('Product/', ''))
+        : safeJoin(this.productBasePath, folderPath);
+      const fullPath = folderBase;
       const results = [];
-      
+
       if (!fs.existsSync(fullPath)) {
         return results;
       }
-      
+
       const searchRecursive = (currentPath, currentRelativePath) => {
         const items = fs.readdirSync(currentPath, { withFileTypes: true });
         

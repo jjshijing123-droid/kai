@@ -7,6 +7,7 @@ const util = require('util');
 const execPromise = util.promisify(exec);
 const { calculateFolderSize } = require('../utils/fsHelpers');
 const { ProductCatalogUtils } = require('../utils/productCatalogUtils');
+const { safeJoin } = require('../utils/safePath');
 const ProductService = require('./productService');
 const FolderService = require('./folderService');
 
@@ -16,6 +17,7 @@ const FolderService = require('./folderService');
 class UploadService {
   constructor() {
     this.serverPath = path.resolve(__dirname, '../../')
+    this.productBasePath = safeJoin(this.serverPath, 'Product')
     this.productService = new ProductService();
     this.folderService = new FolderService();
   }
@@ -32,7 +34,7 @@ class UploadService {
       }
       
       const tempZipPath = uploadedFile.path;
-      const targetProductPath = path.join(this.serverPath, 'Product');
+      const targetProductPath = this.productBasePath;
       
       console.log('📦 开始处理ZIP文件:', uploadedFile.originalname);
       
@@ -42,7 +44,7 @@ class UploadService {
       }
       
       // 1. 备份现有的Product文件夹（可选）
-      const backupPath = path.join(this.serverPath, 'Product_backup_' + Date.now());
+      const backupPath = safeJoin(this.serverPath, 'Product_backup_' + Date.now());
       if (fs.existsSync(targetProductPath)) {
         console.log('📦 创建备份文件夹...');
         await execPromise(`cp -r "${targetProductPath}" "${backupPath}"`);
@@ -91,8 +93,9 @@ class UploadService {
               console.log('📄 处理文件:', fileName);
               
               if (type === 'Directory') {
-                // 创建目录
-                const dirPath = path.join(targetProductPath, fileName);
+                // 创建目录 - 用 safeJoin 防止 zip 路径穿越
+                const safeEntryPath = path.basename(fileName);
+                const dirPath = path.join(targetProductPath, safeEntryPath);
                 fs.mkdirSync(dirPath, { recursive: true });
                 folderCount++;
                 
@@ -197,7 +200,7 @@ class UploadService {
       }
       
       const tempZipPath = uploadedFile.path;
-      const targetProductPath = path.join(this.serverPath, 'Product');
+      const targetProductPath = this.productBasePath;
       
       console.log('📦 开始处理ZIP文件:', uploadedFile.originalname);
       
@@ -209,7 +212,7 @@ class UploadService {
       // 生成实际的文件夹名称（避免冲突）
       let actualFolderName = folderName;
       let counter = 1;
-      while (fs.existsSync(path.join(targetProductPath, actualFolderName))) {
+      while (fs.existsSync(safeJoin(this.productBasePath, actualFolderName))) {
         actualFolderName = `${folderName}_副本${counter}`;
         counter++;
       }
@@ -310,7 +313,7 @@ class UploadService {
     try {
       console.log('🔄 开始重新生成产品目录...');
       
-      const productPath = path.join(this.serverPath, 'Product');
+      const productPath = safeJoin(this.serverPath, 'Product');
       const products = [];
       
       if (!fs.existsSync(productPath)) {

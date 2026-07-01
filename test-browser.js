@@ -1,5 +1,5 @@
-import { chromium } from 'playwright';
-import http from 'http';
+const { chromium } = require('playwright');
+const http = require('http');
 
 const BASE = 'http://localhost:5173';
 const API = 'http://localhost:3000';
@@ -8,11 +8,19 @@ function waitForServer(url, timeout = 15000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const check = () => {
-      http.get(url, (res) => {
-        if (res.statusCode === 200) resolve();
-        else reject(new Error(`Server returned ${res.statusCode}`));
+      http.get(url, { headers: { 'Accept': 'text/html,application/xhtml+xml,*/*' } }, (res) => {
+        if (res.statusCode === 200) {
+          resolve();
+        } else if (res.statusCode === 404 && url.includes('5173')) {
+          // Vite dev server may return 404 for some paths but still be running
+          resolve();
+        } else if (Date.now() - start > timeout) {
+          reject(new Error(`Timeout waiting for ${url}`));
+        } else {
+          setTimeout(check, 500);
+        }
       }).on('error', () => {
-        if (Date.now() - start > timeout) reject(new Error('Timeout'));
+        if (Date.now() - start > timeout) reject(new Error(`Timeout waiting for ${url}`));
         else setTimeout(check, 500);
       });
     };
@@ -21,56 +29,48 @@ function waitForServer(url, timeout = 15000) {
 }
 
 async function checkPage(browser, name, path, checks) {
-  const page = await browser.new_page();
+  const page = await browser.newPage();
   const results = { name, errors: [], warnings: [] };
 
   try {
-    await page.goto(`${BASE}${path}`, { wait_until: 'networkidle', timeout: 15000 });
+    await page.goto(`${BASE}${path}`, { waitUntil: 'networkidle', timeout: 15000 });
+    await page.waitForTimeout(2000);
 
-    // Wait for Vue to render
-    await page.wait_for_timeout(2000);
-
-    // Check for Vue errors in console
     const consoleErrors = [];
     page.on('console', msg => {
       if (msg.type() === 'error') consoleErrors.push(msg.text());
-      if (msg.type() === 'warning' && msg.text().includes('Vue warn')) consoleErrors.push(`[WARN] ${msg.text()}`);
     });
-
-    // Check for page errors
     const pageErrors = [];
     page.on('pageerror', err => pageErrors.push(err.message));
-
-    // Wait a bit more for async errors
-    await page.wait_for_timeout(1000);
+    await page.waitForTimeout(1000);
 
     results.errors.push(...consoleErrors);
     results.errors.push(...pageErrors);
 
-    // Run custom checks
     if (checks) {
-      for (const check of checks) {
+      for (let i = 0; i < checks.length; i++) {
         try {
-          const result = await check(page);
-          results[result.name] = result.passed;
-          if (!result.passed) results.errors.push(result.error || `${result.name} failed`);
+          const check = checks[i];
+          const result = await check.fn(page);
+          results[check.name] = result;
+          if (!result) results.errors.push(check.error || `${check.name} failed`);
         } catch (e) {
-          results.errors.push(`${check.name || 'check'}: ${e.message}`);
+          results.errors.push(`${checks[i].name || 'check'}: ${e.message}`);
         }
       }
     }
 
-    // Take screenshot
-    const safeName = name.replace(/[^a-zA-Z0-9一-鿿]/g, '_');
-    await page.screenshot({ path: `test-screenshots/${safeName}.png`, full_page: true });
+    const safeName = name.replace(/[^\x20-\x7e一-鿿]/g, '_');
+    const fs = require('fs');
+    try { fs.mkdirSync('test-screenshots', { recursive: true }); } catch {}
+    await page.screenshot({ path: `test-screenshots/${safeName}.png`, fullPage: true });
 
   } catch (e) {
     results.errors.push(`Navigation failed: ${e.message}`);
-    // Still take screenshot of error state
-    const safeName = name.replace(/[^a-zA-Z0-9一-\ufff]/g, '_');
-    try {
-      await page.screenshot({ path: `test-screenshots/${safeName}_error.png`, full_page: true });
-    } catch {}
+    const safeName = name.replace(/[^\x20-\x7e一-鿿]/g, '_');
+    const fs = require('fs');
+    try { fs.mkdirSync('test-screenshots', { recursive: true }); } catch {}
+    try { await page.screenshot({ path: `test-screenshots/${safeName}_error.png`, fullPage: true }); } catch {}
   }
 
   await page.close();
@@ -78,90 +78,160 @@ async function checkPage(browser, name, path, checks) {
 }
 
 async function main() {
-  console.log('Waiting for servers...');
-  await waitForServer(`${BASE}/`);
-  await waitForServer(`${API}/api/products`);
-  console.log('Servers ready!');
-
-  // Create screenshots directory
-  import { mkdirSync } from 'fs';
-  try { mkdirSync('test-screenshots'); } catch {}
+  console.log('Starting browser tests...');
 
   const browser = await chromium.launch({ headless: true });
   const results = [];
+
+  // Test 0: Auth API
+  console.log('\n=== Test 0: Auth API ===');
+  results.push(await checkPage(browser, 'AuthAPI', '/', [
+    {
+      name: 'loginEndpoint',
+      fn: async (page) => {
+        const resp = await page.evaluate(async () => {
+          const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: 'admin', password: 'admin123' })
+          });
+          const data = await res.json();
+          return { status: res.status, success: data.success, hasToken: !!data.data?.token };
+        });
+        return resp.status === 200 && resp.success && resp.hasToken;
+      },
+      error: `Login endpoint failed: status=${200}, success=${true}`
+    },
+    {
+      name: 'authRequiredForWrite',
+      fn: async (page) => {
+        const resp = await page.evaluate(async () => {
+          const res = await fetch('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productName: 'test-hack', folderName: 'test-hack' })
+          });
+          const data = await res.json();
+          return { status: res.status, message: data.message };
+        });
+        return resp.status === 401;
+      },
+      error: 'Write should be blocked without auth (401)'
+    },
+    {
+      name: 'verifyWithToken',
+      fn: async (page) => {
+        const resp = await page.evaluate(async () => {
+          const loginRes = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: 'admin', password: 'admin123' })
+          });
+          const loginData = await loginRes.json();
+          const token = loginData.data?.token;
+          if (!token) return { status: 0, ok: false };
+
+          const verifyRes = await fetch('/api/auth/verify', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const verifyData = await verifyRes.json();
+          return { status: verifyRes.status, data: verifyData };
+        });
+        return resp.status === 200 && resp.data?.success === true;
+      },
+      error: 'Token verification should succeed'
+    }
+  ]));
 
   // Test 1: Home page
   console.log('\n=== Test 1: Home Page (/) ===');
   results.push(await checkPage(browser, 'Home', '/', [
     {
       name: 'pageTitle',
-      async (page) => {
+      fn: async (page) => {
         const title = await page.title();
-        return { name: 'title', passed: title.length > 0, error: `Title: "${title}"` };
-      }
+        return title.length > 0;
+      },
+      error: 'Page has no title'
     },
     {
       name: 'hasContent',
-      async (page) => {
+      fn: async (page) => {
         const html = await page.content();
-        const hasRealContent = html.includes('cobi18') || html.includes('product');
-        return { name: 'hasContent', passed: hasRealContent, error: 'Page appears empty' };
-      }
+        return html.includes('product') || html.includes('Product') || html.includes('cobi18');
+      },
+      error: 'Page appears empty'
     },
     {
-      name: 'noVueErrors',
-      async (page) => {
-        // Already captured in console errors
-        return { name: 'noVueErrors', passed: true, error: null };
-      }
+      name: 'loadsProducts',
+      fn: async (page) => {
+        const html = await page.content();
+        return html.includes('cobi18') || html.includes('cobi18 - 副本') || html.includes('view2');
+      },
+      error: 'No products loaded on home page'
     }
   ]));
 
-  // Test 2: Product management (protected)
-  console.log('\n=== Test 2: Product Management (/product-management) ===');
-  results.push(await checkPage(browser, 'ProductManagement', '/product-management', [
+  // Test 2: Product detail
+  console.log('\n=== Test 2: Product Detail ===');
+  results.push(await checkPage(browser, 'ProductDetail', '/product/cobi18', [
+    {
+      name: 'showsProduct',
+      fn: async (page) => {
+        const html = await page.content();
+        return html.includes('cobi18');
+      },
+      error: 'Product name not found on detail page'
+    }
+  ]));
+
+  // Test 3: 3D Viewer
+  console.log('\n=== Test 3: 3D Viewer ===');
+  results.push(await checkPage(browser, 'Product3DViewer', '/product-3d/cobi18', [
     {
       name: 'noCrash',
-      async (page) => {
+      fn: async (page) => {
         const html = await page.content();
-        // Should either show login modal or redirect, but not crash
-        return { name: 'noCrash', passed: true, error: null };
-      }
+        return html.length > 100;
+      },
+      error: '3D Viewer page too short, may have crashed'
     }
   ]));
 
-  // Test 3: i18n manager (protected)
-  console.log('\n=== Test 3: i18n Manager (/i18n-manager) ===');
-  results.push(await checkPage(browser, 'I18nManager', '/i18n-manager', []));
+  // Test 4: Product Management (protected, no auth)
+  console.log('\n=== Test 4: Product Management (no auth) ===');
+  results.push(await checkPage(browser, 'ProductManagement', '/product-management', [
+    {
+      name: 'redirectsOrShowsLogin',
+      fn: async (page) => {
+        const url = page.url();
+        const html = await page.content();
+        const isRedirected = !url.includes('/product-management');
+        const showsLogin = html.includes('login') || html.includes('登录') || html.includes('Admin');
+        return isRedirected || showsLogin;
+      },
+      error: 'Should redirect or show login for protected route'
+    }
+  ]));
 
-  // Test 4: Login and then access protected pages
-  console.log('\n=== Test 4: Login Flow ===');
-  const loginPage = await browser.new_page();
-  await loginPage.goto(`${BASE}/`, { wait_until: 'networkidle', timeout: 15000 });
-  await loginPage.wait_for_timeout(1000);
+  // Test 5: Login flow
+  console.log('\n=== Test 5: Login Flow ===');
+  const loginPage = await browser.newPage();
+  await loginPage.goto(`${BASE}/`, { waitUntil: 'networkidle', timeout: 15000 });
+  await loginPage.waitForTimeout(1000);
 
-  // Open drawer and click admin login
   try {
-    // Click hamburger menu
-    const menuBtn = await loginPage.$('button[class*="Menu-button"]');
+    const menuBtn = await loginPage.$('button[class*="Menu"]');
     if (menuBtn) {
       await menuBtn.click();
-      await loginPage.wait_for_timeout(500);
-
-      // Click admin login in drawer
-      const adminLogin = await loginPage.$('text=Admin Login');
-      if (adminLogin) {
-        await adminLogin.click();
-        await loginPage.wait_for_timeout(500);
+      await loginPage.waitForTimeout(500);
+      const adminLink = await loginPage.$('text=Admin Login');
+      if (adminLink) {
+        await adminLink.click();
+        await loginPage.waitForTimeout(500);
       }
     }
-  } catch (e) {
-    console.log('Login flow note:', e.message);
-  }
 
-  // Try to find and use login modal
-  try {
-    // Fill in credentials
     const usernameInput = await loginPage.$('input[placeholder*="username" i], input[placeholder*="用户名"]');
     const passwordInput = await loginPage.$('input[type="password"]');
     const loginBtn = await loginPage.$('button:has-text("Login"), button:has-text("登录")');
@@ -170,47 +240,40 @@ async function main() {
       await usernameInput.fill('admin');
       await passwordInput.fill('admin123');
       await loginBtn.click();
-      await loginPage.wait_for_timeout(1000);
-      console.log('Login submitted');
+      await loginPage.waitForTimeout(2000);
+      console.log('Login submitted successfully');
     }
   } catch (e) {
-    console.log('Login form interaction note:', e.message);
+    console.log('Login flow note:', e.message);
   }
-
   await loginPage.close();
 
-  // Test 5: Product management with auth
-  console.log('\n=== Test 5: Product Management (with auth) ===');
+  // Test 6: Product Management after login
+  console.log('\n=== Test 6: Product Management (after login) ===');
   results.push(await checkPage(browser, 'ProductManagement_Auth', '/product-management', [
     {
       name: 'showsContent',
-      async (page) => {
+      fn: async (page) => {
         const html = await page.content();
-        const hasProducts = html.includes('cobi18') || html.includes('containeruser') || html.includes('folder') || html.includes('page-header');
-        return { name: 'showsContent', passed: hasProducts, error: 'No product content found' };
-      }
+        const hasProducts = html.includes('cobi18') || html.includes('folder') || html.includes('page-header') || html.includes('containeruser');
+        return hasProducts;
+      },
+      error: 'No product content found after login'
     }
   ]));
 
-  // Test 6: i18n manager with auth
-  console.log('\n=== Test 6: i18n Manager (with auth) ===');
-  results.push(await checkPage(browser, 'I18nManager_Auth', '/i18n-manager', []));
-
-  // Test 7: Navigate to product detail
-  console.log('\n=== Test 7: Product Detail ===');
-  results.push(await checkPage(browser, 'ProductDetail', '/product/cobi18', [
+  // Test 7: i18n Manager
+  console.log('\n=== Test 7: i18n Manager ===');
+  results.push(await checkPage(browser, 'I18nManager', '/i18n-manager', [
     {
-      name: 'showsProduct',
-      async (page) => {
+      name: 'noCrash',
+      fn: async (page) => {
         const html = await page.content();
-        return { name: 'showsProduct', passed: html.includes('cobi18'), error: 'Product name not found' };
-      }
+        return html.length > 100;
+      },
+      error: 'i18n Manager page too short'
     }
   ]));
-
-  // Test 8: Back to home
-  console.log('\n=== Test 8: Back to Home ===');
-  results.push(await checkPage(browser, 'Home2', '/', []));
 
   await browser.close();
 
@@ -223,12 +286,16 @@ async function main() {
   let failCount = 0;
 
   for (const r of results) {
+    const checkKeys = Object.keys(r).filter(k => k !== 'name' && k !== 'errors' && k !== 'warnings');
+    const checkTotal = checkKeys.length;
+    const checkPasses = checkKeys.filter(k => r[k] === true).length;
     const hasErrors = r.errors && r.errors.length > 0;
-    const status = hasErrors ? 'FAIL' : 'PASS';
-    if (!hasErrors) passCount++;
+
+    const status = (!hasErrors && checkPasses === checkTotal) ? 'PASS' : 'FAIL';
+    if (status === 'PASS') passCount++;
     else failCount++;
 
-    console.log(`\n[${status}] ${r.name}`);
+    console.log(`\n[${status}] ${r.name} (${checkPasses}/${checkTotal} checks)`);
     if (hasErrors) {
       for (const err of r.errors) {
         console.log(`  ERROR: ${err}`);

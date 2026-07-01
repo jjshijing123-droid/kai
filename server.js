@@ -14,6 +14,7 @@ const uploadsRouter = require('./server/routes/uploads')
 
 // 导入工具
 const { ProductCatalogUtils, productCatalogUtils } = require('./server/utils/productCatalogUtils')
+const { generateToken, authMiddleware } = require('./server/middleware/auth')
 
 const app = express();
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -32,6 +33,91 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ===== 限流中间件 =====
+const rateLimit = require('express-rate-limit');
+
+// 登录接口限流 - 5次/分钟
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: { success: false, message: '登录尝试过于频繁，请稍后再试' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// API 限流 - 100次/分钟
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  message: { success: false, message: '请求过于频繁，请稍后再试' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// 上传接口限流 - 10次/分钟
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { success: false, message: '上传过于频繁，请稍后再试' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// ===== 认证路由 =====
+
+// 管理员登录
+app.post('/api/auth/login', loginLimiter, (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: '请输入用户名和密码'
+      });
+    }
+
+    // 验证管理员凭据（从环境变量读取，开发环境有默认值）
+    const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+    const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
+
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
+      const token = generateToken({
+        username: ADMIN_USER,
+        role: 'admin'
+      });
+
+      return res.json({
+        success: true,
+        message: '登录成功',
+        data: { token, username: ADMIN_USER }
+      });
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: '用户名或密码错误'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '登录失败',
+      error: error.message
+    });
+  }
+});
+
+// 验证 token 有效性
+app.get('/api/auth/verify', authMiddleware, (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      username: req.user.username,
+      role: req.user.role
+    }
+  });
+});
 
 // 生产环境安全配置
 if (isProduction) {
@@ -53,8 +139,8 @@ app.use('/Product', express.static(path.join(__dirname, 'Product')));
 
 // ========== API路由 ==========
 
-// 产品管理路由
-app.use('/api/products', productsRouter);
+// 产品管理路由（全局限流，写操作认证在路由文件内）
+app.use('/api/products', apiLimiter, productsRouter);
 
 // 数据库兼容性路由 - 从数据库/JSON获取产品目录
 app.get('/api/db/products', (req, res) => {

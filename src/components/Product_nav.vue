@@ -190,8 +190,8 @@ const checkProductFolders = async () => {
     return
   }
 
-  const basePath = `/Product/${folderName.value}`
-  
+  const basePath = `Product/${folderName.value}`
+
   // 检查各个文件夹
   try {
     const [view1Exists, images6ViewsExists, imagesOtherExists] = await Promise.all([
@@ -199,11 +199,11 @@ const checkProductFolders = async () => {
       checkFolderFiles(`${basePath}/images_6Views`),
       checkFolderFiles(`${basePath}/images_other`)
     ])
-    
+
     hasView1Files.value = view1Exists
     hasImages6ViewsFiles.value = images6ViewsExists
     hasImagesOtherFiles.value = imagesOtherExists
-    
+
     console.log('文件夹检测结果:', {
       view1: view1Exists,
       images_6Views: images6ViewsExists,

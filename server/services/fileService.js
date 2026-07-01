@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { safeJoin } = require('../utils/safePath');
 
 /**
  * 文件管理服务类 - 负责文件相关的业务逻辑
@@ -7,6 +8,7 @@ const fs = require('fs');
 class FileService {
   constructor() {
     this.serverPath = path.resolve(__dirname, '../../')
+    this.productBasePath = safeJoin(this.serverPath, 'Product')
   }
 
   /**
@@ -19,8 +21,11 @@ class FileService {
     
     console.log(`删除文件: ${filePath}`);
     
-    // 构建完整的文件路径
-    const fullPath = path.join(this.serverPath, filePath.startsWith('Product/') ? filePath : `Product/${filePath}`);
+    // 安全的文件路径（防止路径穿越）
+    const cleanPath = filePath.startsWith('Product/')
+      ? filePath.replace('Product/', '')
+      : filePath;
+    const fullPath = safeJoin(this.productBasePath, cleanPath);
     console.log('文件完整路径:', fullPath);
     
     // 检查文件是否存在
@@ -47,7 +52,8 @@ class FileService {
    * 检查文件是否存在
    */
   async checkFileExists(filePath) {
-    const fullPath = path.join(this.serverPath, filePath);
+    const cleanPath = filePath.replace('Product/', '');
+    const fullPath = safeJoin(this.productBasePath, cleanPath);
     return fs.existsSync(fullPath);
   }
 
@@ -56,7 +62,8 @@ class FileService {
    */
   async getFileInfo(filePath) {
     try {
-      const fullPath = path.join(this.serverPath, filePath);
+      const cleanPath = filePath.replace('Product/', '');
+      const fullPath = safeJoin(this.productBasePath, cleanPath);
       
       if (!fs.existsSync(fullPath)) {
         return null;
@@ -110,7 +117,10 @@ class FileService {
    */
   async checkFolderHasFiles(folderPath) {
     try {
-      const fullPath = path.join(this.serverPath, folderPath);
+      const folderBase = folderPath.startsWith('Product/')
+        ? safeJoin(this.productBasePath, folderPath.replace('Product/', ''))
+        : safeJoin(this.productBasePath, folderPath);
+      const fullPath = folderBase;
       
       if (!fs.existsSync(fullPath)) {
         return { hasFiles: false, message: '文件夹不存在' };

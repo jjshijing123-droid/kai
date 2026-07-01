@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const { calculateFolderSize } = require('../utils/fsHelpers')
 const { buildProductObject } = require('../utils/buildProductObject')
+const { safeJoin } = require('../utils/safePath')
 
 /**
  * 产品管理服务类 - 负责所有产品相关的业务逻辑
@@ -9,6 +10,7 @@ const { buildProductObject } = require('../utils/buildProductObject')
 class ProductService {
   constructor() {
     this.serverPath = path.resolve(__dirname, '../../')
+    this.productBasePath = safeJoin(this.serverPath, 'Product')
   }
 
   /**
@@ -16,7 +18,7 @@ class ProductService {
    */
   async getProducts() {
     try {
-      const productPath = path.join(this.serverPath, 'Product');
+      const productPath = this.productBasePath;
       
       if (!fs.existsSync(productPath)) {
         return [];
@@ -94,8 +96,8 @@ class ProductService {
     }
     
     console.log(`创建新产品: ${productName}`);
-    
-    const productFolderPath = path.join(this.serverPath, 'Product', folderName);
+
+    const productFolderPath = safeJoin(this.productBasePath, folderName);
     
     if (fs.existsSync(productFolderPath)) {
       throw new Error('文件夹已存在');
@@ -126,9 +128,9 @@ class ProductService {
     }
     
     console.log(`重命名项目: ${productName} -> ${newFolderName}`);
-    
-    const oldItemPath = path.join(this.serverPath, 'Product', productName);
-    const newItemPath = path.join(this.serverPath, 'Product', newFolderName);
+
+    const oldItemPath = safeJoin(this.productBasePath, productName);
+    const newItemPath = safeJoin(this.productBasePath, newFolderName);
     
     if (!fs.existsSync(oldItemPath)) {
       throw new Error('原项目不存在');
@@ -155,8 +157,8 @@ class ProductService {
    */
   async deleteProduct(productName) {
     console.log(`删除项目: ${productName}`);
-    
-    const productItemPath = path.join(this.serverPath, 'Product', productName);
+
+    const productItemPath = safeJoin(this.productBasePath, productName);
     
     let physicalItemDeleted = false;
     
@@ -182,7 +184,7 @@ class ProductService {
    */
   async getProductById(productId) {
     try {
-      const productPath = path.join(this.serverPath, 'Product', productId);
+      const productPath = safeJoin(this.productBasePath, productId);
       
       if (!fs.existsSync(productPath)) {
         throw new Error('产品不存在');
@@ -212,7 +214,7 @@ class ProductService {
    */
   async getProductByName(productName) {
     try {
-      const productPath = path.join(this.serverPath, 'Product', productName);
+      const productPath = safeJoin(this.productBasePath, productName);
       
       if (!fs.existsSync(productPath)) {
         throw new Error('产品不存在');
@@ -242,7 +244,7 @@ class ProductService {
     try {
       // 确定图片文件夹类型
       const folderType = imageType === '6views' ? 'images_6Views' : 'images_other';
-      const productImagesPath = path.join(this.serverPath, 'Product', productName, folderType);
+      const productImagesPath = safeJoin(this.productBasePath, productName, folderType);
       
       if (!fs.existsSync(productImagesPath)) {
         throw new Error('图片文件夹不存在');

@@ -27,18 +27,19 @@
 
     <!-- 产品列表 -->
     <div v-else class="product-grid">
-      <div 
-        v-for="product in products" 
-        :key="product.id" 
+      <div
+        v-for="product in products"
+        :key="product.id"
         class="product-card"
         @click="handleProductClick(product)"
       >
         <div class="product-image-container" :class="{ 'lazy-load': !product.imageLoaded }">
-          <img 
-            :src="product.mainImage" 
+          <img
+            :src="product.mainImage"
             :alt="product.name"
             class="product-image"
             loading="lazy"
+            decoding="async"
             @load="handleImageLoad(product, $event)"
             @error="handleImageError(product, $event)"
           />
@@ -56,6 +57,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
+import { cachedFetch, invalidateCache } from '../utils/cache.js'
 import LucideIcon from './ui/LucideIcon.vue'
 
 const { t } = useI18n()
@@ -204,56 +206,55 @@ const processProductData = (rawData) => {
 }
 
 /**
- * 加载产品列表 - 优先使用产品目录JSON文件
+ * 加载产品列表 - 优先使用产品目录JSON文件，带缓存
  */
 const loadProducts = async () => {
   try {
     loading.value = true
     error.value = null
     loadingProgress.value = 30
-    
-    // 优先尝试从产品目录JSON文件获取数据
+
+    // 优先尝试从产品目录JSON文件获取数据（5秒缓存）
     try {
-      const catalogData = await fetchProductDataFromCatalog()
-      loadingProgress.value = 60
+      loadingProgress.value = 50
+      const response = await cachedFetch(
+        'product-catalog',
+        () => fetch(API_CONFIG.PRODUCT_CATALOG_URL).then(r => r.json()),
+        5000
+      )
 
-      // 处理产品目录数据
-      const processedProducts = processCatalogData(catalogData)
-      loadingProgress.value = 80
+      loadingProgress.value = 70
+      const processedProducts = processCatalogData(response)
+      loadingProgress.value = 90
 
-      // 如果目录文件有数据，使用目录数据；否则降级到API
       if (processedProducts.length > 0) {
         products.value = processedProducts
         loadingProgress.value = 100
-
-        if (processedProducts.length > 0) {
-          startImagePreload(processedProducts)
-        }
-
+        startImagePreload(processedProducts)
         loading.value = false
         return
       }
-
     } catch (catalogError) {
       console.warn('读取产品目录文件失败，尝试API:', catalogError.message)
+      invalidateCache('product-catalog')
     }
 
-    // 降级：从数据库API获取产品数据
+    // 降级：从数据库API获取产品数据（5秒缓存）
     try {
       loadingProgress.value = 40
+      const response = await cachedFetch(
+        'product-api',
+        () => fetchProductDataFromDatabase(),
+        5000
+      )
+      loadingProgress.value = 70
 
-      const rawData = await fetchProductDataFromDatabase()
-      loadingProgress.value = 60
+      const processedProducts = processProductData(response)
+      loadingProgress.value = 90
 
-      // 获取产品数据并处理
-      const processedProducts = processProductData(rawData)
-      loadingProgress.value = 80
-
-      // 更新产品列表
       products.value = processedProducts
       loadingProgress.value = 100
 
-      // 开始图片预加载
       if (processedProducts.length > 0) {
         startImagePreload(processedProducts)
       }
@@ -261,7 +262,6 @@ const loadProducts = async () => {
       loading.value = false
 
     } catch (apiError) {
-      // API也失败了
       console.error('API获取产品数据失败:', apiError.message)
       error.value = apiError.message
       loading.value = false
@@ -353,6 +353,8 @@ onMounted(() => {
   
   // 监听语言变化
   const unsubscribe = useI18n().addListener(() => {
+    invalidateCache('product-catalog')
+    invalidateCache('product-api')
     loadProducts()
     // 语言变化时更新浏览器标题
     setBrowserTitle()

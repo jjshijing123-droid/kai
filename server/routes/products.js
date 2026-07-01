@@ -1,6 +1,7 @@
 const express = require('express')
 const ProductService = require('../services/productService')
 const { buildProductObject } = require('../utils/buildProductObject')
+const { authMiddleware } = require('../middleware/auth')
 const router = express.Router()
 const productService = new ProductService()
 
@@ -32,8 +33,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 创建新产品
-router.post('/', async (req, res) => {
+// 创建新产品（需登录）
+router.post('/', authMiddleware, async (req, res) => {
   try {
     const { productName, folderName } = req.body;
     
@@ -101,8 +102,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 重命名产品
-router.put('/:productName', async (req, res) => {
+// 重命名产品（需登录）
+router.put('/:productName', authMiddleware, async (req, res) => {
   try {
     const { productName } = req.params;
     const { newProductName, newFolderName } = req.body;
@@ -139,8 +140,8 @@ router.put('/:productName', async (req, res) => {
   }
 });
 
-// 删除产品
-router.delete('/:productName', async (req, res) => {
+// 删除产品（需登录）
+router.delete('/:productName', authMiddleware, async (req, res) => {
   try {
     const { productName } = req.params;
     console.log(`删除产品: ${productName}`);
