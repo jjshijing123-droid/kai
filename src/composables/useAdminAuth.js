@@ -1,56 +1,8 @@
 import { ref, computed } from 'vue'
+import { showToast } from '../lib/toast.js'
 
 // 简单的消息提示实现（替代Ant Design Vue message）
-export const showMessage = (type, text) => {
-  const messageDiv = document.createElement('div')
-  messageDiv.className = `message-${type}`
-  messageDiv.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100%);
-    padding: 12px 20px;
-    border-radius: 6px;
-    color: white;
-    z-index: 9999;
-    font-size: 14px;
-    font-weight: 500;
-    max-width: 300px;
-    word-wrap: break-word;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-    text-align: center;
-  `
-  
-  if (type === 'warning') {
-    messageDiv.style.backgroundColor = '#f59e0b'
-  } else if (type === 'error') {
-    messageDiv.style.backgroundColor = '#ef4444'
-  } else if (type === 'success') {
-    messageDiv.style.backgroundColor = '#22c55e'
-  } else {
-    messageDiv.style.backgroundColor = '#0ea5e9'
-  }
-  
-  messageDiv.textContent = text
-  document.body.appendChild(messageDiv)
-  
-  // 滑入动画
-  setTimeout(() => {
-    messageDiv.style.transform = 'translateX(-50%) translateY(20px)'
-  }, 10)
-  
-  // 3秒后自动移除
-  setTimeout(() => {
-    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
-    messageDiv.style.opacity = '0'
-    setTimeout(() => {
-      if (messageDiv.parentNode) {
-        document.body.removeChild(messageDiv)
-      }
-    }, 300)
-  }, 3000)
-}
+export const showMessage = showToast
 
 // 管理员账号配置
 const ADMIN_CREDENTIALS = {
@@ -133,7 +85,7 @@ export function useAdminAuth() {
     isAdminLoggedIn, // 返回响应式引用而不是当前值
     isAuthenticated,
     showLoginModal,
-    
+
     // 方法
     login,
     logout,

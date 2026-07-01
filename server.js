@@ -1,21 +1,19 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const fs = require('fs');
+const express = require('express')
+const path = require('path')
+const cors = require('cors')
+const fs = require('fs')
+const { buildProductObject } = require('./server/utils/buildProductObject')
 
-const ProductService = require('./server/services/productService');
-const FileService = require('./server/services/fileService');
-const FolderService = require('./server/services/folderService');
-const UploadService = require('./server/services/uploadService');
+const ProductService = require('./server/services/productService')
 
 // 导入路由
-const productsRouter = require('./server/routes/products');
-const foldersRouter = require('./server/routes/folders');
-const filesRouter = require('./server/routes/files');
-const uploadsRouter = require('./server/routes/uploads');
+const productsRouter = require('./server/routes/products')
+const foldersRouter = require('./server/routes/folders')
+const filesRouter = require('./server/routes/files')
+const uploadsRouter = require('./server/routes/uploads')
 
 // 导入工具
-const { ProductCatalogUtils, productCatalogUtils } = require('./server/utils/productCatalogUtils');
+const { ProductCatalogUtils, productCatalogUtils } = require('./server/utils/productCatalogUtils')
 
 const app = express();
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -23,10 +21,7 @@ const isProduction = NODE_ENV === 'production';
 const PORT = process.env.PORT || (isProduction ? 8000 : 3000);
 
 // 初始化服务实例
-const productService = new ProductService();
-const fileService = new FileService();
-const folderService = new FolderService();
-const uploadService = new UploadService();
+const productService = new ProductService()
 
 // 中间件配置
 const corsOptions = {
@@ -128,29 +123,15 @@ app.post('/api/products/refresh-catalog', async (req, res) => {
     };
     
     products.forEach((product, index) => {
-      catalogData.products.push({
+      catalogData.products.push(buildProductObject({
         id: product.id || index + 1,
         name: product.name,
         folderName: product.folderName,
-        model: product.model || product.name,
         category: product.category || 'general',
         description: product.description || `Product model: ${product.name}`,
-        path: product.path,
-        folder: product.path + '/',
         totalSize: product.totalSize || 0,
-        fileCount: product.fileCount || 0,
-        mainImage: `/Product/${product.name}/image_00.webp`,
-        views: {
-          view1: `/Product/${product.name}/view1/`,
-          view2: `/Product/${product.name}/view2/`,
-          view3: `/Product/${product.name}/view3/`,
-          view4: `/Product/${product.name}/view4/`
-        },
-        additionalImages: {
-          sixViews: `/Product/${product.name}/images_6Views/`,
-          other: `/Product/${product.name}/images_other/`
-        }
-      });
+        fileCount: product.fileCount || 0
+      }))
     });
     
     // 更新总数

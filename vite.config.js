@@ -63,6 +63,6 @@ export default defineConfig({
       }
     },
     // 调整 chunk 大小警告限制，gzip后200KB左右是可接受的
-    chunkSizeWarningLimit: 1500
+    chunkSizeWarningLimit: 500
   }
 })

@@ -474,9 +474,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
+import { formatFileSize } from '../lib/utils.js'
 import { useAdminAuth, showMessage } from '../composables/useAdminAuth.js'
 import AdminLoginModal from './AdminLoginModal.vue'
 import Button from './ui/button.vue'
@@ -488,8 +489,6 @@ import ProductFolderUploader from './ProductFolderUploader.vue'
 import BatchUploadModal from './BatchUploadModal.vue'
 import Functionaldescription from './Functionaldescription.vue'
 import apiService from '../services/apiService.js'
-
-
 
 const { t, currentLanguage } = useI18n()
 const router = useRouter()
@@ -529,11 +528,11 @@ const folderNameInput = ref(null)
 
 // 计算属性
 const filteredProducts = computed(() => {
-  if (!searchQuery.value) return products.value
-  return products.value.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
-})
+    if (!searchQuery.value) return products.value
+    return products.value.filter(product =>
+      product.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+  })
 
 // 设置浏览器标题
 const setPageTitle = () => {
@@ -598,15 +597,6 @@ const refreshProducts = async () => {
     loading.value = false
   }
 }
-
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
 const validateFolderName = () => {
   if (!newFolderName.value || newFolderName.value.trim() === '') {
     folderNameError.value = ''
@@ -1182,14 +1172,14 @@ const goBack = () => {
 }
 
 // 生命周期
-onMounted(() => {
-  fetchProducts()
-  
-  // 设置浏览器标题
+onMounted(async () => {
+  await fetchProducts()
   setPageTitle()
-  
-  // 点击页面其他地方隐藏右键菜单
   document.addEventListener('click', hideContextMenu)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', hideContextMenu)
 })
 
 // 管理员登录成功回调

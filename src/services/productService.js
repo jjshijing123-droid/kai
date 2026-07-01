@@ -3,6 +3,7 @@
  * 已迁移到原生实现，移除Ant Design Vue依赖
  */
 import apiService from './apiService'
+import { formatFileSize } from '../lib/utils.js'
 
 class ProductService {
   constructor() {
@@ -32,7 +33,6 @@ class ProductService {
       return data
     } catch (error) {
       console.error('获取产品列表失败:', error)
-      message.error(`获取产品列表失败: ${error.message}`)
       throw error
     }
   }
@@ -46,12 +46,9 @@ class ProductService {
       
       // 清除缓存
       this.clearCache('products')
-      
-      message.success(`产品 "${productData.productName}" 创建成功`)
       return result
     } catch (error) {
       console.error('创建产品失败:', error)
-      message.error(`创建产品失败: ${error.message}`)
       throw error
     }
   }
@@ -65,12 +62,9 @@ class ProductService {
       
       // 清除缓存
       this.clearCache('products')
-      
-      message.success('产品重命名成功')
       return result
     } catch (error) {
       console.error('重命名产品失败:', error)
-      message.error(`重命名产品失败: ${error.message}`)
       throw error
     }
   }
@@ -84,12 +78,9 @@ class ProductService {
       
       // 清除缓存
       this.clearCache('products')
-      
-      message.success(`产品 "${productName}" 删除成功`)
       return result
     } catch (error) {
-      console.error('删除产品失败:', error)
-      message.error(`删除产品失败: ${error.message}`)
+      console.error(`删除产品 ${productName} 失败:`, error)
       throw error
     }
   }
@@ -233,22 +224,11 @@ class ProductService {
     return {
       ...product,
       displayName: product.folderName || product.name || '未知产品',
-      displaySize: this.formatFileSize(product.totalSize || 0),
+      displaySize: formatFileSize(product.totalSize || 0),
       displayDate: product.modified ? new Date(product.modified).toLocaleDateString() : '',
       hasImages: !!(product.mainImage || (product.images && product.images.length > 0)),
       imageCount: product.fileCount || 0
     }
-  }
-
-  /**
-   * 格式化文件大小
-   */
-  formatFileSize(bytes) {
-    if (bytes === 0) return '0 B'
-    const k = 1024
-    const sizes = ['B', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
   // ==================== 缓存管理 ====================

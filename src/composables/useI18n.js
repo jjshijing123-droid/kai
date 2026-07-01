@@ -67,9 +67,11 @@ export function useI18n() {
   const addListener = (callback) => i18n.addListener(callback)
 
   // 在组件卸载时清理监听器
-  onUnmounted(() => {
-    if (unsubscribe) unsubscribe()
-  })
+  if (typeof onUnmounted === 'function') {
+    onUnmounted(() => {
+      if (unsubscribe) unsubscribe()
+    })
+  }
 
   // 触发翻译完整性重新计算的方法
   const refreshCompleteness = () => {

@@ -72,13 +72,13 @@ router.beforeEach((to, from, next) => {
   const protectedRoutes = ['/i18n-manager', '/product-management']
   
   if (protectedRoutes.includes(to.path)) {
-    // 动态检查管理员登录状态（避免过早实例化）
     const storedSession = localStorage.getItem('admin_session')
     if (storedSession !== 'true') {
-      console.log('尝试访问受保护页面，需要管理员权限')
+      next('/')
+      return
     }
   }
-  
+
   next()
 })
 

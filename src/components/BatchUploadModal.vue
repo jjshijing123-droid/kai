@@ -118,6 +118,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
+import { formatFileSize } from '../lib/utils.js'
 import Button from './ui/button.vue'
 import Modal from './ui/modal.vue'
 import Functionaldescription from './Functionaldescription.vue'
@@ -168,14 +169,6 @@ const uploadSteps = computed(() => [
 ])
 
 // 方法
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
 const handleClose = () => {
   if (!uploading.value) {
     resetState()

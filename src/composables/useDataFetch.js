@@ -5,15 +5,8 @@ import { ref, reactive } from 'vue'
  * 提供加载状态、错误处理、重试机制等通用功能
  */
 export function useDataFetch() {
-  const loading = ref(false)
-  const error = ref(null)
-  const data = ref(null)
-  
   // 状态管理
   const state = reactive({
-    loading: false,
-    error: null,
-    data: null,
     lastFetchTime: null,
     retryCount: 0
   })
@@ -62,15 +55,16 @@ export function useDataFetch() {
       state.loading = true
       state.error = null
       state.lastFetchTime = Date.now()
-      
+
       const result = await fetchFunction()
-      
+
       state.data = result
       state.loading = false
-      
+      state.retryCount = 0  // 成功后重置重试计数
+
       console.log('Data fetch successful:', result)
       return result
-      
+
     } catch (err) {
       handleError(err)
       throw err
@@ -80,7 +74,7 @@ export function useDataFetch() {
   // 带重试的数据获取
   const fetchWithRetry = async (fetchFunction, options = {}) => {
     const { maxRetries = 3, delay = 1000 } = options
-    
+
     try {
       return await executeFetch(fetchFunction)
     } catch (err) {
@@ -121,12 +115,8 @@ export function useDataFetch() {
   })
 
   return {
-    // 状态
-    loading,
-    error,
-    data,
     state,
-    
+
     // 计算属性
     isLoading,
     hasError,

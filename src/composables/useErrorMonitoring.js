@@ -450,21 +450,71 @@ export function useErrorMonitoring() {
   onMounted(() => {
     // 注册默认错误恢复策略
     registerDefaultRecoveryStrategies()
-    
+
     // 开始监控
     startMonitoring()
-    
+
     // 监听全局错误
     document.addEventListener('app:error', (event) => {
       trackError(event.detail.error)
       attemptRecovery(event.detail.error)
     })
   })
-  
+
   onUnmounted(() => {
     stopMonitoring()
   })
-  
+
+  // 注册默认恢复策略
+  function registerDefaultRecoveryStrategies() {
+    // 网络错误恢复策略
+    registerErrorType('NETWORK_ERROR', {
+      name: 'Network Recovery',
+      recover: async (errorInfo) => {
+        // 检查网络状态
+        if (!navigator.onLine) {
+          return { success: false, reason: 'Network offline' }
+        }
+
+        // 等待网络恢复
+        await new Promise(resolve => {
+          const checkOnline = () => {
+            if (navigator.onLine) {
+              window.removeEventListener('online', checkOnline)
+              resolve()
+            }
+          }
+          window.addEventListener('online', checkOnline)
+
+          // 超时处理
+          setTimeout(resolve, 30000) // 30秒超时
+        })
+
+        return { success: true, method: 'network_recovery' }
+      }
+    })
+
+    // 服务器错误恢复策略
+    registerErrorType('SERVER_ERROR', {
+      name: 'Server Error Recovery',
+      recover: async (errorInfo) => {
+        // 等待一段时间后重试
+        await new Promise(resolve => setTimeout(resolve, 5000))
+        return { success: true, method: 'server_retry' }
+      }
+    })
+
+    // 授权错误恢复策略
+    registerErrorType('AUTHORIZATION_ERROR', {
+      name: 'Authorization Recovery',
+      recover: async (errorInfo) => {
+        // 触发重新登录
+        document.dispatchEvent(new CustomEvent('app:reauthenticate'))
+        return { success: true, method: 'reauth' }
+      }
+    })
+  }
+
   return {
     monitoring,
     errorStats,
@@ -481,57 +531,4 @@ export function useErrorMonitoring() {
     stopMonitoring
   }
 }
-
-/**
- * 注册默认恢复策略
- */
-function registerDefaultRecoveryStrategies() {
-  const { registerErrorType } = useErrorMonitoring()
-  
-  // 网络错误恢复策略
-  registerErrorType('NETWORK_ERROR', {
-    name: 'Network Recovery',
-    recover: async (errorInfo) => {
-      // 检查网络状态
-      if (!navigator.onLine) {
-        return { success: false, reason: 'Network offline' }
-      }
-      
-      // 等待网络恢复
-      await new Promise(resolve => {
-        const checkOnline = () => {
-          if (navigator.onLine) {
-            window.removeEventListener('online', checkOnline)
-            resolve()
-          }
-        }
-        window.addEventListener('online', checkOnline)
-        
-        // 超时处理
-        setTimeout(resolve, 30000) // 30秒超时
-      })
-      
-      return { success: true, method: 'network_recovery' }
-    }
-  })
-  
-  // 服务器错误恢复策略
-  registerErrorType('SERVER_ERROR', {
-    name: 'Server Error Recovery',
-    recover: async (errorInfo) => {
-      // 等待一段时间后重试
-      await new Promise(resolve => setTimeout(resolve, 5000))
-      return { success: true, method: 'server_retry' }
-    }
-  })
-  
-  // 授权错误恢复策略
-  registerErrorType('AUTHORIZATION_ERROR', {
-    name: 'Authorization Recovery',
-    recover: async (errorInfo) => {
-      // 触发重新登录
-      document.dispatchEvent(new CustomEvent('app:reauthenticate'))
-      return { success: true, method: 'reauth' }
-    }
-  })
 }

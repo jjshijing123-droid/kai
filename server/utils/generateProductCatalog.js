@@ -1,5 +1,7 @@
-const path = require('path');
-const fs = require('fs');
+const path = require('path')
+const fs = require('fs')
+const { calculateFolderSize } = require('./fsHelpers')
+const { buildProductObject } = require('./buildProductObject')
 
 /**
  * 生成产品目录JSON文件
@@ -7,37 +9,7 @@ const fs = require('fs');
  */
 class ProductCatalogGenerator {
   constructor() {
-    this.serverPath = __dirname.replace(/server\/utils$/, '');
-  }
-
-  /**
-   * 递归计算文件夹大小
-   */
-  calculateFolderSize(dirPath) {
-    let totalSize = 0;
-    let fileCount = 0;
-    
-    try {
-      const items = fs.readdirSync(dirPath, { withFileTypes: true });
-      
-      for (const item of items) {
-        const itemPath = path.join(dirPath, item.name);
-        
-        if (item.isDirectory()) {
-          const subResult = this.calculateFolderSize(itemPath);
-          totalSize += subResult.totalSize;
-          fileCount += subResult.fileCount;
-        } else if (item.isFile()) {
-          const stats = fs.statSync(itemPath);
-          totalSize += stats.size;
-          fileCount += 1;
-        }
-      }
-    } catch (error) {
-      console.error(`计算文件夹大小失败: ${dirPath}`, error);
-    }
-    
-    return { totalSize, fileCount };
+    this.serverPath = path.resolve(__dirname, '../../')
   }
 
   /**
@@ -78,30 +50,15 @@ class ProductCatalogGenerator {
         
         console.log(`\n🔍 处理产品: ${item.name} (${i + 1}/${directories.length})`);
         
-        const folderInfo = this.calculateFolderSize(folderPath);
-        
-        const productData = {
+        const folderInfo = calculateFolderSize(folderPath);
+
+        const productData = buildProductObject({
           id: i + 1,
           name: item.name,
           folderName: item.name,
-          category: 'general',
-          description: `Product model: ${item.name}`,
-          path: `Product/${item.name}/`,
-          folder: `Product/${item.name}/`,
-          mainImage: `/Product/${item.name}/image_00.webp`,
           totalSize: folderInfo.totalSize,
-          fileCount: folderInfo.fileCount,
-          views: {
-            view1: `/Product/${item.name}/view1/`,
-            view2: `/Product/${item.name}/view2/`,
-            view3: `/Product/${item.name}/view3/`,
-            view4: `/Product/${item.name}/view4/`
-          },
-          additionalImages: {
-            sixViews: `/Product/${item.name}/images_6Views/`,
-            other: `/Product/${item.name}/images_other/`
-          }
-        };
+          fileCount: folderInfo.fileCount
+        })
         
         products.push(productData);
         console.log(`✅ 生成产品数据: ${item.name}`);
@@ -134,5 +91,7 @@ class ProductCatalogGenerator {
 }
 
 // 执行脚本
-const generator = new ProductCatalogGenerator();
-generator.generateCatalog();
+if (require.main === module) {
+  const generator = new ProductCatalogGenerator();
+  generator.generateCatalog();
+}

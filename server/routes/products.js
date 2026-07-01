@@ -1,7 +1,8 @@
-const express = require('express');
-const ProductService = require('../services/productService');
-const router = express.Router();
-const productService = new ProductService();
+const express = require('express')
+const ProductService = require('../services/productService')
+const { buildProductObject } = require('../utils/buildProductObject')
+const router = express.Router()
+const productService = new ProductService()
 
 /**
  * 产品管理路由
@@ -60,29 +61,15 @@ router.post('/', async (req, res) => {
       const { productCatalogUtils } = require('../utils/productCatalogUtils');
       const catalogData = productCatalogUtils.getProductCatalog();
       
-      catalogData.products.push({
+      catalogData.products.push(buildProductObject({
         id: newProduct.id || catalogData.products.length + 1,
         name: newProduct.name,
         folderName: newProduct.folderName,
-        model: newProduct.model || newProduct.name,
         category: newProduct.category || 'general',
         description: newProduct.description || `Product model: ${newProduct.name}`,
-        path: newProduct.path,
-        folder: newProduct.path + '/',
         totalSize: newProduct.totalSize || 0,
-        fileCount: newProduct.fileCount || 0,
-        mainImage: `/Product/${newProduct.name}/image_00.webp`,
-        views: {
-          view1: `/Product/${newProduct.name}/view1/`,
-          view2: `/Product/${newProduct.name}/view2/`,
-          view3: `/Product/${newProduct.name}/view3/`,
-          view4: `/Product/${newProduct.name}/view4/`
-        },
-        additionalImages: {
-          sixViews: `/Product/${newProduct.name}/images_6Views/`,
-          other: `/Product/${newProduct.name}/images_other/`
-        }
-      });
+        fileCount: newProduct.fileCount || 0
+      }))
       
       // 更新总数和时间戳
       catalogData.totalProducts = catalogData.products.length;

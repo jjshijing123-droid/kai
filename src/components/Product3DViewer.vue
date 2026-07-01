@@ -89,60 +89,11 @@ import apiService from '../services/apiService.js'
 import Product3DHeader from './Product3DHeader.vue'
 import Drawer from './Drawer.vue'
 import LoadingState from './ui/LoadingState.vue'
-import Progress from './ui/progress.vue'
 import Button from './ui/button.vue'
-const showMessage = (type, text) => {
-  const messageDiv = document.createElement('div')
-  messageDiv.className = `message-${type}`
-  messageDiv.style.cssText = `
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100%);
-    padding: 12px 20px;
-    border-radius: 10px;
-    color: white;
-    z-index: 9999;
-    font-size: 14px;
-    font-weight: 500;
-    max-width: 400px;
-    word-wrap: break-word;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-    opacity: 0;
-  `
-  
-  if (type === 'warning') {
-    messageDiv.style.backgroundColor = 'var(--orange-8)'
-  } else if (type === 'error') {
-    messageDiv.style.backgroundColor = 'var(--red-9)'
-  } else if (type === 'success') {
-    messageDiv.style.backgroundColor = 'var(--green-8)'
-  } else {
-    messageDiv.style.backgroundColor = 'var(--primary-8)'
-  }
-  
-  messageDiv.textContent = text
-  document.body.appendChild(messageDiv)
-  
-  // 入场动画
-  setTimeout(() => {
-    messageDiv.style.opacity = '1'
-    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
-  }, 10)
-  
-  // 3秒后自动移除
-  setTimeout(() => {
-    messageDiv.style.opacity = '0'
-    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
-    setTimeout(() => {
-      if (messageDiv.parentNode) {
-        document.body.removeChild(messageDiv)
-      }
-    }, 300)
-  }, 3000)
-}
+import { showToast } from '../lib/toast.js'
+import { throttle } from '../utils/responsive.js'
+
+const showMessage = showToast
 
 const { t } = useI18n()
 const route = useRoute()
@@ -803,16 +754,7 @@ const handleMoveStart = (x, y) => {
 }
 
 // 添加优化的节流函数
-const throttle = (func, limit) => {
-  let lastCall = 0;
-  return function(...args) {
-    const now = Date.now();
-    if (now - lastCall >= limit) {
-      func.apply(this, args);
-      lastCall = now;
-    }
-  }
-};
+;
 
 // 优化的handleMove函数，使用节流限制调用频率
 const handleMove = (clientX, clientY) => {

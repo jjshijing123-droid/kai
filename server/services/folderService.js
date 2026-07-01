@@ -1,39 +1,15 @@
-const path = require('path');
-const fs = require('fs');
-const FileService = require('./fileService');
+const path = require('path')
+const fs = require('fs')
+const FileService = require('./fileService')
+const { calculateFolderSize } = require('../utils/fsHelpers')
 
 /**
  * 文件夹管理服务类 - 负责文件夹相关的业务逻辑
  */
 class FolderService {
   constructor() {
-    // 项目根目录应该是server目录的父目录
-    this.serverPath = path.resolve(__dirname, '../../');
-    this.fileService = new FileService();
-  }
-
-  /**
-   * 递归计算文件夹大小
-   */
-  calculateFolderSize(folderPath) {
-    let totalSize = 0;
-    
-    const items = fs.readdirSync(folderPath, { withFileTypes: true });
-    
-    for (const item of items) {
-      const itemPath = path.join(folderPath, item.name);
-      
-      if (item.isDirectory()) {
-        // 递归计算子文件夹大小
-        totalSize += this.calculateFolderSize(itemPath);
-      } else if (item.isFile()) {
-        // 添加文件大小
-        const stats = fs.statSync(itemPath);
-        totalSize += stats.size;
-      }
-    }
-    
-    return totalSize;
+    this.serverPath = path.resolve(__dirname, '../../')
+    this.fileService = new FileService()
   }
 
   /**
@@ -74,7 +50,7 @@ class FolderService {
           const subItems = fs.readdirSync(subFolderPath, { withFileTypes: true });
           
           // 计算子文件夹的总大小
-          const subFolderTotalSize = this.calculateFolderSize(subFolderPath);
+          const subFolderTotalSize = calculateFolderSize(subFolderPath).totalSize
           
           folders[item.name] = {
             path: path.join(folderPath, item.name),

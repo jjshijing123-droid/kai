@@ -1,12 +1,12 @@
-const path = require('path');
-const fs = require('fs');
+const path = require('path')
+const fs = require('fs')
 
 /**
  * 产品目录管理工具类
  */
 class ProductCatalogUtils {
   constructor() {
-    this.serverPath = __dirname.replace(/server\/utils$/, '');
+    this.serverPath = path.resolve(__dirname, '../../')
     this.isProduction = process.env.NODE_ENV === 'production';
   }
 

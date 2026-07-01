@@ -13,7 +13,7 @@ const FolderService = require('./folderService');
  */
 class UploadService {
   constructor() {
-    this.serverPath = __dirname.replace(/server\/services$/, '');
+    this.serverPath = path.resolve(__dirname, '../../')
     this.productService = new ProductService();
     this.folderService = new FolderService();
   }

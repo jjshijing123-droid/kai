@@ -6,7 +6,7 @@ const fs = require('fs');
  */
 class FileService {
   constructor() {
-    this.serverPath = __dirname.replace(/server\/services$/, '');
+    this.serverPath = path.resolve(__dirname, '../../')
   }
 
   /**

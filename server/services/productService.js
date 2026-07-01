@@ -1,42 +1,14 @@
-const path = require('path');
-const fs = require('fs');
+const path = require('path')
+const fs = require('fs')
+const { calculateFolderSize } = require('../utils/fsHelpers')
+const { buildProductObject } = require('../utils/buildProductObject')
 
 /**
  * 产品管理服务类 - 负责所有产品相关的业务逻辑
  */
 class ProductService {
   constructor() {
-    this.serverPath = __dirname.replace(/server\/services$/, '');
-  }
-
-  /**
-   * 递归计算文件夹大小
-   */
-  calculateFolderSize(dirPath) {
-    let totalSize = 0;
-    let fileCount = 0;
-    
-    try {
-      const items = fs.readdirSync(dirPath, { withFileTypes: true });
-      
-      for (const item of items) {
-        const itemPath = path.join(dirPath, item.name);
-        
-        if (item.isDirectory()) {
-          const subResult = this.calculateFolderSize(itemPath);
-          totalSize += subResult.totalSize;
-          fileCount += subResult.fileCount;
-        } else if (item.isFile()) {
-          const stats = fs.statSync(itemPath);
-          totalSize += stats.size;
-          fileCount += 1;
-        }
-      }
-    } catch (error) {
-      console.error(`计算文件夹大小失败: ${dirPath}`, error);
-    }
-    
-    return { totalSize, fileCount };
+    this.serverPath = path.resolve(__dirname, '../../')
   }
 
   /**
@@ -62,27 +34,22 @@ class ProductService {
           
           console.log(`📁 计算文件夹: ${item.name}`);
           
-          const folderInfo = this.calculateFolderSize(folderPath);
-          
+          const folderInfo = calculateFolderSize(folderPath);
+
           console.log(`   文件夹: ${item.name}`);
           console.log(`   总大小: ${folderInfo.totalSize} bytes`);
           console.log(`   文件数: ${folderInfo.fileCount}`);
-          
-          const productData = {
+
+          products.push(buildProductObject({
             name: item.name,
             folderName: item.name,
             id: products.length + 1,
-            category: 'general',
-            description: `Product model: ${item.name}`,
-            path: `Product/${item.name}`,
             totalSize: folderInfo.totalSize,
             fileCount: folderInfo.fileCount,
             modified: stats.mtime,
             isDirectory: true
-          };
-          
-          products.push(productData);
-          console.log(`✅ 文件夹数据:`, productData);
+          }));
+          console.log(`✅ 文件夹数据:`, products[products.length - 1]);
         } else if (item.isFile()) {
           const filePath = path.join(productPath, item.name);
           const stats = fs.statSync(filePath);
@@ -91,7 +58,7 @@ class ProductService {
           console.log(`   文件: ${item.name}`);
           console.log(`   大小: ${stats.size} bytes`);
           
-          const fileData = {
+          const fileData = buildProductObject({
             name: item.name,
             folderName: item.name,
             id: products.length + 1,
@@ -102,7 +69,7 @@ class ProductService {
             fileCount: 1,
             modified: stats.mtime,
             isDirectory: false
-          };
+          })
           
           products.push(fileData);
           console.log(`✅ 文件数据:`, fileData);
@@ -221,30 +188,17 @@ class ProductService {
         throw new Error('产品不存在');
       }
       
-      const folderInfo = this.calculateFolderSize(productPath);
-      
-      const productData = {
+      const folderInfo = calculateFolderSize(productPath);
+      const stats = fs.statSync(productPath)
+
+      const productData = buildProductObject({
         id: null,
         name: productId,
         folderName: productId,
-        category: 'general',
-        description: `Product model: ${productId}`,
-        path: `Product/${productId}`,
         totalSize: folderInfo.totalSize,
         fileCount: folderInfo.fileCount,
-        mainImage: `/Product/${productId}/image_00.webp`,
-        folder: `Product/${productId}/`,
-        views: {
-          view1: `/Product/${productId}/view1/`,
-          view2: `/Product/${productId}/view2/`,
-          view3: `/Product/${productId}/view3/`,
-          view4: `/Product/${productId}/view4/`
-        },
-        additionalImages: {
-          sixViews: `/Product/${productId}/images_6Views/`,
-          other: `/Product/${productId}/images_other/`
-        }
-      };
+        modified: stats.mtime
+      })
       
       return productData;
     } catch (error) {
@@ -264,30 +218,15 @@ class ProductService {
         throw new Error('产品不存在');
       }
       
-      const folderInfo = this.calculateFolderSize(productPath);
-      
-      const productData = {
+      const folderInfo = calculateFolderSize(productPath);
+
+      const productData = buildProductObject({
         id: null,
         name: productName,
         folderName: productName,
-        category: 'general',
-        description: `Product model: ${productName}`,
-        path: `Product/${productName}`,
         totalSize: folderInfo.totalSize,
-        fileCount: folderInfo.fileCount,
-        mainImage: `/Product/${productName}/image_00.webp`,
-        folder: `Product/${productName}/`,
-        views: {
-          view1: `/Product/${productName}/view1/`,
-          view2: `/Product/${productName}/view2/`,
-          view3: `/Product/${productName}/view3/`,
-          view4: `/Product/${productName}/view4/`
-        },
-        additionalImages: {
-          sixViews: `/Product/${productName}/images_6Views/`,
-          other: `/Product/${productName}/images_other/`
-        }
-      };
+        fileCount: folderInfo.fileCount
+      })
       
       return productData;
     } catch (error) {

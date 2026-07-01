@@ -66,6 +66,16 @@ ICE图片查看器是一个现代化的产品管理系统，采用前后端分�
 - **Concurrently** - 并行运行多个npm脚本
 - **terser** - JavaScript压缩器
 
+## 📚 文档
+
+项目文档位于 `docs/` 目录：
+
+- [文档总索引](docs/README.md) — 所有文档的导航入口
+- [架构总览](docs/architecture/overview.md) — 技术栈和核心模块
+- [API 参考](docs/api/reference.md) — RESTful 接口文档
+- [部署指南](docs/deployment/guide.md) — 生产环境部署
+- [设计系统](docs/design/colors.md) — 颜色变量和主题配置
+
 ## 🚀 快速开始
 
 ### 环境要求
@@ -119,112 +129,22 @@ npm run prod
 
 ```
 kai/
-├── .gitignore                          # Git忽略文件配置
-├── API接口文档.md                      # API接口文档
-├── README.md                           # 项目说明文档
-├── index.html                          # HTML入口文件
-├── package-lock.json                   # 依赖版本锁定文件
-├── package.json                        # 项目依赖和脚本配置
-├── postcss.config.js                   # PostCSS配置
-├── server.js                           # Express服务器入口文件
-├── tailwind.config.js                  # Tailwind CSS配置
-├── vite.config.js                      # Vite构建工具配置
-├── 文档索引.md                         # 文档索引
-├── 部署和配置指南.md                   # 部署和配置指南
-├── 项目目录结构说明.md                 # 目录结构说明
-├── 项目详细文档.md                     # 详细项目文档
-├── public/                             # 静态资源目录
-│   └── data/                           # 数据文件
-│       └── product-catalog.json        # 产品目录数据
-├── server/                             # 后端服务目录
-│   ├── routes/                         # API路由定义
-│   │   ├── files.js                    # 文件操作路由
-│   │   ├── folders.js                  # 文件夹管理路由
-│   │   ├── products.js                 # 产品管理路由
-│   │   └── uploads.js                  # 文件上传路由
-│   ├── services/                       # 业务逻辑服务层
-│   │   ├── fileService.js              # 文件服务
-│   │   ├── folderService.js            # 文件夹服务
-│   │   ├── productService.js           # 产品服务
-│   │   └── uploadService.js            # 上传服务
-│   └── utils/                          # 工具函数
-│       ├── generateProductCatalog.js   # 产品目录生成工具
-│       └── productCatalogUtils.js      # 产品目录工具
-├── src/                                # 前端源代码目录
-│   ├── App.vue                         # 根组件
-│   ├── main.js                         # Vue应用入口
-│   ├── components/                     # Vue组件目录
-│   │   ├── ui/                         # 基础UI组件
-│   │   │   ├── Alert.vue               # 警告组件
-│   │   │   ├── Badge.vue               # 徽章组件
-│   │   │   ├── Breadcrumb.vue          # 面包屑导航
-│   │   │   ├── Button.vue              # 按钮组件
-│   │   │   ├── Card.vue                # 卡片组件
-│   │   │   ├── CardHeader.vue          # 卡片头部组件
-│   │   │   ├── Drawer.vue              # 抽屉组件
-│   │   │   ├── EmptyState.vue          # 空状态组件
-│   │   │   ├── ErrorHandler.vue        # 错误处理组件
-│   │   │   ├── ErrorState.vue          # 错误状态组件
-│   │   │   ├── Input.vue               # 输入框组件
-│   │   │   ├── LazyImage.vue           # 懒加载图片组件
-│   │   │   ├── LoadingState.vue        # 加载状态组件
-│   │   │   ├── LucideIcon.vue          # 图标组件
-│   │   │   ├── Modal.vue               # 模态框组件
-│   │   │   ├── NotificationContainer.vue # 通知容器
-│   │   │   ├── Pagination.vue          # 分页组件
-│   │   │   ├── PasswordInput.vue       # 密码输入框
-│   │   │   ├── Progress.vue            # 进度条组件
-│   │   │   ├── SearchInput.vue         # 搜索输入框
-│   │   │   ├── ShortcutHelp.vue        # 快捷键帮助
-│   │   │   ├── Table.vue               # 表格组件
-│   │   │   ├── Tabs.vue                # 标签页组件
-│   │   │   └── VirtualList.vue         # 虚拟列表组件
-│   │   ├── AdminLoginModal.vue         # 管理员登录模态框
-│   │   ├── BatchUploadModal.vue        # 批量上传模态框
-│   │   ├── Drawer.vue                  # 抽屉菜单组件
-│   │   ├── Functionaldescription.vue   # 功能说明组件
-│   │   ├── Header.vue                  # 页面头部组件
-│   │   ├── I18nManagementPanel.vue     # 国际化管理面板
-│   │   ├── Product3DHeader.vue         # 3D查看器头部
-│   │   ├── Product3DViewer.vue         # 3D查看器组件
-│   │   ├── ProductFolderUploader.vue   # 文件夹上传组件
-│   │   ├── Product_Management.vue      # 产品管理组件
-│   │   ├── Product_Viewimages.vue      # 产品图片查看组件
-│   │   ├── Product_list.vue            # 产品列表组件
-│   │   └── Product_nav.vue             # 产品导航组件
-│   ├── composables/                    # Vue组合式函数
-│   │   ├── useAdminAuth.js             # 管理员认证
-│   │   ├── useDataFetch.js             # 数据获取
-│   │   ├── useErrorMonitoring.js       # 错误监控
-│   │   ├── useI18n.js                  # 国际化
-│   │   ├── useKeyboardShortcuts.js     # 键盘快捷键
-│   │   ├── useNotifications.js         # 通知管理
-│   │   └── useTooltip.js               # 工具提示
-│   ├── i18n/                           # 国际化配置
-│   │   ├── index.js                    # 国际化入口
-│   │   └── translations.js             # 翻译内容
-│   ├── images/                         # 图片资源
-│   │   ├── Logo.png                    # 项目Logo
-│   │   └── icelogo.webp                # ICE Logo
-│   ├── lib/                            # 第三方库
-│   │   └── utils.js                    # 工具函数
-│   ├── router/                         # 路由配置
-│   │   └── index.js                    # 路由定义
-│   ├── services/                       # 前端服务层
-│   │   ├── apiService.js               # API服务
-│   │   └── productService.js           # 产品服务
-│   ├── stores/                         # 状态管理
-│   │   └── notificationStore.js        # 通知状态管理
-│   ├── styles/                         # 样式文件
-│   │   └── globals.css                 # 全局样式
-│   ├── theme/                          # 主题配置
-│   │   └── index.js                    # 主题入口
-│   └── utils/                          # 工具函数
-│       ├── errorHandler.js             # 错误处理
-│       ├── logger.js                   # 日志工具
-│       └── responsive.js               # 响应式工具
-├── Product/                            # 产品文件存储目录
-└── uploads/                            # 上传文件存储目录
+├── server/                # Express 后端
+│   ├── routes/            # API 路由（products, folders, files, uploads）
+│   ├── services/          # 业务逻辑层
+│   └── utils/             # 工具函数
+├── src/                   # Vue 3 前端
+│   ├── components/        # 组件（ui/ 基础组件 + 业务组件）
+│   ├── composables/       # 组合式函数（7 个）
+│   ├── i18n/              # 国际化
+│   ├── router/            # 路由（6 个路由）
+│   ├── services/          # 前端 API 服务
+│   ├── stores/            # 状态管理
+│   └── utils/             # 工具函数
+├── Product/               # 产品文件存储（gitignore）
+├── public/                # 静态资源
+├── docs/                  # 📖 项目文档
+└── uploads/               # 临时上传目录（gitignore）
 ```
 
 ## 🔌 API接口

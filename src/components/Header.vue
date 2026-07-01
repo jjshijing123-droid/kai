@@ -50,6 +50,7 @@ import { Menu, Sun, Moon } from 'lucide-vue-next'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter, useRoute } from 'vue-router'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
+import { showToast } from '../lib/toast.js'
 import Drawer from './Drawer.vue'
 import Button from './ui/button.vue'
 import LucideIcon from './ui/LucideIcon.vue'
@@ -62,58 +63,7 @@ const { isAdminLoggedIn, openLoginModal } = useAdminAuth()
 const menuVisible = ref(false)
 
 // 全局消息提示
-const showMessage = (type, text) => {
-  const messageDiv = document.createElement('div')
-  messageDiv.className = `message-${type}`
-  messageDiv.style.cssText = `
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100%);
-    padding: 12px 20px;
-    border-radius: 10px;
-    color: white;
-    z-index: 9999;
-    font-size: 14px;
-    font-weight: 500;
-    max-width: 400px;
-    word-wrap: break-word;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-    opacity: 0;
-  `
-  
-  if (type === 'warning') {
-    messageDiv.style.backgroundColor = 'var(--orange-8)'
-  } else if (type === 'error') {
-    messageDiv.style.backgroundColor = 'var(--red-9)'
-  } else if (type === 'success') {
-    messageDiv.style.backgroundColor = 'var(--green-8)'
-  } else {
-    messageDiv.style.backgroundColor = 'var(--primary-8)'
-  }
-  
-  messageDiv.textContent = text
-  document.body.appendChild(messageDiv)
-  
-  // 入场动画
-  setTimeout(() => {
-    messageDiv.style.opacity = '1'
-    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
-  }, 10)
-  
-  // 3秒后自动移除
-  setTimeout(() => {
-    messageDiv.style.opacity = '0'
-    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
-    setTimeout(() => {
-      if (messageDiv.parentNode) {
-        document.body.removeChild(messageDiv)
-      }
-    }, 300)
-  }, 3000)
-}
+const showMessage = showToast
 
 // 主题切换相关
 const currentTheme = ref('light')
@@ -189,7 +139,6 @@ const goToProductManager = () => {
     return
   }
   router.push('/product-management')
-  menuVisible.value = false
 }
 
 // 统一菜单控制
