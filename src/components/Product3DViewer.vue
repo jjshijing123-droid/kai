@@ -8,7 +8,7 @@
       class="viewer-container"
       ref="viewerContainer"
       @mousedown="handleMouseDown"
-      @touchstart.passive="handleTouchStart"
+      @touchstart="handleTouchStart"
       @wheel.passive="handleWheel"
       @click="handleViewerClick"
     >
@@ -28,7 +28,7 @@
           }"
           @click="handleImageClick"
           @mousedown="handleImageMouseDown"
-          @touchstart.passive="handleImageTouchStart"
+          @touchstart="handleImageTouchStart"
         />
         <!-- 隐藏的预加载图片容器 -->
         <div class="preloaded-images" ref="preloadedImages"></div>
