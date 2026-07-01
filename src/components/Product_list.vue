@@ -216,46 +216,57 @@ const loadProducts = async () => {
     try {
       const catalogData = await fetchProductDataFromCatalog()
       loadingProgress.value = 60
-      
+
       // 处理产品目录数据
       const processedProducts = processCatalogData(catalogData)
       loadingProgress.value = 80
-      
-      // 更新产品列表
-      products.value = processedProducts
-      loadingProgress.value = 100
-      
-      // 开始图片预加载
+
+      // 如果目录文件有数据，使用目录数据；否则降级到API
       if (processedProducts.length > 0) {
-        startImagePreload(processedProducts)
+        products.value = processedProducts
+        loadingProgress.value = 100
+
+        if (processedProducts.length > 0) {
+          startImagePreload(processedProducts)
+        }
+
+        loading.value = false
+        return
       }
-      
-      loading.value = false
-      return
-      
+
     } catch (catalogError) {
-      // 如果产品目录文件读取失败，尝试数据库API
+      console.warn('读取产品目录文件失败，尝试API:', catalogError.message)
+    }
+
+    // 降级：从数据库API获取产品数据
+    try {
       loadingProgress.value = 40
-      
+
       const rawData = await fetchProductDataFromDatabase()
       loadingProgress.value = 60
-      
+
       // 获取产品数据并处理
       const processedProducts = processProductData(rawData)
       loadingProgress.value = 80
-      
+
       // 更新产品列表
       products.value = processedProducts
       loadingProgress.value = 100
-      
+
       // 开始图片预加载
       if (processedProducts.length > 0) {
         startImagePreload(processedProducts)
       }
-      
+
+      loading.value = false
+
+    } catch (apiError) {
+      // API也失败了
+      console.error('API获取产品数据失败:', apiError.message)
+      error.value = apiError.message
       loading.value = false
     }
-    
+
   } catch (err) {
     error.value = err.message
     loading.value = false

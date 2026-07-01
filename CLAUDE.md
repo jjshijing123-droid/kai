@@ -64,6 +64,16 @@ npm run prod
 
 历史文档（迁移前版本，内容可能过时）保留在 `docs/archive/` 中。
 
+## 文档同步规则
+
+- **修改 API 端点时**：同步更新 [docs/api/reference.md](docs/api/reference.md)
+- **修改路由、组件、目录结构时**：同步更新 [docs/architecture/structure.md](docs/architecture/structure.md)
+- **修改技术栈、核心功能、数据存储时**：同步更新 [docs/architecture/overview.md](docs/architecture/overview.md)
+- **修改部署方式、环境配置时**：同步更新 [docs/deployment/guide.md](docs/deployment/guide.md)
+- **修改 CSS 变量、颜色主题时**：同步更新 [docs/design/colors.md](docs/design/colors.md)
+- **新增或删除文件/组件/路由**：同步更新 [docs/architecture/structure.md](docs/architecture/structure.md) 中的目录树
+- **修改技术栈版本（package.json）**：同步更新 [docs/architecture/overview.md](docs/architecture/overview.md) 中的技术栈表格
+
 ## 主题系统
 
 - 颜色通过 CSS 变量定义，在 `tailwind.config.js` 的 theme 中引用

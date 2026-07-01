@@ -5,6 +5,8 @@ const unzipper = require('unzipper');
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+const { calculateFolderSize } = require('../utils/fsHelpers');
+const { ProductCatalogUtils } = require('../utils/productCatalogUtils');
 const ProductService = require('./productService');
 const FolderService = require('./folderService');
 
@@ -321,7 +323,7 @@ class UploadService {
       for (const item of items) {
         if (item.isDirectory()) {
           const folderPath = path.join(productPath, item.name);
-          const folderInfo = this.productService.calculateFolderSize(folderPath);
+          const folderInfo = calculateFolderSize(folderPath);
           
           products.push({
             id: products.length + 1,
@@ -350,16 +352,16 @@ class UploadService {
         }
       }
       
-      // 更新product-catalog.json
-      const catalogPath = path.join(this.serverPath, 'public/data/product-catalog.json');
+      // 更新product-catalog.json - 写入public和dist两个路径
+      const catalogUtils = new ProductCatalogUtils();
       const catalogData = {
         products: products,
         totalProducts: products.length,
         lastUpdated: new Date().toISOString(),
         version: '2.0'
       };
-      
-      fs.writeFileSync(catalogPath, JSON.stringify(catalogData, null, 2), 'utf8');
+
+      catalogUtils.saveCatalogToAllPaths(catalogData);
       console.log(`✅ 产品目录更新完成，共 ${products.length} 个产品`);
       
     } catch (error) {
