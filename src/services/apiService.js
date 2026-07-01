@@ -9,6 +9,23 @@ class ApiService {
     this.defaultHeaders = {
       'Content-Type': 'application/json'
     }
+    this.authToken = null
+  }
+
+  setAuthToken(token) {
+    this.authToken = token
+  }
+
+  clearAuthToken() {
+    this.authToken = null
+  }
+
+  getAuthHeaders() {
+    const token = this.authToken || localStorage.getItem('admin_token')
+    if (token) {
+      return { Authorization: `Bearer ${token}` }
+    }
+    return {}
   }
 
   /**
@@ -16,16 +33,22 @@ class ApiService {
    */
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`
+    const timeout = options.timeout || 15000
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeout)
+
     const config = {
-      headers: { ...this.defaultHeaders, ...options.headers },
+      headers: { ...this.defaultHeaders, ...this.getAuthHeaders(), ...options.headers },
+      signal: controller.signal,
       ...options
     }
 
     try {
       console.log(`🚀 API请求: ${options.method || 'GET'} ${url}`)
-      
+
       const response = await fetch(url, config)
-      
+      clearTimeout(timeoutId)
+
       // 处理HTTP错误
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))

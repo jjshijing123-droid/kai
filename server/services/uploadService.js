@@ -2,12 +2,9 @@ const path = require('path');
 const fs = require('fs');
 const archiver = require('archiver');
 const unzipper = require('unzipper');
-const { exec } = require('child_process');
-const util = require('util');
-const execPromise = util.promisify(exec);
 const { calculateFolderSize } = require('../utils/fsHelpers');
 const { ProductCatalogUtils } = require('../utils/productCatalogUtils');
-const { safeJoin } = require('../utils/safePath');
+const { safeJoin, sanitizeZipEntry } = require('../utils/safePath');
 const ProductService = require('./productService');
 const FolderService = require('./folderService');
 
@@ -62,7 +59,7 @@ class UploadService {
       const backupPath = safeJoin(this.serverPath, 'Product_backup_' + Date.now());
       if (fs.existsSync(targetProductPath)) {
         console.log('📦 创建备份文件夹...');
-        await execPromise(`cp -r "${targetProductPath}" "${backupPath}"`);
+        fs.cpSync(targetProductPath, backupPath, { recursive: true });
         console.log('✅ 备份完成:', backupPath);
       }
       
@@ -96,7 +93,7 @@ class UploadService {
             try {
               const fileName = entry.path;
               const type = entry.type; // 'Directory' or 'File'
-              
+
               // 过滤隐藏文件
               if (isHiddenFile(fileName)) {
                 console.log('⏭️ 跳过隐藏文件:', fileName);
@@ -104,16 +101,16 @@ class UploadService {
                 entry.autodrain();
                 return;
               }
-              
+
               console.log('📄 处理文件:', fileName);
-              
+
               if (type === 'Directory') {
-                // 创建目录 - 用 safeJoin 防止 zip 路径穿越
-                const safeEntryPath = path.basename(fileName);
-                const dirPath = path.join(targetProductPath, safeEntryPath);
+                // 清理目录名并使用 safeJoin 验证
+                const safeDirName = sanitizeZipEntry(fileName);
+                const dirPath = safeJoin(targetProductPath, safeDirName);
                 fs.mkdirSync(dirPath, { recursive: true });
                 folderCount++;
-                
+
                 // 检查是否是产品文件夹（直接位于根目录下的文件夹）
                 if (!fileName.includes('/') && fileName.trim()) {
                   replacedProducts.push({
@@ -122,21 +119,22 @@ class UploadService {
                     type: 'directory'
                   });
                 }
-                
+
                 entry.autodrain();
               } else {
-                // 创建文件
-                const filePath = path.join(targetProductPath, fileName);
+                // 使用 sanitizeZipEntry 清理文件名并用 safeJoin 验证路径
+                const sanitizedName = sanitizeZipEntry(fileName);
+                const filePath = safeJoin(targetProductPath, sanitizedName);
                 const dir = path.dirname(filePath);
-                
+
                 // 确保目录存在
                 if (!fs.existsSync(dir)) {
                   fs.mkdirSync(dir, { recursive: true });
                 }
-                
+
                 entry.pipe(fs.createWriteStream(filePath));
                 extractedCount++;
-                
+
                 // 如果文件在根目录下且是图片文件，检查是否是主图
                 if (!fileName.includes('/') && (fileName.endsWith('.webp') || fileName.endsWith('.png') || fileName.endsWith('.jpg'))) {
                   const productName = fileName.replace(/\.(webp|png|jpg|jpeg)$/i, '');
@@ -178,7 +176,7 @@ class UploadService {
       console.log('🧹 立即清理备份文件夹...');
       if (fs.existsSync(backupPath)) {
         try {
-          await execPromise(`rm -rf "${backupPath}"`);
+          fs.rmSync(backupPath, { recursive: true, force: true });
           console.log('✅ 备份文件夹清理成功:', backupPath);
         } catch (cleanupError) {
           console.warn('清理备份文件夹失败:', cleanupError.message);
@@ -250,7 +248,7 @@ class UploadService {
             try {
               const fileName = entry.path;
               const type = entry.type;
-              
+
               // 过滤隐藏文件
               const baseName = path.basename(fileName);
               if (baseName.startsWith('.')) {
@@ -258,25 +256,27 @@ class UploadService {
                 entry.autodrain();
                 return;
               }
-              
+
               console.log('📄 处理文件:', fileName);
-              
+
               if (type === 'Directory') {
-                // 创建目录
-                const dirPath = path.join(productFolderPath, fileName);
+                // 清理目录名并使用 safeJoin 验证
+                const safeDirName = sanitizeZipEntry(fileName);
+                const dirPath = safeJoin(productFolderPath, safeDirName);
                 fs.mkdirSync(dirPath, { recursive: true });
                 folderCount++;
                 entry.autodrain();
               } else {
-                // 创建文件
-                const filePath = path.join(productFolderPath, fileName);
+                // 使用 sanitizeZipEntry 清理文件名并用 safeJoin 验证路径
+                const sanitizedName = sanitizeZipEntry(fileName);
+                const filePath = safeJoin(productFolderPath, sanitizedName);
                 const dir = path.dirname(filePath);
-                
+
                 // 确保目录存在
                 if (!fs.existsSync(dir)) {
                   fs.mkdirSync(dir, { recursive: true });
                 }
-                
+
                 entry.pipe(fs.createWriteStream(filePath));
                 extractedCount++;
               }
@@ -418,7 +418,7 @@ class UploadService {
         throw new Error('文件夹路径不能为空');
       }
       
-      const targetFolderPath = path.join(this.serverPath, folderPath);
+      const targetFolderPath = safeJoin(this.productBasePath, folderPath.replace(/^Product\//, ''));
       console.log('📁 目标文件夹:', targetFolderPath);
       
       // 检查目标文件夹是否存在

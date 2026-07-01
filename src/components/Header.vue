@@ -58,7 +58,7 @@ import LucideIcon from './ui/LucideIcon.vue'
 const { currentLanguage, toggleLanguage, t } = useI18n()
 const router = useRouter()
 const route = useRoute()
-const { isAdminLoggedIn, openLoginModal } = useAdminAuth()
+const { isAdminLoggedIn, sessionReady, openLoginModal } = useAdminAuth()
 
 const menuVisible = ref(false)
 
@@ -123,6 +123,7 @@ const goToHome = () => {
 }
 
 const goToI18nManager = () => {
+  if (!sessionReady.value) return
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionI18n'))
     openLoginModal()
@@ -133,6 +134,7 @@ const goToI18nManager = () => {
 }
 
 const goToProductManager = () => {
+  if (!sessionReady.value) return
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionProduct'))
     openLoginModal()

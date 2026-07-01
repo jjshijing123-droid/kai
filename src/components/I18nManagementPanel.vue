@@ -320,7 +320,10 @@ const loadTranslations = async (showNotification = true) => {
     // 从服务器获取最新的翻译数据
     let serverLoadSuccess = false
     try {
-      const response = await fetch('/api/i18n/translations')
+      const authHeaders = useAdminAuth().getAuthHeader()
+      const response = await fetch('/api/i18n/translations', {
+        headers: authHeaders
+      })
       if (response.ok) {
         const result = await response.json()
         if (result.success && result.data) {

@@ -7,6 +7,7 @@ export const showMessage = showToast
 // 登录状态管理
 const isAdminLoggedIn = ref(false)
 const adminToken = ref(localStorage.getItem('admin_token') || null)
+const sessionReady = ref(false)  // token 验证是否完成
 
 // 全局登录模态框状态
 const showLoginModal = ref(false)
@@ -18,8 +19,14 @@ const ADMIN_SESSION_KEY = 'admin_session'
 // 初始化时检查登录状态
 const checkStoredSession = async () => {
   const token = localStorage.getItem(ADMIN_TOKEN_KEY)
-  if (token) {
-    // 验证 token 是否仍然有效
+  const hasSession = localStorage.getItem(ADMIN_SESSION_KEY) === 'true'
+
+  if (token && hasSession) {
+    // 先乐观地设置为已登录，避免 UI 闪烁
+    isAdminLoggedIn.value = true
+    adminToken.value = token
+
+    // 异步验证 token 有效性
     try {
       const response = await fetch('/api/auth/verify', {
         headers: {
@@ -28,19 +35,20 @@ const checkStoredSession = async () => {
       })
 
       if (response.ok) {
-        isAdminLoggedIn.value = true
-        adminToken.value = token
+        // token 有效，保持登录状态
       } else {
         // token 过期，清除
+        isAdminLoggedIn.value = false
+        adminToken.value = null
         localStorage.removeItem(ADMIN_TOKEN_KEY)
         localStorage.removeItem(ADMIN_SESSION_KEY)
-        adminToken.value = null
       }
     } catch {
-      localStorage.removeItem(ADMIN_TOKEN_KEY)
-      adminToken.value = null
+      // 网络错误，保持乐观的登录状态（token 可能仍然有效）
+      console.warn('Token 验证请求失败，保持当前登录状态')
     }
   }
+  sessionReady.value = true
 }
 
 // 检查登录状态
@@ -118,6 +126,7 @@ export function useAdminAuth() {
     isAuthenticated,
     showLoginModal,
     adminToken,
+    sessionReady,
 
     // 方法
     login,

@@ -42,9 +42,10 @@ class I18nService {
     let text = getTranslation(key, targetLang)
 
     // 处理参数替换
-    Object.keys(params).forEach(param => {
-      text = text.replace(new RegExp(`{${param}}`, 'g'), params[param])
-      text = text.replace(new RegExp(`{{${param}}}`, 'g'), params[param])
+    Object.keys(params).forEach((param) => {
+      const escapedParam = param.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      text = text.replace(new RegExp(`{${escapedParam}}`, 'g'), params[param])
+      text = text.replace(new RegExp(`{{${escapedParam}}}`, 'g'), params[param])
     })
 
     return text

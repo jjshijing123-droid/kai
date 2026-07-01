@@ -492,7 +492,18 @@ import apiService from '../services/apiService.js'
 
 const { t, currentLanguage } = useI18n()
 const router = useRouter()
-const { isAdminLoggedIn } = useAdminAuth()
+const { isAdminLoggedIn, getAuthHeader } = useAdminAuth()
+
+// 带认证的 fetch 封装
+const authFetch = async (url, options = {}) => {
+  const authHeaders = getAuthHeader()
+  const headers = {
+    'Content-Type': 'application/json',
+    ...authHeaders,
+    ...(options.headers || {})
+  }
+  return fetch(url, { ...options, headers })
+}
 
 // 响应式数据
 const products = ref([])
@@ -568,7 +579,7 @@ const refreshProducts = async () => {
   try {
     loading.value = true
     // 先调用API重新生成产品目录
-    const response = await fetch('/api/products/refresh-catalog', {
+    const response = await authFetch('/api/products/refresh-catalog', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -686,7 +697,7 @@ const createFolder = async () => {
   try {
     creatingFolder.value = true
     
-    const response = await fetch(API_CONFIG.CREATE_PRODUCT, {
+    const response = await authFetch(API_CONFIG.CREATE_PRODUCT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -728,7 +739,7 @@ const confirmRenameFolder = async () => {
   try {
     renamingFolder.value = true
     
-    const response = await fetch(`${API_CONFIG.RENAME_PRODUCT}/${encodeURIComponent(folderToRename.value)}`, {
+    const response = await authFetch(`${API_CONFIG.RENAME_PRODUCT}/${encodeURIComponent(folderToRename.value)}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -841,7 +852,7 @@ const fetchFolderContent = async () => {
     console.log(`获取文件夹内容: ${folderPath}`)
     
     // 调用文件夹详情API
-    const response = await fetch(`/api/folder/${folderPath}/details`)
+    const response = await authFetch(`/api/folder/${folderPath}/details`)
     
     if (!response.ok) {
       throw new Error(`获取文件夹内容失败: ${response.status}`)
@@ -1086,7 +1097,7 @@ const uploadSingleFile = async (file) => {
   formData.append('file', file)
   formData.append('folderPath', currentPath.value.join('/'))
   
-  const response = await fetch('/api/upload-files', {
+  const response = await authFetch('/api/upload-files', {
     method: 'POST',
     body: formData
   })

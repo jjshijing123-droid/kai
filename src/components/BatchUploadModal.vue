@@ -135,6 +135,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
+import { useAdminAuth } from '../composables/useAdminAuth.js'
 import { formatFileSize } from '../lib/utils.js'
 import Button from './ui/button.vue'
 import Modal from './ui/modal.vue'
@@ -302,8 +303,13 @@ const startBatchZipUpload = async () => {
     uploadProgress.value = 65
 
     // 调用批量替换API
+    const authHeaders = useAdminAuth().getAuthHeader()
     const response = await fetch('/api/batch-replace-products', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders
+      },
       body: formData
     })
 

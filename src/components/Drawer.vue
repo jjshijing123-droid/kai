@@ -191,7 +191,7 @@ const showMessage = (type, text) => {
 
 const { currentLanguage, t, setLanguage } = useI18n()
 const router = useRouter()
-const { isAdminLoggedIn, logout, checkPermission, openLoginModal } = useAdminAuth()
+const { isAdminLoggedIn, sessionReady, logout, checkPermission, openLoginModal } = useAdminAuth()
 
 // 主题切换相关
 const currentTheme = ref('light')
@@ -280,6 +280,7 @@ const goToHome = () => {
 }
 
 const goToI18nManager = () => {
+  if (!sessionReady.value) return
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionI18n'))
     closeDrawer() // 先关闭抽屉
@@ -291,6 +292,7 @@ const goToI18nManager = () => {
 }
 
 const goToProductManager = () => {
+  if (!sessionReady.value) return
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionProduct'))
     closeDrawer() // 先关闭抽屉

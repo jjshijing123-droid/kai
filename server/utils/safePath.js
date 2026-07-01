@@ -1,8 +1,10 @@
 const path = require('path');
+const fs = require('fs');
 
 /**
  * 安全的路径拼接工具，防止路径穿越攻击
  * 确保解析后的路径始终在 baseDir 目录下
+ * 同时检测符号链接绕过
  *
  * @param {string} baseDir - 基础目录（绝对路径）
  * @param {...string} segments - 路径片段
@@ -20,6 +22,28 @@ function safeJoin(baseDir, ...segments) {
   // 检查解析后的路径是否在 baseDir 下
   if (!resolvedPath.startsWith(resolvedBase + path.sep) && resolvedPath !== resolvedBase) {
     throw new Error(`路径穿越检测: 试图访问 "${resolvedPath}" 超出允许范围 "${resolvedBase}"`);
+  }
+
+  // 检测符号链接绕过：验证真实路径仍在 baseDir 下
+  try {
+    const realPath = fs.realpathSync(resolvedPath);
+    if (!realPath.startsWith(resolvedBase + path.sep) && realPath !== resolvedBase) {
+      throw new Error(`符号链接检测: 真实路径 "${realPath}" 超出允许范围 "${resolvedBase}"`);
+    }
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      // 路径不存在，检查父目录
+      const parentDir = path.dirname(resolvedPath);
+      if (parentDir !== resolvedBase) {
+        const realParent = fs.realpathSync(parentDir);
+        if (!realParent.startsWith(resolvedBase + path.sep)) {
+          throw new Error(`符号链接检测: 父目录真实路径 "${realParent}" 超出允许范围`);
+        }
+      }
+    } else if (err.message.includes('符号链接检测')) {
+      throw err;
+    }
+    // 其他 realpathSync 错误（如 ELOOP）忽略，后续操作会自然失败
   }
 
   return resolvedPath;

@@ -42,32 +42,39 @@ export function invalidateCache(key) {
  * @returns {Function}
  */
 export function debounce(fn, delay = 300) {
-  let timer = null
+  let timer = null;
+  let pendingArgs = null;
 
   const debounced = function (...args) {
-    if (timer) clearTimeout(timer)
+    pendingArgs = args;
+    if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
-      fn.apply(this, args)
-      timer = null
-    }, delay)
-  }
+      fn.apply(this, pendingArgs);
+      timer = null;
+      pendingArgs = null;
+    }, delay);
+  };
 
   debounced.cancel = () => {
     if (timer) {
-      clearTimeout(timer)
-      timer = null
+      clearTimeout(timer);
+      timer = null;
     }
-  }
+    pendingArgs = null;
+  };
 
   debounced.flush = () => {
     if (timer) {
-      clearTimeout(timer)
-      timer = null
-      fn.apply(this, arguments)
+      clearTimeout(timer);
+      timer = null;
+      if (pendingArgs) {
+        fn.apply(this, pendingArgs);
+      }
+      pendingArgs = null;
     }
-  }
+  };
 
-  return debounced
+  return debounced;
 }
 
 /**

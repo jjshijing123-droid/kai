@@ -1,6 +1,7 @@
 const express = require('express');
 const FileService = require('../services/fileService');
 const UploadService = require('../services/uploadService');
+const { authMiddleware } = require('../middleware/auth');
 const router = express.Router();
 const fileService = new FileService();
 const uploadService = new UploadService();
@@ -10,7 +11,7 @@ const uploadService = new UploadService();
  */
 
 // 删除文件
-router.post('/delete-file', async (req, res) => {
+router.post('/delete-file', authMiddleware, async (req, res) => {
   try {
     const { filePath } = req.body;
     
@@ -44,7 +45,7 @@ router.post('/delete-file', async (req, res) => {
   }
 });
 
-// 检查文件夹中是否有文件
+// 检查文件夹中是否有文件（公开只读，不需要认证）
 router.get('/check-folder/:folderPath', async (req, res) => {
   try {
     const { folderPath } = req.params;
@@ -68,7 +69,7 @@ router.get('/check-folder/:folderPath', async (req, res) => {
   }
 });
 
-// 获取文件信息
+// 获取文件信息（公开只读，不需要认证）
 router.get('/file-info/:filePath', async (req, res) => {
   try {
     const { filePath } = req.params;
@@ -97,7 +98,7 @@ router.get('/file-info/:filePath', async (req, res) => {
   }
 });
 
-// 下载文件（提供文件下载链接）
+// 下载文件（公开只读，不需要认证）
 router.get('/download/:filePath/:fileName', async (req, res) => {
   try {
     const { filePath, fileName } = req.params;

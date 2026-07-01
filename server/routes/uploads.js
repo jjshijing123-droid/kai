@@ -1,26 +1,10 @@
 const express = require('express');
 const multer = require('multer');
+const { fixFileName } = require('../services/uploadService');
 const UploadService = require('../services/uploadService');
+const { authMiddleware } = require('../middleware/auth');
 const router = express.Router();
 const uploadService = new UploadService();
-
-// 修复 Multer 中文文件名乱码
-// Multer 2.x / Busboy 1.6.x 将 multipart header 中的文件名按 Latin-1 解码，
-// 导致中文文件名变成乱码。这里通过 Buffer 字节转换恢复 UTF-8 编码。
-function fixFileName(originalName) {
-  if (!originalName) return originalName
-  // 尝试将 Latin-1 解码的字符串转回原始字节，再用 UTF-8 解码
-  try {
-    const fixed = Buffer.from(originalName, 'latin1').toString('utf-8')
-    // 验证修复后的文件名不包含 NUL 字节
-    if (!fixed.includes('\x00')) {
-      return fixed
-    }
-  } catch (e) {
-    // 转换失败，返回原始名称
-  }
-  return originalName
-}
 
 // Multer磁盘存储引擎 - 修复文件名编码
 const diskStorage = multer.diskStorage({
@@ -59,7 +43,7 @@ const fileUpload = multer({
  */
 
 // 批量替换产品
-router.post('/batch-replace-products', upload.single('zipFile'), async (req, res) => {
+router.post('/batch-replace-products', authMiddleware, upload.single('zipFile'), async (req, res) => {
   try {
     const result = await uploadService.batchReplaceProducts(req.file);
     
@@ -76,7 +60,7 @@ router.post('/batch-replace-products', upload.single('zipFile'), async (req, res
 });
 
 // 上传单个产品文件夹
-router.post('/upload-product-folder', upload.single('file'), async (req, res) => {
+router.post('/upload-product-folder', authMiddleware, upload.single('file'), async (req, res) => {
   try {
     const { folderName } = req.body;
     
@@ -101,7 +85,7 @@ router.post('/upload-product-folder', upload.single('file'), async (req, res) =>
 });
 
 // 手动重新生成产品目录
-router.post('/regenerate-catalog', async (req, res) => {
+router.post('/regenerate-catalog', authMiddleware, async (req, res) => {
   try {
     console.log('手动重新生成产品目录...');
     const result = await uploadService.regenerateCatalog();
@@ -133,7 +117,7 @@ router.get('/upload-progress/:uploadId', (req, res) => {
 });
 
 // 上传文件到指定文件夹
-router.post('/upload-files', fileUpload.array('file'), async (req, res) => {
+router.post('/upload-files', authMiddleware, fileUpload.array('file'), async (req, res) => {
   try {
     const files = req.files;
     const { folderPath } = req.body;

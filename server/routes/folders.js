@@ -1,6 +1,7 @@
 const express = require('express');
 const FolderService = require('../services/folderService');
 const { ProductCatalogUtils, productCatalogUtils } = require('../utils/productCatalogUtils');
+const { authMiddleware } = require('../middleware/auth');
 const router = express.Router();
 const folderService = new FolderService();
 
@@ -11,8 +12,8 @@ const folderService = new FolderService();
 /**
  * 检查是否为产品文件夹（位于Product目录下）
  */
-function isProductFolder(parentPath, folderName) {
-  return parentPath.includes('Product/') && folderName;
+function isProductFolder(parentPath) {
+  return parentPath.includes('Product/');
 }
 
 /**
@@ -28,7 +29,7 @@ function getFullProductFolderName(parentPath, folderName) {
 }
 
 // 获取文件夹详情
-router.get('/:folderPath(.*)/details', async (req, res) => {
+router.get('/:folderPath(.*)/details', authMiddleware, async (req, res) => {
   try {
     const { folderPath } = req.params;
     
@@ -50,7 +51,7 @@ router.get('/:folderPath(.*)/details', async (req, res) => {
 });
 
 // 创建子文件夹
-router.post('/:parentPath/create-subfolder', async (req, res) => {
+router.post('/:parentPath/create-subfolder', authMiddleware, async (req, res) => {
   try {
     const { parentPath } = req.params;
     const { folderName } = req.body;
@@ -81,14 +82,14 @@ router.post('/:parentPath/create-subfolder', async (req, res) => {
 });
 
 // 删除子文件夹
-router.delete('/:parentPath/subfolder/:folderName', async (req, res) => {
+router.delete('/:parentPath/subfolder/:folderName', authMiddleware, async (req, res) => {
   try {
     const { parentPath, folderName } = req.params;
     
     const result = await folderService.deleteSubfolder(parentPath, folderName);
     
     // 检查是否需要同步产品目录
-    if (isProductFolder(parentPath, folderName)) {
+    if (isProductFolder(parentPath)) {
       const productFolderName = getFullProductFolderName(parentPath, folderName);
       if (productFolderName) {
         console.log(`🔄 检测到删除产品文件夹，同步更新产品目录: ${productFolderName}`);
@@ -113,7 +114,7 @@ router.delete('/:parentPath/subfolder/:folderName', async (req, res) => {
 });
 
 // 重命名子文件夹
-router.put('/:parentPath/subfolder/:folderName', async (req, res) => {
+router.put('/:parentPath/subfolder/:folderName', authMiddleware, async (req, res) => {
   try {
     const { parentPath, folderName } = req.params;
     const { newFolderName } = req.body;
@@ -128,7 +129,7 @@ router.put('/:parentPath/subfolder/:folderName', async (req, res) => {
     const result = await folderService.renameSubfolder(parentPath, folderName, newFolderName);
     
     // 检查是否需要同步产品目录
-    if (isProductFolder(parentPath, folderName)) {
+    if (isProductFolder(parentPath)) {
       const productFolderName = getFullProductFolderName(parentPath, folderName);
       if (productFolderName) {
         console.log(`🔄 检测到重命名产品文件夹，同步更新产品目录: ${productFolderName} -> ${newFolderName}`);
@@ -153,7 +154,7 @@ router.put('/:parentPath/subfolder/:folderName', async (req, res) => {
 });
 
 // 获取文件夹树结构
-router.get('/:folderPath/tree', async (req, res) => {
+router.get('/:folderPath/tree', authMiddleware, async (req, res) => {
   try {
     const { folderPath } = req.params;
     const maxDepth = parseInt(req.query.maxDepth) || 3;
@@ -176,7 +177,7 @@ router.get('/:folderPath/tree', async (req, res) => {
 });
 
 // 搜索文件
-router.get('/:folderPath/search', async (req, res) => {
+router.get('/:folderPath/search', authMiddleware, async (req, res) => {
   try {
     const { folderPath } = req.params;
     const { searchTerm, fileTypes } = req.query;
