@@ -11,6 +11,21 @@ const { safeJoin } = require('../utils/safePath');
 const ProductService = require('./productService');
 const FolderService = require('./folderService');
 
+// 修复中文文件名乱码
+// Multer 2.x / Busboy 1.6.x 将 multipart header 中的文件名按 Latin-1 解码，
+// 导致中文文件名变成乱码。这里通过 Buffer 字节转换恢复 UTF-8 编码。
+function fixFileName(originalName) {
+  if (!originalName) return originalName
+  try {
+    const fixed = Buffer.from(originalName, 'latin1').toString('utf-8')
+    // 验证结果不包含 NUL 字节（乱码恢复失败时可能产生）
+    if (!fixed.includes('\x00')) {
+      return fixed
+    }
+  } catch (e) {}
+  return originalName
+}
+
 /**
  * 上传管理服务类 - 负责文件上传和批量操作
  */
@@ -36,7 +51,7 @@ class UploadService {
       const tempZipPath = uploadedFile.path;
       const targetProductPath = this.productBasePath;
       
-      console.log('📦 开始处理ZIP文件:', uploadedFile.originalname);
+      console.log('📦 开始处理ZIP文件:', fixFileName(uploadedFile.originalname));
       
       // 检查Product文件夹是否存在
       if (!fs.existsSync(targetProductPath)) {
@@ -202,7 +217,7 @@ class UploadService {
       const tempZipPath = uploadedFile.path;
       const targetProductPath = this.productBasePath;
       
-      console.log('📦 开始处理ZIP文件:', uploadedFile.originalname);
+      console.log('📦 开始处理ZIP文件:', fixFileName(uploadedFile.originalname));
       
       // 检查Product文件夹是否存在
       if (!fs.existsSync(targetProductPath)) {
@@ -416,7 +431,7 @@ class UploadService {
       // 逐个处理文件
       for (const file of files) {
         try {
-          const fileName = file.originalname;
+          const fileName = fixFileName(file.originalname);
           const filePath = path.join(targetFolderPath, fileName);
           
           // 检查文件是否已存在
@@ -448,7 +463,7 @@ class UploadService {
           console.log(`✅ 文件上传成功: ${actualFileName}`);
           
         } catch (fileError) {
-          console.error(`文件上传失败: ${file.originalname}`, fileError);
+          console.error(`文件上传失败: ${fixFileName(file.originalname)}`, fileError);
           // 继续处理其他文件，不中断整个上传过程
         }
       }

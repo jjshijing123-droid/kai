@@ -4,14 +4,41 @@ const UploadService = require('../services/uploadService');
 const router = express.Router();
 const uploadService = new UploadService();
 
+// 修复 Multer 中文文件名乱码
+// Multer 2.x / Busboy 1.6.x 将 multipart header 中的文件名按 Latin-1 解码，
+// 导致中文文件名变成乱码。这里通过 Buffer 字节转换恢复 UTF-8 编码。
+function fixFileName(originalName) {
+  if (!originalName) return originalName
+  // 尝试将 Latin-1 解码的字符串转回原始字节，再用 UTF-8 解码
+  try {
+    const fixed = Buffer.from(originalName, 'latin1').toString('utf-8')
+    // 验证修复后的文件名不包含 NUL 字节
+    if (!fixed.includes('\x00')) {
+      return fixed
+    }
+  } catch (e) {
+    // 转换失败，返回原始名称
+  }
+  return originalName
+}
+
+// Multer磁盘存储引擎 - 修复文件名编码
+const diskStorage = multer.diskStorage({
+  filename: (req, file, cb) => {
+    const fixedName = fixFileName(file.originalname)
+    cb(null, fixedName)
+  }
+})
+
 // Multer配置 - 用于批量上传
 const upload = multer({
-  dest: 'uploads/',
+  storage: diskStorage,
   limits: {
     fileSize: 500 * 1024 * 1024 // 500MB
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/zip' || file.originalname.toLowerCase().endsWith('.zip')) {
+    const fixedName = fixFileName(file.originalname)
+    if (file.mimetype === 'application/zip' || fixedName.toLowerCase().endsWith('.zip')) {
       cb(null, true);
     } else {
       cb(new Error('只支持ZIP格式的压缩包'));
@@ -21,7 +48,7 @@ const upload = multer({
 
 // Multer配置 - 用于文件上传（支持多文件）
 const fileUpload = multer({
-  dest: 'uploads/',
+  storage: diskStorage,
   limits: {
     fileSize: 100 * 1024 * 1024 // 100MB per file
   }
