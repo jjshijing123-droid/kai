@@ -20,6 +20,15 @@ npm run start
 
 # 生产构建并启动
 npm run prod
+
+# Docker 开发环境
+docker compose -f docker-compose.dev.yml up --build
+docker compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml down
+
+# Docker 生产环境
+docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml down
 ```
 
 - `npm run start` 使用 concurrently 同时运行后端（Express，端口 3000）和前端（Vite，端口 5173）

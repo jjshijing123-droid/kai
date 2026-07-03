@@ -23,8 +23,8 @@
           {{ currentLanguage === 'zh-CN' ? t('common_english') : t('common_chinese') }}
         </Button>
         
-        <Button  @click="toggleTheme" class="theme-button"  variant="no" size="icon32" title="Toggle Theme">
-          <LucideIcon :name="currentTheme === 'light' ? 'Moon' : 'Sun'" size="16"/>
+        <Button  @click="() => themeStore.toggleTheme()" class="theme-button"  variant="no" size="icon32" title="Toggle Theme">
+          <LucideIcon :name="themeStore.currentTheme === 'light' ? 'Moon' : 'Sun'" size="16"/>
         </Button>
       </div>
       
@@ -50,7 +50,7 @@ import { useI18n } from '../composables/useI18n.js'
 import { useRouter, useRoute } from 'vue-router'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
 import { showToast } from '../lib/toast.js'
-import { useTheme } from '../composables/useTheme.js'
+import { useThemeStore } from '../stores/themeStore'
 import Drawer from './Drawer.vue'
 import Button from './ui/button.vue'
 import LucideIcon from './ui/LucideIcon.vue'
@@ -59,7 +59,7 @@ const { currentLanguage, toggleLanguage, t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const { isAdminLoggedIn, sessionReady, openLoginModal } = useAdminAuth()
-const { currentTheme, initTheme, toggleTheme } = useTheme()
+const themeStore = useThemeStore()
 
 const menuVisible = ref(false)
 
@@ -112,7 +112,6 @@ const handleClickOutside = (event) => {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
-  initTheme()
 })
 
 onUnmounted(() => {

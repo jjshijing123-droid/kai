@@ -11,6 +11,10 @@ export default defineConfig({
   },
   server: {
     host: true, // 监听所有地址，允许局域网访问
+    watch: {
+      usePolling: true, // Docker 容器内文件监听需要轮询模式
+      ignored: ['**/node_modules/**', '**/Product/**', '**/uploads/**']
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3000',

@@ -96,24 +96,24 @@
               <div class="theme-options">
                 <div
                   class="theme-option"
-                  :class="{ active: currentTheme === 'light' }"
-                  @click="toggleTheme('light')"
+                  :class="{ active: themeStore.currentTheme === 'light' }"
+                  @click="themeStore.toggleTheme('light')"
                 >
                   <LucideIcon name="Sun" size="16" class="theme-icon" />
                   <span class="theme-text">{{ t('common_lightTheme') }}</span>
-                  <div class="theme-check" v-if="currentTheme === 'light'">
+                  <div class="theme-check" v-if="themeStore.currentTheme === 'light'">
                     <LucideIcon name="Check" size="16" />
                   </div>
                 </div>
-                
+
                 <div
                   class="theme-option"
-                  :class="{ active: currentTheme === 'dark' }"
-                  @click="toggleTheme('dark')"
+                  :class="{ active: themeStore.currentTheme === 'dark' }"
+                  @click="themeStore.toggleTheme('dark')"
                 >
                   <LucideIcon name="Moon" size="16" class="theme-icon" />
                   <span class="theme-text">{{ t('common_darkTheme') }}</span>
-                  <div class="theme-check" v-if="currentTheme === 'dark'">
+                  <div class="theme-check" v-if="themeStore.currentTheme === 'dark'">
                     <LucideIcon name="Check" size="16" />
                   </div>
                 </div>
@@ -129,19 +129,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter } from 'vue-router'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
 import { showToast } from '../lib/toast.js'
-import { useTheme } from '../composables/useTheme.js'
+import { useThemeStore } from '../stores/themeStore'
 import Button from './ui/button.vue'
 import LucideIcon from './ui/LucideIcon.vue'
 
 const { currentLanguage, t, setLanguage } = useI18n()
 const router = useRouter()
 const { isAdminLoggedIn, sessionReady, logout, checkPermission, openLoginModal } = useAdminAuth()
-const { currentTheme, initTheme, toggleTheme } = useTheme()
+const themeStore = useThemeStore()
 
 const props = defineProps({
   isOpen: {
@@ -151,21 +151,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close'])
-
-// 监听抽屉打开事件，同步主题状态
-watch(() => props.isOpen, (newVal) => {
-  if (newVal) {
-    const htmlElement = document.documentElement
-    const currentHtmlTheme = htmlElement.classList.contains('dark') ? 'dark' : (htmlElement.classList.contains('light') ? 'light' : null)
-    if (currentHtmlTheme) {
-      currentTheme.value = currentHtmlTheme
-    }
-  }
-})
-
-onMounted(() => {
-  initTheme()
-})
 
 
 

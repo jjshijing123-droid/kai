@@ -1,45 +1,15 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { useThemeStore } from '../stores/themeStore'
 
-const THEME_KEY = 'theme'
-
-const currentTheme = ref('light')
-
-function getSystemTheme() {
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
-
-function applyTheme(theme) {
-  const html = document.documentElement
-  html.classList.remove('light', 'dark')
-  html.classList.add(theme)
-  localStorage.setItem(THEME_KEY, theme)
-  currentTheme.value = theme
-}
-
+/**
+ * @deprecated 请使用 useThemeStore 代替
+ * 保留此文件仅为向后兼容，新代码请直接 import { useThemeStore } from '@/stores/themeStore'
+ */
 export function useTheme() {
-  function initTheme() {
-    const html = document.documentElement
-    const existing = html.classList.contains('dark') ? 'dark' : html.classList.contains('light') ? 'light' : null
-    if (existing) {
-      currentTheme.value = existing
-      return
-    }
-    const saved = localStorage.getItem(THEME_KEY)
-    const system = getSystemTheme()
-    const initial = (saved === 'light' || saved === 'dark') ? saved : system
-    currentTheme.value = initial
-    applyTheme(initial)
-  }
-
-  function toggleTheme(theme) {
-    const newTheme = theme || (currentTheme.value === 'light' ? 'dark' : 'light')
-    applyTheme(newTheme)
-  }
-
+  const store = useThemeStore()
   return {
-    currentTheme,
-    initTheme,
-    applyTheme,
-    toggleTheme
+    currentTheme: store.currentTheme,
+    initTheme: store.initTheme,
+    applyTheme: store.applyTheme,
+    toggleTheme: store.toggleTheme
   }
 }

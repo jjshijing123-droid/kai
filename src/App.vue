@@ -25,9 +25,11 @@ import Header from './components/Header.vue'
 import AdminLoginModal from './components/AdminLoginModal.vue'
 import { useAdminAuth } from './composables/useAdminAuth.js'
 import { createShortcutRegistry } from './composables/useKeyboardShortcuts.js'
+import { useThemeStore } from './stores/themeStore'
 
 const route = useRoute()
 const { showLoginModal, closeLoginModal } = useAdminAuth()
+const themeStore = useThemeStore()
 
 // 获取快捷键注册器实例并挂载事件监听器
 const { mount, unmount } = createShortcutRegistry()
@@ -45,6 +47,7 @@ const handleLoginSuccess = () => {
 // 挂载和卸载事件监听器
 onMounted(() => {
   mount()
+  themeStore.initTheme()
 })
 
 onBeforeUnmount(() => {
