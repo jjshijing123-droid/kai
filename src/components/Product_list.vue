@@ -74,7 +74,7 @@ const loadingProgress = ref(0)
 
 // 配置常量
 const API_CONFIG = {
-  PRODUCT_CATALOG_URL: '/data/product-catalog.json',
+  PRODUCT_CATALOG_URL: '/api/products/catalog',
   DATABASE_API_URL: '/api/db/products',
   DEFAULT_IMAGE: '../images/Logo.png',
   PRELOAD_DELAY: 100
@@ -87,18 +87,15 @@ const preloadIndex = ref(0)
 
 
 /**
- * 从产品目录JSON文件获取产品数据
+ * 从产品目录 API 获取产品数据
  */
 const fetchProductDataFromCatalog = async () => {
   try {
     const response = await fetch(API_CONFIG.PRODUCT_CATALOG_URL)
-    
     if (!response.ok) {
       throw new Error(`HTTP错误! 状态码: ${response.status} - ${response.statusText}`)
     }
-    
     return await response.json()
-    
   } catch (error) {
     throw error
   }
@@ -238,8 +235,25 @@ const loadProducts = async () => {
         return
       }
     } catch (catalogError) {
-      console.warn('读取产品目录文件失败，尝试API:', catalogError.message)
+      console.warn('读取产品目录文件失败，尝试自动刷新...', catalogError.message)
       invalidateCache('product-catalog')
+      try {
+        const refreshRes = await fetch('/api/products/refresh-catalog', { method: 'POST' })
+        if (refreshRes.ok) {
+          console.log('✅ 产品目录刷新成功，重新读取 catalog')
+          const refreshedResponse = await fetch(API_CONFIG.PRODUCT_CATALOG_URL).then(r => r.json())
+          const processedProducts = processCatalogData(refreshedResponse)
+          if (processedProducts.length > 0) {
+            products.value = processedProducts
+            loadingProgress.value = 100
+            startImagePreload(processedProducts)
+            loading.value = false
+            return
+          }
+        }
+      } catch (refreshErr) {
+        console.warn('自动刷新 catalog 失败，降级到 API:', refreshErr.message)
+      }
     }
 
     // 降级：从数据库API获取产品数据（5秒缓存）

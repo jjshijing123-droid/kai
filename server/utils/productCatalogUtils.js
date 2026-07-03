@@ -7,7 +7,16 @@ const fs = require('fs')
 class ProductCatalogUtils {
   constructor() {
     this.serverPath = path.resolve(__dirname, '../../')
+    this.catalogDir = path.join(this.serverPath, 'data')
+    this.catalogPath = path.join(this.catalogDir, 'product-catalog.json')
     this.isProduction = process.env.NODE_ENV === 'production';
+  }
+
+  /**
+   * 获取 catalog 文件路径（统一路径）
+   */
+  getCatalogPath() {
+    return this.catalogPath
   }
 
   /**
@@ -15,7 +24,7 @@ class ProductCatalogUtils {
    */
   updateProductCatalog(oldName, action = 'delete', newName = null) {
     try {
-      const catalogPath = path.join(this.serverPath, 'public/data/product-catalog.json');
+      const catalogPath = this.getCatalogPath();
       
       if (!fs.existsSync(catalogPath)) {
         console.warn('产品目录文件不存在，跳过同步更新');
@@ -166,32 +175,18 @@ class ProductCatalogUtils {
    */
   saveCatalogToAllPaths(catalogData) {
     try {
-      // 保存路径列表：public目录是源目录，dist目录是生产目录
-      const catalogPaths = [
-        path.join(this.serverPath, 'public/data/product-catalog.json')
-      ];
-      
-      // 如果是生产环境或dist目录存在，也保存到dist目录
-      const distCatalogPath = path.join(this.serverPath, 'dist/data/product-catalog.json');
-      if (this.isProduction || fs.existsSync(path.dirname(distCatalogPath))) {
-        catalogPaths.push(distCatalogPath);
+      const catalogPath = this.getCatalogPath();
+      const dir = path.dirname(catalogPath)
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true })
       }
-      
-      // 添加时间戳
-      catalogData.lastUpdated = new Date().toISOString();
-      catalogData.version = '2.0';
-      
-      // 保存到所有目录（原子写入，避免并发写覆盖）
-      catalogPaths.forEach(catalogPath => {
-        const dir = path.dirname(catalogPath)
-        if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir, { recursive: true })
-        }
 
-        const tempPath = catalogPath + '.tmp.' + process.pid
-        fs.writeFileSync(tempPath, JSON.stringify(catalogData, null, 2), 'utf8')
-        fs.renameSync(tempPath, catalogPath)
-      })
+      catalogData.lastUpdated = new Date().toISOString()
+      catalogData.version = '2.0'
+
+      const tempPath = catalogPath + '.tmp.' + process.pid
+      fs.writeFileSync(tempPath, JSON.stringify(catalogData, null, 2), 'utf8')
+      fs.renameSync(tempPath, catalogPath)
       
       return true;
     } catch (error) {
@@ -205,29 +200,10 @@ class ProductCatalogUtils {
    */
   getProductCatalog() {
     try {
-      // 优先读取路径列表：生产环境优先读dist，开发环境读public
-      const catalogPaths = [
-        path.join(this.serverPath, 'public/data/product-catalog.json')
-      ];
-      
-      // 如果是生产环境，优先读取dist目录
-      const distCatalogPath = path.join(this.serverPath, 'dist/data/product-catalog.json');
-      if (this.isProduction && fs.existsSync(distCatalogPath)) {
-        catalogPaths.unshift(distCatalogPath);
-      }
-      
-      // 尝试从第一个存在的路径读取
-      for (const catalogPath of catalogPaths) {
-        if (fs.existsSync(catalogPath)) {
-          try {
-            const fileContent = fs.readFileSync(catalogPath, 'utf8');
-            return JSON.parse(fileContent);
-          } catch (parseError) {
-            console.error(`解析 ${catalogPath} 文件失败:`, parseError.message);
-            // 继续尝试下一个路径
-            continue;
-          }
-        }
+      const catalogPath = this.getCatalogPath();
+      if (fs.existsSync(catalogPath)) {
+        const fileContent = fs.readFileSync(catalogPath, 'utf8');
+        return JSON.parse(fileContent);
       }
       
       // 所有路径都不存在，返回默认数据

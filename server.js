@@ -17,6 +17,7 @@ if (!ADMIN_USER || !ADMIN_PASS) {
 }
 
 // 导入路由
+const { ProductCatalogGenerator } = require('./server/utils/generateProductCatalog')
 const productsRouter = require('./server/routes/products')
 const foldersRouter = require('./server/routes/folders')
 const filesRouter = require('./server/routes/files')
@@ -35,10 +36,14 @@ const PORT = process.env.PORT || (isProduction ? 8000 : 3000);
 const productService = new ProductService()
 
 // 中间件配置
+// 从环境变量读取 CORS 来源，支持逗号分隔的多个域名
+const corsOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+
 const corsOptions = {
-  origin: isProduction
-    ? ['https://yourdomain.com']
-    : ['http://localhost:5173'],
+  origin: corsOrigins.length > 0 ? corsOrigins : true,
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -183,6 +188,17 @@ app.post('/api/error-report', (req, res) => {
 // 产品管理路由（全局限流，写操作认证在路由文件内）
 app.use('/api/products', apiLimiter, productsRouter);
 
+// 直接返回 catalog JSON（免限流，供前端替代静态文件读取）
+app.get('/api/products/catalog', (req, res) => {
+  try {
+    const catalogData = productCatalogUtils.getProductCatalog();
+    res.json(catalogData);
+  } catch (error) {
+    console.error('获取产品目录失败:', error);
+    res.status(500).json({ success: false, message: '获取产品目录失败', error: error.message });
+  }
+});
+
 // 数据库兼容性路由 - 从数据库/JSON获取产品目录
 app.get('/api/db/products', (req, res) => {
   try {
@@ -287,9 +303,19 @@ app.post('/api/products/refresh-catalog', authMiddleware, async (req, res) => {
   }
 });
 
-// 翻译管理路由 - 新增
-app.use('/api/i18n', authMiddleware, (req, res, next) => {
-  const translationsPath = path.join(__dirname, 'src/i18n/translations.js');
+// 翻译管理路由 - 新增（仅写操作需要认证）
+app.use('/api/i18n', (req, res, next) => {
+  if (req.method === 'GET') {
+    return next();
+  }
+  authMiddleware(req, res, next);
+});
+app.use('/api/i18n', (req, res, next) => {
+  const translationsPath = path.join(__dirname, 'src', 'i18n', 'translations.js');
+  if (!fs.existsSync(translationsPath)) {
+    // 生产环境无翻译文件，返回空数据
+    return res.json({ success: true, data: { 'en': {}, 'zh-CN': {} } });
+  }
   req.translationsPath = translationsPath;
   next();
 });
@@ -560,60 +586,8 @@ app.use((req, res) => {
   });
 });
 
-// ========== 服务启动 ==========
+// ========== 优雅关闭处理 ==========
 
-/**
- * 启动服务器并生成产品目录
- */
-async function startServer() {
-  try {
-    console.log('='.repeat(60));
-    console.log(`启动产品管理服务器 - 环境: ${NODE_ENV}`);
-    console.log('='.repeat(60));
-    
-    // 验证产品目录数据
-    const catalogData = productCatalogUtils.getProductCatalog();
-    const validation = productCatalogUtils.validateProductCatalog(catalogData);
-    
-    if (!validation.isValid) {
-      console.warn('⚠️ 产品目录数据验证失败:', validation.errors);
-    } else {
-      console.log(`✅ 产品目录验证成功，共 ${validation.productCount} 个产品`);
-    }
-    
-    // 启动Express服务器
-    const server = app.listen(PORT, () => {
-      console.log('='.repeat(60));
-      console.log(`服务器已启动，端口: ${PORT}`);
-      console.log(`环境: ${NODE_ENV}`);
-      console.log(`静态文件目录: ${isProduction ? 'dist/' : 'public/'}`);
-      console.log(`服务访问地址: http://localhost:${PORT}`);
-      console.log(`产品列表API: http://localhost:${PORT}/api/products`);
-      console.log(`产品目录API: http://localhost:${PORT}/api/db/products`);
-      console.log('='.repeat(60));
-      
-      // 检查服务器是否真正在监听端口
-      const address = server.address();
-      if (address) {
-        console.log(`✅ 服务器确实在监听 ${address.address === '::' ? '0.0.0.0' : address.address}:${address.port}`);
-      } else {
-        console.error('❌ 服务器未能获取监听地址');
-      }
-    });
-    
-    // 添加错误处理
-    server.on('error', (error) => {
-      console.error('服务器启动错误:', error);
-      process.exit(1);
-    });
-    
-  } catch (error) {
-    console.error('启动服务器失败:', error);
-    process.exit(1);
-  }
-}
-
-// 优雅关闭处理
 const gracefulShutdown = (signal) => {
   console.log(`\n收到 ${signal}，正在关闭服务器...`)
   server.close(() => {
@@ -629,6 +603,66 @@ const gracefulShutdown = (signal) => {
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'))
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+
+// ========== 服务启动 ==========
+
+/**
+ * 启动服务器并生成产品目录
+ */
+async function startServer() {
+  try {
+    console.log('='.repeat(60));
+    console.log(`启动产品管理服务器 - 环境: ${NODE_ENV}`);
+    console.log('='.repeat(60));
+
+    // 启动前重新生成产品目录，确保 catalog 与文件系统一致
+    const generator = new ProductCatalogGenerator()
+    generator.generateCatalog()
+
+    // 验证产品目录数据
+    const catalogData = productCatalogUtils.getProductCatalog();
+    const validation = productCatalogUtils.validateProductCatalog(catalogData);
+
+    if (!validation.isValid) {
+      console.warn('⚠️ 产品目录数据验证失败:', validation.errors);
+    } else {
+      console.log(`✅ 产品目录验证成功，共 ${validation.productCount} 个产品`);
+    }
+
+    // 启动Express服务器
+    server = app.listen(PORT, () => {
+      console.log('='.repeat(60));
+      console.log(`服务器已启动，端口: ${PORT}`);
+      console.log(`环境: ${NODE_ENV}`);
+      console.log(`静态文件目录: ${isProduction ? 'dist/' : 'public/'}`);
+      console.log(`服务访问地址: http://localhost:${PORT}`);
+      console.log(`产品列表API: http://localhost:${PORT}/api/products`);
+      console.log(`产品目录API: http://localhost:${PORT}/api/db/products`);
+      console.log('='.repeat(60));
+
+      // 检查服务器是否真正在监听端口
+      const address = server.address();
+      if (address) {
+        console.log(`✅ 服务器确实在监听 ${address.address === '::' ? '0.0.0.0' : address.address}:${address.port}`);
+      } else {
+        console.error('❌ 服务器未能获取监听地址');
+      }
+    });
+
+    // 添加错误处理
+    server.on('error', (error) => {
+      console.error('服务器启动错误:', error);
+      process.exit(1);
+    });
+
+  } catch (error) {
+    console.error('启动服务器失败:', error);
+    process.exit(1);
+  }
+}
+
+// 服务器实例（模块级别声明，供 gracefulShutdown 使用）
+let server;
 
 // 启动服务器
 startServer();

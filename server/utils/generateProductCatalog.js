@@ -18,7 +18,7 @@ class ProductCatalogGenerator {
   generateCatalog() {
     try {
       const productPath = path.join(this.serverPath, 'Product');
-      const catalogPath = path.join(this.serverPath, 'public', 'data', 'product-catalog.json');
+      const catalogPath = path.join(this.serverPath, 'data', 'product-catalog.json');
       
       console.log('='.repeat(60));
       console.log('开始生成产品目录');
@@ -95,3 +95,5 @@ if (require.main === module) {
   const generator = new ProductCatalogGenerator();
   generator.generateCatalog();
 }
+
+module.exports = { ProductCatalogGenerator }
