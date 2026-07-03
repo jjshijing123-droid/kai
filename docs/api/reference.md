@@ -471,6 +471,36 @@ POST /api/error-report
 
 **请求体**: `{ "message": "...", "stack": "...", "source": "client" }`
 
+### 1.11 获取产品目录（统一接口）
+
+```http
+GET /api/products/catalog
+```
+
+**说明**: 开发/生产环境统一使用此接口获取产品目录，替代直接读取静态 JSON 文件。
+
+**响应示例**:
+```json
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "cobi18",
+      "folderName": "cobi18",
+      "category": "general",
+      "totalSize": 9441264,
+      "fileCount": 137,
+      "mainImage": "/Product/cobi18/image_00.webp",
+      "views": { "view1": "/Product/cobi18/view1/" },
+      "additionalImages": { "sixViews": "/Product/cobi18/images_6Views/" }
+    }
+  ],
+  "totalProducts": 3,
+  "lastUpdated": "2026-07-03T19:50:52.488Z",
+  "version": "2.0"
+}
+```
+
 ---
 
 ## 静态资源
@@ -484,12 +514,6 @@ GET /Product/{productName}/{viewType}/image_{frame}.webp
 **viewType 示例**: `view1`、`view2`、`view3`、`view4`、`images_6Views`、`images_other`
 
 **frame 范围**: `00` - `31`（共 32 帧）
-
-### 产品目录数据
-
-```http
-GET /data/product-catalog.json
-```
 
 ---
 

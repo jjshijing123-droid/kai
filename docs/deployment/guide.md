@@ -89,7 +89,7 @@ server {
 ```bash
 PORT=3000
 NODE_ENV=development
-CORS_ORIGIN=https://yourdomain.com
+CORS_ORIGIN=http://localhost:5173,http://localhost:5175
 ```
 
 ## 数据目录
@@ -98,7 +98,7 @@ CORS_ORIGIN=https://yourdomain.com
 |------|------|---------------|
 | `Product/` | 产品文件存储 | 是 |
 | `uploads/` | 临时上传文件 | 是 |
-| `public/data/product-catalog.json` | 产品目录（自动生成） | 否 |
+| `data/product-catalog.json` | 产品目录（自动生成，开发/生产共用） | 是 |
 
 ## 日常维护
 

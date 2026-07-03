@@ -11,9 +11,9 @@ kai/
 │       ├── images_6Views/        # 6 视图图片
 │       ├── images_other/         # 其他图片
 │       ├── view1/ - view4/       # 4 个视角的 32 帧图片序列
+├── data/                       # 产品目录数据（gitignore）
+│   └── product-catalog.json    # 后端生成的产品目录（开发/生产共用）
 ├── public/                       # 前端静态资源
-│   └── data/
-│       └── product-catalog.json  # 后端生成的产品目录
 ├── server/                       # Express 后端
 │   ├── routes/                   # API 路由
 │   │   ├── files.js              # 文件操作路由

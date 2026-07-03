@@ -2,8 +2,20 @@ const express = require('express')
 const ProductService = require('../services/productService')
 const { buildProductObject } = require('../utils/buildProductObject')
 const { authMiddleware } = require('../middleware/auth')
+const { productCatalogUtils } = require('../utils/productCatalogUtils')
 const router = express.Router()
 const productService = new ProductService()
+
+// 获取产品目录数据（统一接口，替代直接读取静态 JSON 文件）
+router.get('/catalog', (req, res) => {
+  try {
+    const catalogData = productCatalogUtils.getProductCatalog();
+    res.json(catalogData);
+  } catch (error) {
+    console.error('获取产品目录失败:', error);
+    res.status(500).json({ success: false, message: '获取产品目录失败', error: error.message });
+  }
+});
 
 /**
  * 产品管理路由

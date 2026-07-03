@@ -188,17 +188,6 @@ app.post('/api/error-report', (req, res) => {
 // 产品管理路由（全局限流，写操作认证在路由文件内）
 app.use('/api/products', apiLimiter, productsRouter);
 
-// 直接返回 catalog JSON（免限流，供前端替代静态文件读取）
-app.get('/api/products/catalog', (req, res) => {
-  try {
-    const catalogData = productCatalogUtils.getProductCatalog();
-    res.json(catalogData);
-  } catch (error) {
-    console.error('获取产品目录失败:', error);
-    res.status(500).json({ success: false, message: '获取产品目录失败', error: error.message });
-  }
-});
-
 // 数据库兼容性路由 - 从数据库/JSON获取产品目录
 app.get('/api/db/products', (req, res) => {
   try {
