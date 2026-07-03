@@ -31,7 +31,7 @@ ICE图片查看器是一个现代化的产品管理系统，采用前后端分�
 - **文件系统驱动** - 基于文件系统，无需数据库
 - **RESTful API** - 标准化的API接口设计
 - **实时数据更新** - 支持产品目录实时刷新
-- **国际化支持** - 多语言国际化框架
+- **CORS 域名白名单** - 通过 `CORS_ORIGIN` 环境变量配置，支持逗号分隔多域名
 - **现代化UI** - 基于Tailwind CSS的美观界面
 
 ## 🏗️ 技术栈
@@ -142,6 +142,7 @@ kai/
 │   ├── stores/            # 状态管理
 │   └── utils/             # 工具函数
 ├── Product/               # 产品文件存储（gitignore）
+├── data/                  # 产品目录数据（自动生成，gitignore）
 ├── public/                # 静态资源
 ├── docs/                  # 📖 项目文档
 └── uploads/               # 临时上传目录（gitignore）
@@ -190,6 +191,12 @@ GET /api/products/{productName}/images/{imageType}
 ```http
 POST /api/products/refresh-catalog
 ```
+
+#### 获取产品目录（统一接口）
+```http
+GET /api/products/catalog
+```
+**说明**: 开发/生产环境统一使用此接口，替代直接读取静态 JSON 文件。
 
 #### 从数据库获取产品（兼容模式）
 ```http
@@ -358,6 +365,10 @@ DELETE /api/i18n/translations/keys/{key}
 ```bash
 PORT=3000                    # 服务器端口
 NODE_ENV=development         # 运行环境
+CORS_ORIGIN=http://localhost:5173,https://yourdomain.com  # CORS 白名单（逗号分隔多域名）
+ADMIN_USER=admin             # 管理员用户名
+ADMIN_PASS=admin123          # 管理员密码
+JWT_SECRET=change-me-in-prod # JWT 密钥
 ```
 
 ### 配置文件
