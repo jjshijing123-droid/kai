@@ -164,6 +164,8 @@ GET /api/products/{productName}/images/{imageType}
 POST /api/products/refresh-catalog
 ```
 
+**认证**: 需要 Bearer Token
+
 **响应示例**:
 ```json
 {
@@ -411,7 +413,17 @@ POST /api/i18n/translations/keys
 ### 5.4 更新翻译键
 
 ```http
-PUT /api/i18n/translations/keys/{key}
+POST /api/i18n/translations/keys/{key}
+```
+
+**请求体**:
+```json
+{
+  "translations": {
+    "en": "English text",
+    "zh-CN": "中文文本"
+  }
+}
 ```
 
 ### 5.5 删除翻译键
@@ -419,6 +431,45 @@ PUT /api/i18n/translations/keys/{key}
 ```http
 DELETE /api/i18n/translations/keys/{key}
 ```
+
+---
+
+## 系统端点
+
+### 健康检查
+
+```http
+GET /api/health
+```
+
+**响应**:
+```json
+{ "success": true, "message": "服务器运行正常", "timestamp": "..." }
+```
+
+### 客户端日志上报
+
+```http
+POST /api/logs
+```
+
+**请求体**: `{ "level": "error", "message": "...", "source": "client" }`
+
+### 批量日志上报
+
+```http
+POST /api/logs/batch
+```
+
+**请求体**: `{ "logs": [...] }`
+
+### 错误上报
+
+```http
+POST /api/error-report
+```
+
+**请求体**: `{ "message": "...", "stack": "...", "source": "client" }`
 
 ---
 
@@ -452,7 +503,8 @@ GET /data/product-catalog.json
 
 ## 速率限制
 
-当前版本未实现速率限制。生产环境建议：
-
-- IP 级别: 1000 请求/小时
-- 用户级别: 500 请求/小时
+| 端点 | 限制 | 窗口 |
+|------|------|------|
+| `POST /api/auth/login` | 5 次 | 每分钟 |
+| 通用 API | 100 次 | 每分钟 |
+| 上传接口 | 10 次 | 每分钟 |

@@ -5,6 +5,7 @@ const unzipper = require('unzipper');
 const { calculateFolderSize } = require('../utils/fsHelpers');
 const { ProductCatalogUtils } = require('../utils/productCatalogUtils');
 const { safeJoin, sanitizeZipEntry } = require('../utils/safePath');
+const { buildProductObject } = require('../utils/buildProductObject');
 const ProductService = require('./productService');
 const FolderService = require('./folderService');
 
@@ -100,6 +101,13 @@ class UploadService {
                 skippedHiddenFiles++;
                 entry.autodrain();
                 return;
+              }
+
+              // 拒绝符号链接条目（防止路径穿越攻击）
+              if (entry.type === 'SymbolicLink') {
+                console.warn('⛔ 拒绝符号链接条目:', fileName)
+                entry.autodrain()
+                return
               }
 
               console.log('📄 处理文件:', fileName);
@@ -257,6 +265,13 @@ class UploadService {
                 return;
               }
 
+              // 拒绝符号链接条目（防止路径穿越攻击）
+              if (entry.type === 'SymbolicLink') {
+                console.warn('⛔ 拒绝符号链接条目:', fileName)
+                entry.autodrain()
+                return
+              }
+
               console.log('📄 处理文件:', fileName);
 
               if (type === 'Directory') {
@@ -342,29 +357,20 @@ class UploadService {
         if (item.isDirectory()) {
           const folderPath = path.join(productPath, item.name);
           const folderInfo = calculateFolderSize(folderPath);
-          
-          products.push({
-            id: products.length + 1,
+
+          const itemStat = fs.statSync(folderPath)
+
+          products.push(buildProductObject({
             name: item.name,
             folderName: item.name,
+            id: products.length + 1,
             category: 'general',
             description: `Product model: ${item.name}`,
-            path: `Product/${item.name}/`,
-            folder: `Product/${item.name}/`,
-            mainImage: `/Product/${item.name}/image_00.webp`,
             totalSize: folderInfo.totalSize,
             fileCount: folderInfo.fileCount,
-            views: {
-              view1: `/Product/${item.name}/view1/`,
-              view2: `/Product/${item.name}/view2/`,
-              view3: `/Product/${item.name}/view3/`,
-              view4: `/Product/${item.name}/view4/`
-            },
-            additionalImages: {
-              sixViews: `/Product/${item.name}/images_6Views/`,
-              other: `/Product/${item.name}/images_other/`
-            }
-          });
+            modified: itemStat.mtime.toISOString(),
+            isDirectory: true
+          }))
           
           console.log(`✅ 添加产品: ${item.name} (${folderInfo.fileCount} 个文件)`);
         }

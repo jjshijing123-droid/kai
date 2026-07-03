@@ -478,7 +478,8 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n.js'
 import { formatFileSize } from '../lib/utils.js'
-import { useAdminAuth, showMessage } from '../composables/useAdminAuth.js'
+import { useAdminAuth } from '../composables/useAdminAuth.js'
+import { showToast } from '../lib/toast.js'
 import AdminLoginModal from './AdminLoginModal.vue'
 import Button from './ui/button.vue'
 import Input from './ui/input.vue'
@@ -590,18 +591,18 @@ const refreshProducts = async () => {
       // 目录更新成功，直接刷新产品列表
       await fetchProducts()
       console.log('产品目录更新成功')
-      showMessage('success', t('productManagement_refreshSuccess'))
+      showToast('success', t('productManagement_refreshSuccess'))
     } else {
       const errorData = await response.json().catch(() => ({ message: '未知错误' }))
       const errorMessage = errorData.message || t('productManagement_refreshFailed')
       console.error('产品目录更新失败:', errorMessage)
-      showMessage('error', errorMessage)
+      showToast('error', errorMessage)
       // 尝试直接刷新产品列表，获取最新数据
       await fetchProducts()
     }
   } catch (error) {
     console.error('刷新操作失败:', error)
-    showMessage('error', t('productManagement_refreshFailed'))
+    showToast('error', t('productManagement_refreshFailed'))
     // 出错时尝试直接刷新产品列表
     await fetchProducts()
   } finally {
@@ -817,15 +818,15 @@ const confirmDeleteFolder = async () => {
       await fetchProducts()
       
       // 显示成功消息
-      showMessage('success', t('productManagement_deleteSuccess'))
+      showToast('success', t('productManagement_deleteSuccess'))
     } else {
       const errorMsg = result.message || result.error || t('productManagement_deleteFailed')
       console.error(`删除失败:`, errorMsg)
-      showMessage('error', errorMsg)
+      showToast('error', errorMsg)
     }
   } catch (err) {
     console.error('删除操作失败:', err)
-    showMessage('error', err.message || t('productManagement_deleteFailed'))
+    showToast('error', err.message || t('productManagement_deleteFailed'))
   }
 }
 
@@ -1028,7 +1029,7 @@ const handleFileSelect = (event) => {
     
     // 显示无效文件信息
     if (invalidFiles.length > 0) {
-      showMessage('warning', `${invalidFiles.length} 个文件大小超过限制（100MB）`)
+      showToast('warning', `${invalidFiles.length} 个文件大小超过限制（100MB）`)
     }
   }
 }
@@ -1085,7 +1086,7 @@ const handleFileUpload = async () => {
     
   } catch (error) {
     console.error('文件上传失败:', error)
-    showMessage('error', '文件上传失败: ' + error.message)
+    showToast('error', '文件上传失败: ' + error.message)
   } finally {
     uploading.value = false
   }

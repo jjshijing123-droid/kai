@@ -116,8 +116,8 @@ router.get('/upload-progress/:uploadId', (req, res) => {
   });
 });
 
-// 上传文件到指定文件夹
-router.post('/upload-files', authMiddleware, fileUpload.array('file'), async (req, res) => {
+// 上传文件到指定文件夹（最多 50 个文件）
+router.post('/upload-files', authMiddleware, fileUpload.array('file', 50), async (req, res) => {
   try {
     const files = req.files;
     const { folderPath } = req.body;

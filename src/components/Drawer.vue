@@ -133,118 +133,15 @@ import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter } from 'vue-router'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
+import { showToast } from '../lib/toast.js'
+import { useTheme } from '../composables/useTheme.js'
 import Button from './ui/button.vue'
 import LucideIcon from './ui/LucideIcon.vue'
-
-const showMessage = (type, text) => {
-  const messageDiv = document.createElement('div')
-  messageDiv.className = `message-${type}`
-  messageDiv.style.cssText = `
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100%);
-    padding: 12px 20px;
-    border-radius: 10px;
-    color: white;
-    z-index: 9999;
-    font-size: 14px;
-    font-weight: 500;
-    max-width: 400px;
-    word-wrap: break-word;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-    opacity: 0;
-  `
-  
-  if (type === 'warning') {
-    messageDiv.style.backgroundColor = 'var(--orange-8)'
-  } else if (type === 'error') {
-    messageDiv.style.backgroundColor = 'var(--red-9)'
-  } else if (type === 'success') {
-    messageDiv.style.backgroundColor = 'var(--green-8)'
-  } else {
-    messageDiv.style.backgroundColor = 'var(--primary-8)'
-  }
-  
-  messageDiv.textContent = text
-  document.body.appendChild(messageDiv)
-  
-  // 入场动画
-  setTimeout(() => {
-    messageDiv.style.opacity = '1'
-    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
-  }, 10)
-  
-  // 3秒后自动移除
-  setTimeout(() => {
-    messageDiv.style.opacity = '0'
-    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
-    setTimeout(() => {
-      if (messageDiv.parentNode) {
-        document.body.removeChild(messageDiv)
-      }
-    }, 300)
-  }, 3000)
-}
 
 const { currentLanguage, t, setLanguage } = useI18n()
 const router = useRouter()
 const { isAdminLoggedIn, sessionReady, logout, checkPermission, openLoginModal } = useAdminAuth()
-
-// 主题切换相关
-const currentTheme = ref('light')
-
-// 初始化主题
-const initTheme = () => {
-  // 首先检查当前html元素上已经应用的主题类
-  const htmlElement = document.documentElement
-  const currentHtmlTheme = htmlElement.classList.contains('dark') ? 'dark' : (htmlElement.classList.contains('light') ? 'light' : null)
-  
-  // 如果html元素上已经有主题类，直接使用
-  if (currentHtmlTheme) {
-    currentTheme.value = currentHtmlTheme
-    return // 不需要重新应用主题，因为已经存在
-  }
-  
-  // 检查 localStorage 中是否有保存的主题
-  const savedTheme = localStorage.getItem('theme')
-  
-  // 检查系统偏好主题
-  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  
-  // 使用保存的主题或系统主题，但只使用light或dark
-  const initialTheme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : systemTheme
-  currentTheme.value = initialTheme
-  
-  // 应用主题
-  applyTheme(initialTheme)
-}
-
-// 应用主题
-const applyTheme = (theme) => {
-  const htmlElement = document.documentElement
-  
-  // 移除现有的主题类
-  htmlElement.classList.remove('light', 'dark')
-  
-  // 应用指定主题
-  htmlElement.classList.add(theme)
-}
-
-// 主题切换函数
-const toggleTheme = (theme) => {
-  currentTheme.value = theme
-  localStorage.setItem('theme', theme)
-  applyTheme(theme)
-  closeDrawer()
-}
-
-// 组件挂载时初始化主题
-onMounted(() => {
-  initTheme()
-})
+const { currentTheme, initTheme, toggleTheme } = useTheme()
 
 const props = defineProps({
   isOpen: {
@@ -255,17 +152,19 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
-// 监听抽屉打开事件，当抽屉打开时重新检查主题
+// 监听抽屉打开事件，同步主题状态
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
-    // 当抽屉打开时，重新检查当前主题
     const htmlElement = document.documentElement
     const currentHtmlTheme = htmlElement.classList.contains('dark') ? 'dark' : (htmlElement.classList.contains('light') ? 'light' : null)
-    
     if (currentHtmlTheme) {
       currentTheme.value = currentHtmlTheme
     }
   }
+})
+
+onMounted(() => {
+  initTheme()
 })
 
 
@@ -282,7 +181,7 @@ const goToHome = () => {
 const goToI18nManager = () => {
   if (!sessionReady.value) return
   if (!isAdminLoggedIn.value) {
-    showMessage('warning', t('common_adminPermissionI18n'))
+    showToast('warning', t('common_adminPermissionI18n'))
     closeDrawer() // 先关闭抽屉
     openLoginModal()
     return
@@ -294,7 +193,7 @@ const goToI18nManager = () => {
 const goToProductManager = () => {
   if (!sessionReady.value) return
   if (!isAdminLoggedIn.value) {
-    showMessage('warning', t('common_adminPermissionProduct'))
+    showToast('warning', t('common_adminPermissionProduct'))
     closeDrawer() // 先关闭抽屉
     openLoginModal()
     return
@@ -319,7 +218,7 @@ const handleOpenLoginModal = () => {
 
 const handleLogout = () => {
   logout()
-  showMessage('success', t('common_logoutSuccess'))
+  showToast('success', t('common_logoutSuccess'))
   // 如果当前在受保护页面，跳转到首页
   const currentPath = router.currentRoute.value.path
   if (currentPath.includes('/i18n-manager') || currentPath.includes('/product-management')) {

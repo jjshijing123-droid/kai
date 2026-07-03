@@ -181,16 +181,17 @@ class ProductCatalogUtils {
       catalogData.lastUpdated = new Date().toISOString();
       catalogData.version = '2.0';
       
-      // 保存到所有目录
+      // 保存到所有目录（原子写入，避免并发写覆盖）
       catalogPaths.forEach(catalogPath => {
-        // 确保目录存在
-        const dir = path.dirname(catalogPath);
+        const dir = path.dirname(catalogPath)
         if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir, { recursive: true });
+          fs.mkdirSync(dir, { recursive: true })
         }
-        
-        fs.writeFileSync(catalogPath, JSON.stringify(catalogData, null, 2), 'utf8');
-      });
+
+        const tempPath = catalogPath + '.tmp.' + process.pid
+        fs.writeFileSync(tempPath, JSON.stringify(catalogData, null, 2), 'utf8')
+        fs.renameSync(tempPath, catalogPath)
+      })
       
       return true;
     } catch (error) {

@@ -13,6 +13,7 @@ ICE 图片查看器是一个基于文件系统驱动的现代化产品管理系�
 | Vue 3 | 3.5.24 | 渐进式 JavaScript 框架 |
 | Vite | 4.5.14 | 前端构建工具 |
 | Vue Router | 4.6.3 | 路由管理 |
+| Pinia | 3.0.0 | 状态管理 |
 | Tailwind CSS | 3.4.0 | 样式框架 |
 | lucide-vue-next | 0.555.0 | 图标库 |
 | class-variance-authority | 0.7.0 | 组件变体管理 |
@@ -156,5 +157,8 @@ Product/
 
 - 路径验证，防止目录遍历
 - 文件类型和大小检查
-- 管理员认证（localStorage 会话）
-- CORS 配置
+- 管理员认证（JWT + Bearer Token，24小时有效期）
+- 登录限流（5次/分钟）、API限流（100次/分钟）、上传限流（10次/分钟）
+- CORS 域名白名单
+- ZIP 符号链接检测
+- 原子写入防竞态

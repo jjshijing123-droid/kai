@@ -79,6 +79,7 @@ kai/
 │   │   ├── useI18n.js
 │   │   ├── useKeyboardShortcuts.js
 │   │   ├── useNotifications.js
+│   │   ├── useTheme.js                  # 共享主题管理
 │   │   └── useTooltip.js
 │   ├── i18n/                            # 国际化
 │   │   ├── index.js                     # 插件初始化
@@ -95,7 +96,7 @@ kai/
 │   │   ├── apiService.js                # HTTP 请求封装
 │   │   └── productService.js            # 产品 API 调用
 │   ├── stores/                          # 状态管理
-│   │   └── notificationStore.js         # 通知状态
+│   │   ├── notificationStore.js         # 通知状态（Pinia）
 │   ├── styles/                          # 全局样式
 │   │   └── globals.css
 │   ├── theme/                           # 主题配置

@@ -63,6 +63,9 @@ import LucideIcon from './ui/LucideIcon.vue'
 const { t } = useI18n()
 const router = useRouter()
 
+// i18n 监听器引用，用于清理
+const i18nUnsubscribe = ref(null)
+
 // 响应式状态
 const products = ref([])
 const loading = ref(true)
@@ -347,25 +350,24 @@ const setBrowserTitle = () => {
  */
 onMounted(() => {
   loadProducts()
-  
+
   // 设置初始浏览器标题
   setBrowserTitle()
-  
+
   // 监听语言变化
-  const unsubscribe = useI18n().addListener(() => {
+  i18nUnsubscribe.value = useI18n().addListener(() => {
     invalidateCache('product-catalog')
     invalidateCache('product-api')
     loadProducts()
-    // 语言变化时更新浏览器标题
     setBrowserTitle()
   })
-  
-  // 清理监听器
-  onUnmounted(() => {
-    if (unsubscribe) {
-      unsubscribe()
-    }
-  })
+})
+
+// 清理 i18n 监听器
+onUnmounted(() => {
+  if (i18nUnsubscribe.value) {
+    i18nUnsubscribe.value()
+  }
 })
 </script>
 

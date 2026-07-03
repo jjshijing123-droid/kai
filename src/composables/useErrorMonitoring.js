@@ -31,7 +31,7 @@ export function useErrorMonitoring() {
   })
   
   // 恢复策略
-  const recoveryStrategies = reactive(new Map())
+  const recoveryStrategies = ref(new Map())
   
   // 健康检查定时器
   let healthCheckTimer = null
@@ -41,7 +41,7 @@ export function useErrorMonitoring() {
    * 注册错误类型处理器
    */
   const registerErrorType = (errorType, strategy) => {
-    recoveryStrategies.set(errorType, strategy)
+    recoveryStrategies.value.set(errorType, strategy)
   }
   
   /**
@@ -78,7 +78,7 @@ export function useErrorMonitoring() {
    * 自动错误恢复
    */
   const attemptRecovery = async (errorInfo) => {
-    const strategy = recoveryStrategies.get(errorInfo.type)
+    const strategy = recoveryStrategies.value.get(errorInfo.type)
     
     if (!strategy) {
       logger.debug('No recovery strategy found', { errorType: errorInfo.type })
@@ -303,7 +303,7 @@ export function useErrorMonitoring() {
         }
         
         // 根据错误类型选择恢复策略
-        const strategy = recoveryStrategies.get(errorInfo.type)
+        const strategy = recoveryStrategies.value.get(errorInfo.type)
         
         if (strategy) {
           return await strategy.recover(errorInfo, context)
@@ -530,5 +530,4 @@ export function useErrorMonitoring() {
     startMonitoring,
     stopMonitoring
   }
-}
 }

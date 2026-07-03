@@ -530,8 +530,9 @@ const handleDeleteTranslation = async (key) => {
       })
       // 同时调用 i18n.deleteTranslation() 方法，确保 i18n 实例中的翻译数据也被更新
       i18n.deleteTranslation(key)
-      // 触发刷新触发器，确保列表自动更新
+      // 刷新列表和完成度
       refreshTrigger.value++
+      refreshCompleteness()
     } else {
       showMessage('error', t('i18nManager_errorDeletingTranslation'))
     }

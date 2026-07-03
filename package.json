@@ -24,6 +24,7 @@
     "lucide-vue-next": "^0.555.0",
     "multer": "^2.0.2",
     "node-fetch": "^2.7.0",
+    "pinia": "^3.0.4",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
     "unzipper": "^0.12.3",

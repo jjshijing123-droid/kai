@@ -63,17 +63,22 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // 确保语言状态已正确初始化
   const savedLang = localStorage.getItem('preferredLanguage')
-  
+
   if (savedLang && i18n.getCurrentLanguage() !== savedLang) {
     i18n.setLanguage(savedLang)
   }
-  
+
   // 检查是否需要管理员权限
   const protectedRoutes = ['/i18n-manager', '/product-management']
-  
+
   if (protectedRoutes.includes(to.path)) {
-    const storedSession = localStorage.getItem('admin_session')
-    if (storedSession !== 'true') {
+    // 检查后端 token 是否存在（比仅检查 localStorage 标记更安全）
+    const token = localStorage.getItem('admin_token')
+    const hasSession = localStorage.getItem('admin_session') === 'true'
+
+    if (!hasSession || !token) {
+      // 保存用户尝试访问的路径，登录后重定向回来
+      sessionStorage.setItem('redirect_after_login', to.path)
       next('/')
       return
     }

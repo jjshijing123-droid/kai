@@ -45,12 +45,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { Menu, Sun, Moon } from 'lucide-vue-next'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 import { useRouter, useRoute } from 'vue-router'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
 import { showToast } from '../lib/toast.js'
+import { useTheme } from '../composables/useTheme.js'
 import Drawer from './Drawer.vue'
 import Button from './ui/button.vue'
 import LucideIcon from './ui/LucideIcon.vue'
@@ -59,64 +59,12 @@ const { currentLanguage, toggleLanguage, t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const { isAdminLoggedIn, sessionReady, openLoginModal } = useAdminAuth()
+const { currentTheme, initTheme, toggleTheme } = useTheme()
 
 const menuVisible = ref(false)
 
 // 全局消息提示
 const showMessage = showToast
-
-// 主题切换相关
-const currentTheme = ref('light')
-
-// 初始化主题
-const initTheme = () => {
-  // 首先检查当前html元素上已经应用的主题类
-  const htmlElement = document.documentElement
-  const currentHtmlTheme = htmlElement.classList.contains('dark') ? 'dark' : (htmlElement.classList.contains('light') ? 'light' : null)
-  
-  // 如果html元素上已经有主题类，直接使用
-  if (currentHtmlTheme) {
-    currentTheme.value = currentHtmlTheme
-    return // 不需要重新应用主题，因为已经存在
-  }
-  
-  // 检查 localStorage 中是否有保存的主题
-  const savedTheme = localStorage.getItem('theme')
-  
-  // 检查系统偏好主题
-  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  
-  // 使用保存的主题或系统主题，但只使用light或dark
-  const initialTheme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : systemTheme
-  currentTheme.value = initialTheme
-  
-  // 应用主题
-  applyTheme(initialTheme)
-}
-
-// 应用主题
-const applyTheme = (theme) => {
-  const htmlElement = document.documentElement
-  
-  // 移除现有的主题类
-  htmlElement.classList.remove('light', 'dark')
-  
-  // 应用指定主题
-  htmlElement.classList.add(theme)
-  
-  // 更新当前组件的主题状态
-  currentTheme.value = theme
-}
-
-// 切换主题
-const toggleTheme = () => {
-  const newTheme = currentTheme.value === 'light' ? 'dark' : 'light'
-  currentTheme.value = newTheme
-  localStorage.setItem('theme', newTheme)
-  applyTheme(newTheme)
-}
-
-
 
 const goToHome = () => {
   router.push('/')
@@ -141,6 +89,7 @@ const goToProductManager = () => {
     return
   }
   router.push('/product-management')
+  menuVisible.value = false
 }
 
 // 统一菜单控制
@@ -161,34 +110,13 @@ const handleClickOutside = (event) => {
   }
 }
 
-// 监听html元素class变化，确保主题状态同步
-const observer = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    if (mutation.attributeName === 'class') {
-      const htmlElement = document.documentElement
-      const currentHtmlTheme = htmlElement.classList.contains('dark') ? 'dark' : (htmlElement.classList.contains('light') ? 'light' : null)
-      if (currentHtmlTheme) {
-        currentTheme.value = currentHtmlTheme
-      }
-    }
-  })
-})
-
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
-  // 初始化主题
   initTheme()
-  
-  // 开始观察html元素的class变化
-  observer.observe(document.documentElement, {
-    attributes: true
-  })
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
-  // 停止观察
-  observer.disconnect()
 })
 
 </script>

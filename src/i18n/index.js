@@ -104,12 +104,13 @@ class I18nService {
   }
 
   // 删除翻译
-  deleteTranslation(key) {
+  async deleteTranslation(key) {
     Object.keys(languages).forEach(lang => {
       if (translations[lang] && translations[lang][key] !== undefined) {
         delete translations[lang][key]
       }
     })
+    await this.saveTranslationsToFile()
   }
 
   // 从localStorage加载翻译（已废弃）
@@ -212,7 +213,7 @@ class I18nService {
       const translationsData = { [lang]: value }
 
       const response = await fetch(`/api/i18n/translations/keys/${encodeURIComponent(key)}`, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ translations: translationsData }),
       })

@@ -3,9 +3,9 @@ const path = require('path')
 const cors = require('cors')
 const fs = require('fs')
 require('dotenv').config()
-const { buildProductObject } = require('./server/utils/buildProductObject')
 
 const ProductService = require('./server/services/productService')
+const { buildProductObject } = require('./server/utils/buildProductObject')
 
 // ===== 环境变量校验 =====
 const ADMIN_USER = process.env.ADMIN_USER;
@@ -36,7 +36,9 @@ const productService = new ProductService()
 
 // 中间件配置
 const corsOptions = {
-  origin: isProduction ? ['http://localhost:3000', 'https://yourdomain.com'] : '*',
+  origin: isProduction
+    ? ['https://yourdomain.com']
+    : ['http://localhost:5173'],
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -144,6 +146,38 @@ if (isProduction) {
 // 产品图片静态文件服务
 app.use('/Product', express.static(path.join(__dirname, 'Product')));
 
+// ========== 系统端点 ==========
+
+// 健康检查端点
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, message: '服务器运行正常', timestamp: new Date().toISOString() })
+})
+
+// 服务器日志端点
+app.post('/api/logs', (req, res) => {
+  const { level, message, source, stack } = req.body || {}
+  console.log(`[${level || 'info'}] ${source || 'client'}: ${message}`)
+  if (stack) console.log(stack)
+  res.json({ success: true })
+})
+
+// 批量日志端点
+app.post('/api/logs/batch', (req, res) => {
+  const logs = req.body?.logs || []
+  logs.forEach(log => {
+    console.log(`[${log.level || 'info'}] ${log.source || 'client'}: ${log.message}`)
+    if (log.stack) console.log(log.stack)
+  })
+  res.json({ success: true, received: logs.length })
+})
+
+// 错误上报端点
+app.post('/api/error-report', (req, res) => {
+  const { message, stack, source, userAgent } = req.body || {}
+  console.error('客户端错误上报:', { message, stack, source, userAgent })
+  res.json({ success: true })
+})
+
 // ========== API路由 ==========
 
 // 产品管理路由（全局限流，写操作认证在路由文件内）
@@ -199,8 +233,8 @@ app.use('/api', filesRouter);
 // 上传管理路由
 app.use('/api', uploadsRouter);
 
-// 重新生成产品目录 - 新增
-app.post('/api/products/refresh-catalog', async (req, res) => {
+// 重新生成产品目录 - 需要管理员认证
+app.post('/api/products/refresh-catalog', authMiddleware, async (req, res) => {
   try {
     console.log('🔄 开始重新生成产品目录...');
     
@@ -580,15 +614,21 @@ async function startServer() {
 }
 
 // 优雅关闭处理
-process.on('SIGINT', () => {
-  console.log('\n正在关闭服务器...');
-  process.exit(0);
-});
+const gracefulShutdown = (signal) => {
+  console.log(`\n收到 ${signal}，正在关闭服务器...`)
+  server.close(() => {
+    console.log('HTTP 服务器已关闭，所有连接已排空')
+    process.exit(0)
+  })
+  // 强制关闭超时
+  setTimeout(() => {
+    console.error('强制关闭：未完成的请求已超时')
+    process.exit(1)
+  }, 30000)
+}
 
-process.on('SIGTERM', () => {
-  console.log('收到终止信号，正在关闭服务器...');
-  process.exit(0);
-});
+process.on('SIGINT', () => gracefulShutdown('SIGINT'))
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
 
 // 启动服务器
 startServer();

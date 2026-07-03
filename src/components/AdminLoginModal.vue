@@ -67,6 +67,7 @@
 import { ref, watch, computed } from 'vue'
 import { useAdminAuth } from '../composables/useAdminAuth'
 import { useI18n } from '../composables/useI18n.js'
+import { showToast } from '../lib/toast.js'
 import Modal from './ui/modal.vue'
 import Input from './ui/input.vue'
 import PasswordInput from './ui/password-input.vue'
@@ -75,59 +76,6 @@ import LucideIcon from './ui/LucideIcon.vue'
 
 const { t } = useI18n()
 
-// 简单的消息提示实现
-const showMessage = (type, text) => {
-  const messageDiv = document.createElement('div')
-  messageDiv.className = `message-${type}`
-  messageDiv.style.cssText = `
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100%);
-    padding: 12px 20px;
-    border-radius: 10px;
-    color: white;
-    z-index: 9999;
-    font-size: 14px;
-    font-weight: 500;
-    max-width: 400px;
-    word-wrap: break-word;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-    opacity: 0;
-  `
-  
-  if (type === 'warning') {
-    messageDiv.style.backgroundColor = 'var(--orange-8)'
-  } else if (type === 'error') {
-    messageDiv.style.backgroundColor = 'var(--red-9)'
-  } else if (type === 'success') {
-    messageDiv.style.backgroundColor = 'var(--green-8)'
-  } else {
-    messageDiv.style.backgroundColor = 'var(--primary-8)'
-  }
-  
-  messageDiv.textContent = text
-  document.body.appendChild(messageDiv)
-  
-  // 入场动画
-  setTimeout(() => {
-    messageDiv.style.opacity = '1'
-    messageDiv.style.transform = 'translateX(-50%) translateY(0)'
-  }, 10)
-  
-  // 3秒后自动移除
-  setTimeout(() => {
-    messageDiv.style.opacity = '0'
-    messageDiv.style.transform = 'translateX(-50%) translateY(-100%)'
-    setTimeout(() => {
-      if (messageDiv.parentNode) {
-        document.body.removeChild(messageDiv)
-      }
-    }, 300)
-  }, 3000)
-}
 
 const props = defineProps({
   open: {
@@ -167,12 +115,12 @@ const handleLogin = async () => {
   try {
     // 简单验证
     if (!loginForm.value.username.trim()) {
-      showMessage('warning', t('common_enterUsername'))
+      showToast('warning', t('common_enterUsername'))
       return
     }
     
     if (!loginForm.value.password.trim()) {
-      showMessage('warning', t('common_enterPassword'))
+      showToast('warning', t('common_enterPassword'))
       return
     }
     
@@ -180,17 +128,17 @@ const handleLogin = async () => {
     const result = await login(loginForm.value.username, loginForm.value.password)
     
     if (result.success) {
-      showMessage('success', t('common_adminLoginSuccess'))
+      showToast('success', t('common_adminLoginSuccess'))
       emit('login-success')
       handleCancel()
       resetForm()
     } else {
-      showMessage('error', result.error || t('common_loginFailed'))
+      showToast('error', result.error || t('common_loginFailed'))
       emit('login-failed', result.error)
     }
   } catch (error) {
     console.error(`${t('common_loginFailed')}:`, error)
-    showMessage('error', t('common_loginFailed'))
+    showToast('error', t('common_loginFailed'))
     emit('login-failed', error.message)
   } finally {
     loading.value = false

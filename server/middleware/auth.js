@@ -13,7 +13,7 @@ if (!JWT_SECRET) {
  * @param {number} expiresIn - 过期时间（秒），默认 7 天
  * @returns {string} JWT token
  */
-function generateToken(payload, expiresIn = 7 * 24 * 3600) {
+function generateToken(payload, expiresIn = 24 * 3600) {
   const header = { alg: 'HS256', typ: 'JWT' };
   const now = Math.floor(Date.now() / 1000);
   const payloadWithClaims = {
