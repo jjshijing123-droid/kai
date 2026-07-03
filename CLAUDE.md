@@ -88,3 +88,8 @@ docker compose -f docker-compose.prod.yml down
 - 颜色通过 CSS 变量定义，在 `tailwind.config.js` 的 theme 中引用
 - 不要硬编码颜色值（如 `#fff`、`#000`），应使用 CSS 变量或 Tailwind 主题色
 - 自定义颜色映射详见 [docs/design/colors.md](docs/design/colors.md)
+
+## 禁止事项
+
+- **不要自动提交 git commit** — 只有在用户明确要求时才执行 `git commit` 或 `git push`
+- 修改文件后不要主动创建 commit，将变更留在工作区等待用户决定
