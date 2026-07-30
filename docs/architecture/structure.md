@@ -94,7 +94,8 @@ kai/
 │   │   └── useTooltip.js             # 工具提示
 │   ├── i18n/                         # 国际化
 │   │   ├── index.js                  # 插件初始化
-│   │   └── translations.js           # 翻译内容（种子数据）
+│   │   ├── translations.js           # 翻译种子数据（从 JSON 导入，供后端播种用）
+│   │   └── translations-seed.json    # 翻译种子数据 JSON（Vite 构建后复制到 dist/assets/）
 │   ├── images/                       # 静态图片
 │   │   ├── Logo.png
 │   │   └── icelogo.webp

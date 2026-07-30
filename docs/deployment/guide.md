@@ -111,7 +111,7 @@ server {
 - **SQLite 数据库** (`data/products.db`) 应纳入备份计划，包含产品元数据、翻译数据和管理员账户
 - **产品图片** (`Product/`) 是核心数据，定期备份
 - **翻译数据** 可通过管理界面导出，也可直接从 SQLite 数据库备份
-- 首次启动时，`src/i18n/translations.js` 中的种子数据自动导入 SQLite，后续无需该文件参与运行
+- 首次启动时，`src/i18n/translations-seed.json` 中的种子数据自动导入 SQLite，后续无需该文件参与运行
 
 ## 日常维护
 
