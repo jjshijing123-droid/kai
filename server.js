@@ -415,12 +415,23 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
  */
 async function seedTranslationsFromFile() {
   try {
-    // 通过动态 import 加载 ES 模块获取 baseTranslations
-    const translationsModule = await import(path.join(__dirname, 'src', 'i18n', 'translations.js'))
-    const seedData = translationsModule.baseTranslations
+    // 从 JSON 种子文件读取翻译数据（兼容开发和生产环境）
+    const seedPaths = [
+      path.join(__dirname, '..', 'src', 'i18n', 'translations-seed.json'),
+      path.join(__dirname, '..', 'dist', 'assets', 'translations-seed.json'),
+    ]
+
+    let seedData = null
+    for (const seedPath of seedPaths) {
+      try {
+        const content = await fs.promises.readFile(seedPath, 'utf-8')
+        seedData = JSON.parse(content)
+        if (seedData && seedData.en) break
+      } catch {}
+    }
 
     if (!seedData || !seedData.en) {
-      console.warn('⚠️ translations.js 中未找到 baseTranslations，跳过初始数据导入')
+      console.warn('⚠️ 未找到翻译种子 JSON 文件，跳过初始数据导入')
       return
     }
 

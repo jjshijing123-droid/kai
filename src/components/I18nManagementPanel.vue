@@ -215,7 +215,7 @@ import { showToast } from '../lib/toast.js'
 // 全局消息提示
 const showMessage = showToast
 // 使用实际的 i18n 数据
-const { currentLanguage, availableLanguages, translationCompleteness, t, getTranslationKeys, addTranslations, updateTranslation, deleteTranslation, setLanguage, refreshCompleteness } = useI18n()
+const { currentLanguage, availableLanguages, translationCompleteness, t, getTranslationKeys, addTranslations, updateTranslation, deleteTranslation, setLanguage } = useI18n()
 
 // 使用管理员认证
 const { isAdminLoggedIn } = useAdminAuth()
@@ -319,8 +319,6 @@ const loadTranslations = async (showNotification = true) => {
 
     // 触发刷新触发器，确保列表自动更新
     refreshTrigger.value++
-    // 触发翻译完整性重新计算
-    refreshCompleteness()
 
     // 显示刷新成功提示
     if (showNotification) {
@@ -380,9 +378,8 @@ const commitTranslation = async (lang, key) => {
 
   if (updateResult) {
     showMessage('success', t('i18nManager_translationSaved'))
-    // 触发刷新触发器和翻译完整性重新计算
+    // 触发刷新触发器
     refreshTrigger.value++
-    refreshCompleteness()
   } else {
     showMessage('error', t('i18nManager_errorSavingTranslation'))
   }
@@ -415,7 +412,6 @@ const addTranslation = async () => {
       // 触发刷新触发器，确保列表自动更新
       refreshTrigger.value++
       // 触发翻译完整性重新计算
-      refreshCompleteness()
       showMessage('success', t('i18nManager_newTranslationAdded'))
     } else {
       showMessage('error', t('i18nManager_errorAddingTranslation'))
@@ -436,9 +432,8 @@ const handleDeleteTranslation = async (key) => {
     
     if (deleteResult) {
       showMessage('success', t('i18nManager_translationDeleted'))
-      // 刷新列表和完成度
+      // 刷新列表
       refreshTrigger.value++
-      refreshCompleteness()
     } else {
       showMessage('error', t('i18nManager_errorDeletingTranslation'))
     }

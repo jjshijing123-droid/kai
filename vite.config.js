@@ -1,9 +1,24 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import fs from 'fs'
+
+// 构建后将翻译种子 JSON 复制到 dist/assets/
+function copySeedFile() {
+  return {
+    name: 'copy-seed-file',
+    closeBundle() {
+      const src = resolve(__dirname, 'src/i18n/translations-seed.json')
+      const destDir = resolve(__dirname, 'dist/assets')
+      fs.mkdirSync(destDir, { recursive: true })
+      fs.copyFileSync(src, resolve(destDir, 'translations-seed.json'))
+      console.log('📋 翻译种子文件已复制到 dist/assets/')
+    }
+  }
+}
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), copySeedFile()],
   resolve: {
     alias: {
       '@': resolve(__dirname, './src')

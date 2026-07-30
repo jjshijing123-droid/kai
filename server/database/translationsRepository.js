@@ -7,7 +7,33 @@
  */
 
 const path = require('path')
+const fs = require('fs')
 const { getDatabase } = require('./index')
+
+// 翻译种子 JSON 文件路径（兼容开发和生产环境）
+// __dirname = server/database/，向上 2 级到达项目根目录
+const SEED_JSON_PATHS = [
+  path.join(__dirname, '..', '..', 'src', 'i18n', 'translations-seed.json'),
+  path.join(__dirname, '..', '..', 'dist', 'assets', 'translations-seed.json'),
+]
+
+/**
+ * 读取翻译种子 JSON 文件
+ * @returns {object|null} { "en": {...}, "zh-CN": {...} } | null
+ */
+function readSeedData() {
+  for (const seedPath of SEED_JSON_PATHS) {
+    try {
+      if (fs.existsSync(seedPath)) {
+        const content = fs.readFileSync(seedPath, 'utf-8')
+        return JSON.parse(content)
+      }
+    } catch (error) {
+      console.warn(`读取种子文件失败 (${seedPath}):`, error.message)
+    }
+  }
+  return null
+}
 
 /**
  * 获取所有翻译（按语言组织）
@@ -171,14 +197,13 @@ function hasTranslations(lang) {
 
 /**
  * 从种子文件增量播种缺失的翻译键
- * 读取 translations.js 中的 baseTranslations，只插入数据库中不存在的键
+ * 读取 translations-seed.json 中的 baseTranslations，只插入数据库中不存在的键
  * 已有的翻译（包括用户手动修改的）不会被覆盖
  * @returns {{ inserted: number, skipped: number }}
  */
-async function seedMissingFromFile() {
+function seedMissingFromFile() {
   try {
-    const translationsModule = await import(path.join(__dirname, '..', '..', 'src', 'i18n', 'translations.js'))
-    const seedData = translationsModule.baseTranslations
+    const seedData = readSeedData()
 
     if (!seedData || !seedData.en) {
       return { inserted: 0, skipped: 0 }
