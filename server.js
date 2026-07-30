@@ -277,6 +277,13 @@ app.use('/api/i18n', (req, res, next) => {
 app.get('/api/i18n/translations', (req, res) => {
   try {
     initDatabase()
+
+    // 兜底保护：如果翻译表为空，自动播种种子数据
+    if (!translationsRepo.hasTranslations('en')) {
+      console.log('📥 翻译表为空，自动播种种子数据...')
+      seedTranslationsFromFile()
+    }
+
     const translations = translationsRepo.getAllTranslations()
     res.json({ success: true, data: translations })
   } catch (error) {
@@ -405,29 +412,25 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
 // ========== 翻译数据种子导入 ==========
 
 /**
- * 从 translations.js 静态文件中提取翻译数据并导入 SQLite
+ * 从 translations.js 加载种子数据并导入 SQLite
  * 仅在翻译表为空时调用（启动时自动触发一次）
  */
-function seedTranslationsFromFile() {
+async function seedTranslationsFromFile() {
   try {
-    const translationsPath = path.join(__dirname, 'src', 'i18n', 'translations.js')
-    if (!fs.existsSync(translationsPath)) {
-      console.warn('⚠️ translations.js 文件不存在，跳过初始数据导入')
+    // 通过动态 import 加载 ES 模块获取 baseTranslations
+    const translationsModule = await import(path.join(__dirname, 'src', 'i18n', 'translations.js'))
+    const seedData = translationsModule.baseTranslations
+
+    if (!seedData || !seedData.en) {
+      console.warn('⚠️ translations.js 中未找到 baseTranslations，跳过初始数据导入')
       return
     }
 
-    const content = fs.readFileSync(translationsPath, 'utf8')
-    // 提取 baseTranslations 对象
-    const baseMatch = content.match(/const baseTranslations = (\{[\s\S]*?\});/)
-    if (!baseMatch) {
-      console.warn('⚠️ 无法解析 translations.js 中的 baseTranslations')
-      return
-    }
-
-    const translationsObj = JSON.parse(baseMatch[1])
-    translationsRepo.replaceAll(translationsObj)
+    const enCount = Object.keys(seedData.en).length
+    const zhCount = Object.keys(seedData['zh-CN'] || {}).length
+    translationsRepo.replaceAll(seedData)
     const count = translationsRepo.getTranslationCount()
-    console.log(`✅ 翻译种子数据已导入 SQLite，共 ${count} 条记录`)
+    console.log(`✅ 翻译种子数据已导入 SQLite，共 ${count} 条记录（en: ${enCount}, zh-CN: ${zhCount}）`)
   } catch (error) {
     console.error('导入翻译种子数据失败:', error)
   }
@@ -457,7 +460,7 @@ async function startServer() {
     // 首次启动时，将 translations.js 中的翻译种子数据导入 SQLite
     if (!translationsRepo.hasTranslations('en')) {
       console.log('📥 检测到翻译数据为空，尝试从 translations.js 导入初始数据...')
-      seedTranslationsFromFile()
+      await seedTranslationsFromFile()
     }
 
     // 启动前同步产品目录到 SQLite，确保与文件系统一致
