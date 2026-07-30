@@ -220,69 +220,36 @@
       </template>
     </Modal>
 
-    <!-- 重命名文件夹模态框 -->
+    <!-- 重命名模态框（统一用于文件和文件夹） -->
     <Modal
-      :open="showRenameFolderModal"
-      :title="t('productManagement_renameFolder')"
+      :open="showRenameModal"
+      :title="renameTargetIsFolder ? t('productManagement_renameFolder') : t('productManagement_renameFile')"
       width="sm:max-w-md md:min-w-[400px]"
-      @close="closeRenameFolderModal"
+      @close="closeRenameModal"
     >
       <div class="form-content">
         <div class="form-item">
-          <label>{{ t('productManagement_newFolderName') }}</label>
+          <label>{{ renameTargetIsFolder ? t('productManagement_newFolderName') : t('productManagement_newFileName') }}</label>
           <Input
-            v-model="renameFolderName"
-            :placeholder="t('productManagement_inputNewFolderName')"
-            @input="validateRenameFolderName"
+            v-model="renameName"
+            :placeholder="renameTargetIsFolder ? t('productManagement_inputNewFolderName') : t('productManagement_inputNewFileName')"
+            @input="validateRenameName"
           />
-          <div v-if="renameFolderNameError" class="error-text">{{ renameFolderNameError }}</div>
-        </div>
-      </div>
-      
-      <template #footer>
-        <Button @click="closeRenameFolderModal" variant="line" size="40">
-          {{ t('productManagement_cancel') }}
-        </Button>
-        <Button
-          @click="confirmRenameFolder"
-          variant="fill" size="40"
-          :disabled="!renameFolderName || !!renameFolderNameError || renamingFolder"
-          :loading="renamingFolder"
-        >
-          {{ renamingFolder ? t('productManagement_renaming') : t('productManagement_renameAction') }}
-        </Button>
-      </template>
-    </Modal>
-
-    <!-- 重命名文件模态框 -->
-    <Modal
-      :open="showRenameFileModal"
-      :title="t('productManagement_renameFile')"
-      width="sm:max-w-md md:min-w-[400px]"
-      @close="closeRenameFileModal"
-    >
-      <div class="form-content">
-        <div class="form-item">
-          <label>{{ t('productManagement_newFileName') }}</label>
-          <Input
-            v-model="renameFileName"
-            :placeholder="t('productManagement_inputNewFileName')"
-            @input="validateRenameFileName"
-          />
-          <div v-if="renameFileNameError" class="error-text">{{ renameFileNameError }}</div>
+          <div v-if="renameNameError" class="error-text">{{ renameNameError }}</div>
         </div>
       </div>
 
       <template #footer>
-        <Button @click="closeRenameFileModal" variant="line" size="40">
+        <Button @click="closeRenameModal" variant="line" size="40">
           {{ t('productManagement_cancel') }}
         </Button>
         <Button
-          @click="confirmRenameFile"
+          @click="confirmRename"
           variant="fill" size="40"
-          :disabled="!renameFileName || !!renameFileNameError"
+          :disabled="!renameName || !!renameNameError || renaming"
+          :loading="renaming"
         >
-          {{ t('productManagement_renameAction') }}
+          {{ renaming ? t('productManagement_renaming') : t('productManagement_renameAction') }}
         </Button>
       </template>
     </Modal>
@@ -558,14 +525,13 @@ const loading = ref(true)
 const error = ref(null)
 const searchQuery = ref('')
 const showCreateFolderModal = ref(false)
-const showRenameFolderModal = ref(false)
-const showRenameFileModal = ref(false)
+const showRenameModal = ref(false)
 const showUploadFolderModal = ref(false)
 const showUploadFileModal = ref(false)
 const showBatchUploadModal = ref(false)
 const showDeleteConfirm = ref(false)
 const creatingFolder = ref(false)
-const renamingFolder = ref(false)
+const renaming = ref(false)
 const uploading = ref(false)
 const exporting = ref(false)
 const fileUploaderRef = ref(null)
@@ -573,14 +539,12 @@ const folderUploaderRef = ref(null)
 const fileInput = ref(null)
 const selectedFiles = ref([])
 const newFolderName = ref('')
-const renameFolderName = ref('')
-const renameFileName = ref('')
-const fileToRename = ref('')
-const renameFileNameError = ref('')
+const renameName = ref('')
+const renameNameError = ref('')
+const renameTargetIsFolder = ref(true)
+const renameTargetName = ref('')
 const folderToDelete = ref('')
-const folderToRename = ref('')
 const folderNameError = ref('')
-const renameFolderNameError = ref('')
 const showContextMenu = ref(false)
 const contextMenuPosition = ref({ x: 0, y: 0 })
 const contextMenuProduct = ref(null)
@@ -718,257 +682,118 @@ const handleKeyDown = (event) => {
   }
 }
 
-// 清理后的函数
-const validateRenameFolderName = () => {
-  if (!renameFolderName.value) {
-    renameFolderNameError.value = ''
-    return
-  }
-  
-  const invalidChars = /[<>:/\\|?*\x00-\x1F]/
-  if (invalidChars.test(renameFolderName.value)) {
-    renameFolderNameError.value = t('productManagement_folderNameContainsInvalid')
-    return
-  }
-  
-  // 检查文件夹名称是否已存在（排除当前重命名的文件夹）
-  if (renameFolderName.value !== folderToRename.value &&
-      products.value.some(p => p.name === renameFolderName.value)) {
-    renameFolderNameError.value = t('productManagement_folderNameExists')
-    return
-  }
-  
-  renameFolderNameError.value = ''
+// 打开重命名弹窗（统一入口）
+const openRenameModal = (item) => {
+  renameTargetIsFolder.value = item.isDirectory
+  renameTargetName.value = item.name
+  renameName.value = item.name
+  renameNameError.value = ''
+  showRenameModal.value = true
 }
 
-const createFolder = async () => {
-  if (folderNameError.value || !newFolderName.value) return
+// 验证重命名输入（统一用于文件和文件夹）
+const validateRenameName = () => {
+  renameNameError.value = ''
 
-  try {
-    creatingFolder.value = true
-    const folderName = newFolderName.value
-    const isRootLevel = currentPath.value.length === 1 && currentPath.value[0] === 'Product'
-
-    let data
-    if (isRootLevel) {
-      // 根目录：创建产品文件夹
-      const response = await authFetch(API_CONFIG.CREATE_PRODUCT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productName: folderName, folderName })
-      })
-      data = await response.json()
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || t('productManagement_createFolderFailed'))
-      }
-    } else {
-      // 子目录：创建子文件夹
-      const parentPath = currentPath.value.join('/')
-      const response = await authFetch(
-        `/api/folder/${encodeURIComponent(parentPath)}/create-subfolder`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folderName }) }
-      )
-      data = await response.json()
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || t('productManagement_createFolderFailed'))
-      }
-    }
-
-    console.log(`文件夹创建成功: ${folderName}`)
-    showToast('success', t('productManagement_createSuccess'))
-    await fetchProducts()
-    closeCreateFolderModal()
-
-  } catch (err) {
-    console.error('创建文件夹错误:', err)
-    showToast('error', err.message || t('productManagement_createFolderFailed'))
-  } finally {
-    creatingFolder.value = false
-  }
-}
-
-const renameFolder = (folderName) => {
-  folderToRename.value = folderName
-  renameFolderName.value = folderName
-  showRenameFolderModal.value = true
-}
-
-const confirmRenameFolder = async () => {
-  if (renameFolderNameError.value || !renameFolderName.value) return
-
-  try {
-    renamingFolder.value = true
-    const oldName = folderToRename.value
-    const newName = renameFolderName.value
-
-    // 判断是根目录产品还是子文件夹，走不同的接口
-    const isRootLevel = currentPath.value.length === 1 && currentPath.value[0] === 'Product'
-
-    let result
-    if (isRootLevel) {
-      // 根目录产品：调用产品级重命名接口
-      const response = await authFetch(`${API_CONFIG.RENAME_PRODUCT}/${encodeURIComponent(oldName)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newProductName: newName, newFolderName: newName })
-      })
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || t('productManagement_renameFolderFailed'))
-      }
-    } else {
-      // 子文件夹：调用子文件夹重命名接口
-      const parentPath = currentPath.value.join('/')
-      const response = await authFetch(
-        `/api/folder/${encodeURIComponent(parentPath)}/subfolder/${encodeURIComponent(oldName)}`,
-        { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newFolderName: newName }) }
-      )
-      const data = await response.json()
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || t('productManagement_renameFolderFailed'))
-      }
-    }
-
-    console.log(`文件夹重命名成功: ${oldName} -> ${newName}`)
-    showToast('success', t('productManagement_renameSuccess'))
-    await fetchProducts()
-    closeRenameFolderModal()
-
-  } catch (err) {
-    console.error('重命名文件夹错误:', err)
-    showToast('error', err.message || t('productManagement_renameFolderFailed'))
-  } finally {
-    renamingFolder.value = false
-  }
-}
-
-// 查看文件（在新标签页中打开）
-const viewFile = (file) => {
-  // currentPath 如 ['Product', 'folderA']，拼接后是 'Product/folderA'
-  // 静态文件 URL 为 /Product/folderA/file.jpg，需要去掉 Product/ 前缀
-  const subPath = currentPath.value.join('/').replace(/^Product\//, '')
-  const fileUrl = `/Product/${subPath}/${file.name}`
-  window.open(fileUrl, '_blank')
-}
-
-// 下载文件
-const downloadFile = async (file) => {
-  try {
-    // 去掉 Product/ 前缀，后端会自行拼接完整路径
-    const folderPath = currentPath.value.join('/').replace(/^Product\//, '')
-    const result = await apiService.getDownloadUrl(folderPath, file.name)
-    if (result.success && result.downloadUrl) {
-      const a = document.createElement('a')
-      a.href = result.downloadUrl
-      a.download = result.fileName || file.name
-      a.style.display = 'none'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-    } else {
-      showToast('error', t('productManagement_downloadFailed'))
-    }
-  } catch (error) {
-    console.error('下载失败:', error)
-    showToast('error', t('productManagement_downloadFailed'))
-  }
-}
-
-// 导出文件夹为 ZIP
-const exportFolder = async (folderName) => {
-  try {
-    exporting.value = true
-    hideContextMenu()
-
-    const folderPath = `${currentPath.value.join('/')}/${folderName}`
-    const result = await apiService.exportFolder(folderPath)
-
-    if (result.blob) {
-      // 触发浏览器下载
-      const url = URL.createObjectURL(result.blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = result.fileName
-      a.style.display = 'none'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-
-      showToast('success', t('productManagement_exportSuccess'))
-    }
-  } catch (error) {
-    console.error('导出文件夹失败:', error)
-    showToast('error', error.message || t('productManagement_exportFailed'))
-  } finally {
-    exporting.value = false
-  }
-}
-
-// 重命名文件
-const renameFile = (file) => {
-  fileToRename.value = file.name
-  renameFileName.value = file.name
-  showRenameFileModal.value = true
-}
-
-const validateRenameFileName = () => {
-  renameFileNameError.value = ''
-
-  if (!renameFileName.value) {
-    renameFileNameError.value = t('productManagement_fileNameEmpty')
+  if (!renameName.value) {
+    renameNameError.value = t('productManagement_fileNameEmpty')
     return
   }
 
-  // 文件名不能包含非法字符
   const invalidChars = /[<>:"/\\|?*\x00-\x1F]/
-  if (invalidChars.test(renameFileName.value)) {
-    renameFileNameError.value = t('productManagement_fileNameInvalid')
+  if (invalidChars.test(renameName.value)) {
+    renameNameError.value = t('productManagement_fileNameInvalid')
     return
   }
 
-  // 检查同名文件是否已存在（排除自己）
-  if (renameFileName.value !== fileToRename.value) {
+  if (renameName.value !== renameTargetName.value) {
     const exists = products.value.some(
-      p => p.name === renameFileName.value && !p.isDirectory
+      p => p.name === renameName.value && (renameTargetIsFolder.value || !p.isDirectory)
     )
     if (exists) {
-      renameFileNameError.value = t('productManagement_fileNameExists')
+      renameNameError.value = t('productManagement_fileNameExists')
       return
     }
   }
 
-  renameFileNameError.value = ''
+  renameNameError.value = ''
 }
 
-const confirmRenameFile = async () => {
-  if (renameFileNameError.value || !renameFileName.value) return
+// 统一确认重命名
+const confirmRename = async () => {
+  if (renameNameError.value || !renameName.value) return
 
   try {
-    const folderPath = currentPath.value.join('/').replace(/^Product\//, '')
-    const oldFilePath = `${folderPath}/${fileToRename.value}`
+    renaming.value = true
+    const oldName = renameTargetName.value
+    const newName = renameName.value
 
-    const result = await apiService.renameFile(oldFilePath, renameFileName.value)
-
-    if (result.success) {
-      console.log(`文件重命名成功: ${fileToRename.value} -> ${renameFileName.value}`)
-      showToast('success', t('productManagement_fileRenamedSuccess'))
-      closeRenameFileModal()
-      await fetchProducts()
+    if (renameTargetIsFolder.value) {
+      // 文件夹重命名
+      const isRootLevel = currentPath.value.length === 1 && currentPath.value[0] === 'Product'
+      if (isRootLevel) {
+        const response = await authFetch(`${API_CONFIG.RENAME_PRODUCT}/${encodeURIComponent(oldName)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newProductName: newName, newFolderName: newName })
+        })
+        const data = await response.json()
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || t('productManagement_renameFolderFailed'))
+        }
+      } else {
+        const parentPath = currentPath.value.join('/')
+        const response = await authFetch(
+          `/api/folder/${encodeURIComponent(parentPath)}/subfolder/${encodeURIComponent(oldName)}`,
+          { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newFolderName: newName }) }
+        )
+        const data = await response.json()
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || t('productManagement_renameFolderFailed'))
+        }
+      }
+      showToast('success', t('productManagement_renameSuccess'))
     } else {
-      showToast('error', result.message || t('productManagement_renameFileFailed'))
+      // 文件重命名
+      const folderPath = currentPath.value.join('/').replace(/^Product\//, '')
+      const oldFilePath = `${folderPath}/${oldName}`
+      const result = await apiService.renameFile(oldFilePath, newName)
+      if (result.success) {
+        showToast('success', t('productManagement_fileRenamedSuccess'))
+      } else {
+        throw new Error(result.message || t('productManagement_renameFileFailed'))
+      }
     }
+
+    console.log(`重命名成功: ${oldName} -> ${newName}`)
+    await fetchProducts()
+    closeRenameModal()
+
   } catch (error) {
-    console.error('重命名文件错误:', error)
+    console.error('重命名错误:', error)
     showToast('error', error.message || t('productManagement_renameFileFailed'))
+  } finally {
+    renaming.value = false
   }
 }
 
-const closeRenameFileModal = () => {
-  showRenameFileModal.value = false
-  renameFileName.value = ''
-  fileToRename.value = ''
-  renameFileNameError.value = ''
+const closeRenameModal = () => {
+  showRenameModal.value = false
+  renameName.value = ''
+  renameNameError.value = ''
+  renameTargetIsFolder.value = true
+  renameTargetName.value = ''
+}
+
+// 重命名文件夹（右键菜单入口）
+const renameFolder = (folderName) => {
+  const item = products.value.find(p => p.name === folderName)
+  openRenameModal({ name: folderName, isDirectory: item ? item.isDirectory : true })
+}
+
+// 重命名文件（文件列表按钮入口）
+const renameFile = (file) => {
+  openRenameModal({ name: file.name, isDirectory: false })
 }
 
 const deleteFile = (file) => {
@@ -1138,6 +963,52 @@ const closeCreateFolderModal = () => {
 }
 
 // 打开创建文件夹模态框时自动聚焦
+const createFolder = async () => {
+  if (folderNameError.value || !newFolderName.value) return
+
+  try {
+    creatingFolder.value = true
+    const folderName = newFolderName.value
+    const isRootLevel = currentPath.value.length === 1 && currentPath.value[0] === 'Product'
+
+    let data
+    if (isRootLevel) {
+      // 根目录：创建产品文件夹
+      const response = await authFetch(API_CONFIG.CREATE_PRODUCT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productName: folderName, folderName })
+      })
+      data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || t('productManagement_createFolderFailed'))
+      }
+    } else {
+      // 子目录：创建子文件夹
+      const parentPath = currentPath.value.join('/')
+      const response = await authFetch(
+        `/api/folder/${encodeURIComponent(parentPath)}/create-subfolder`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folderName }) }
+      )
+      data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || t('productManagement_createFolderFailed'))
+      }
+    }
+
+    console.log(`文件夹创建成功: ${folderName}`)
+    showToast('success', t('productManagement_createSuccess'))
+    await fetchProducts()
+    closeCreateFolderModal()
+
+  } catch (err) {
+    console.error('创建文件夹错误:', err)
+    showToast('error', err.message || t('productManagement_createFolderFailed'))
+  } finally {
+    creatingFolder.value = false
+  }
+}
+
 const showCreateFolderModalEnhanced = (event) => {
   showCreateFolderModal.value = true
   
@@ -1145,14 +1016,6 @@ const showCreateFolderModalEnhanced = (event) => {
   setTimeout(() => {
     folderNameInput.value?.focus()
   }, 100)
-}
-
-const closeRenameFolderModal = () => {
-  showRenameFolderModal.value = false
-  renameFolderName.value = ''
-  renameFolderNameError.value = ''
-  folderToRename.value = ''
-  renamingFolder.value = false
 }
 
 const closeUploadFolderModal = () => {

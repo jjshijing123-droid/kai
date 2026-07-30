@@ -17,7 +17,7 @@ export function useNotifications() {
   const notifySuccess = (message, options = {}) => {
     return methods.success(message, {
       ...options,
-      title: options.title || t('notification.success')
+      title: options.title || t('notification_success')
     })
   }
 
@@ -27,7 +27,7 @@ export function useNotifications() {
   const notifyError = (message, options = {}) => {
     return methods.error(message, {
       ...options,
-      title: options.title || t('notification.error')
+      title: options.title || t('notification_error')
     })
   }
 
@@ -37,7 +37,7 @@ export function useNotifications() {
   const notifyWarning = (message, options = {}) => {
     return methods.warning(message, {
       ...options,
-      title: options.title || t('notification.warning')
+      title: options.title || t('notification_warning')
     })
   }
 
@@ -47,7 +47,7 @@ export function useNotifications() {
   const notifyInfo = (message, options = {}) => {
     return methods.info(message, {
       ...options,
-      title: options.title || t('notification.info')
+      title: options.title || t('notification_info')
     })
   }
 
@@ -57,7 +57,7 @@ export function useNotifications() {
   const notifyLoading = (message, options = {}) => {
     return methods.loading(message, {
       ...options,
-      title: options.title || t('notification.loading')
+      title: options.title || t('notification_loading')
     })
   }
 
@@ -79,12 +79,12 @@ export function useNotifications() {
   const notifyConfirm = (message, onConfirm, onCancel = null, options = {}) => {
     const confirmId = store.add({
       type: 'warning',
-      title: options.title || t('notification.confirm'),
+      title: options.title || t('notification_confirm'),
       message,
       duration: 0,
       actions: [
         {
-          label: options.confirmText || t('common.confirm'),
+          label: options.confirmText || t('common_confirm'),
           type: 'primary',
           handler: () => {
             if (onConfirm) onConfirm()
@@ -92,7 +92,7 @@ export function useNotifications() {
           }
         },
         {
-          label: options.cancelText || t('common.cancel'),
+          label: options.cancelText || t('common_cancel'),
           type: 'default',
           handler: () => {
             if (onCancel) onCancel()
@@ -111,12 +111,12 @@ export function useNotifications() {
   const notifyNetworkError = (retryFn = null, options = {}) => {
     const networkId = store.add({
       type: 'error',
-      title: options.title || t('notification.networkError'),
-      message: options.message || t('notification.networkErrorMessage'),
+      title: options.title || t('notification_networkError'),
+      message: options.message || t('notification_networkErrorMessage'),
       duration: 0,
       actions: [
         {
-          label: options.retryText || t('common.retry'),
+          label: options.retryText || t('common_retry'),
           type: 'primary',
           handler: () => {
             if (retryFn) retryFn()
@@ -124,7 +124,7 @@ export function useNotifications() {
           }
         },
         {
-          label: options.closeText || t('common.close'),
+          label: options.closeText || t('common_close'),
           type: 'default',
           handler: () => {
             store.remove(networkId)
@@ -140,7 +140,7 @@ export function useNotifications() {
    * 保存成功通知
    */
   const notifySaveSuccess = (message = null, options = {}) => {
-    return methods.success(message || t('notification.saveSuccess'), {
+    return methods.success(message || t('notification_saveSuccess'), {
       duration: 3000,
       ...options
     })
@@ -152,12 +152,12 @@ export function useNotifications() {
   const notifyDeleteConfirm = (message, onDelete, onCancel = null, options = {}) => {
     const deleteId = store.add({
       type: 'warning',
-      title: options.title || t('notification.deleteConfirm'),
+      title: options.title || t('notification_deleteConfirm'),
       message,
       duration: 0,
       actions: [
         {
-          label: options.deleteText || t('common.delete'),
+          label: options.deleteText || t('common_delete'),
           type: 'primary',
           handler: () => {
             if (onDelete) onDelete()
@@ -165,7 +165,7 @@ export function useNotifications() {
           }
         },
         {
-          label: options.cancelText || t('common.cancel'),
+          label: options.cancelText || t('common_cancel'),
           type: 'default',
           handler: () => {
             if (onCancel) onCancel()
@@ -205,7 +205,7 @@ export function useNotifications() {
       if (options.errorMessage) {
         notifyError(options.errorMessage)
       } else {
-        notifyError(error.message || t('notification.operationFailed'))
+        notifyError(error.message || t('notification_operationFailed'))
       }
       
       throw error
@@ -232,12 +232,12 @@ export function useNotifications() {
         duration: 8000,
         actions: options.showRetry ? [
           {
-            label: t('common.retry'),
+            label: t('common_retry'),
             type: 'primary',
             handler: options.onRetry
           },
           {
-            label: t('common.close'),
+            label: t('common_close'),
             type: 'default',
             handler: () => {}
           }
@@ -252,7 +252,7 @@ export function useNotifications() {
   const notifyProgress = (message, progress, options = {}) => {
     const progressId = store.add({
       type: 'info',
-      title: options.title || t('notification.inProgress'),
+      title: options.title || t('notification_inProgress'),
       message: `${message} (${Math.round(progress)}%)`,
       duration: 0,
       ...options

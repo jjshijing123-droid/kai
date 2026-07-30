@@ -6,6 +6,7 @@
  *   PRIMARY KEY: (lang, key)
  */
 
+const path = require('path')
 const { getDatabase } = require('./index')
 
 /**
@@ -168,6 +169,52 @@ function hasTranslations(lang) {
   return row.count > 0
 }
 
+/**
+ * 从种子文件增量播种缺失的翻译键
+ * 读取 translations.js 中的 baseTranslations，只插入数据库中不存在的键
+ * 已有的翻译（包括用户手动修改的）不会被覆盖
+ * @returns {{ inserted: number, skipped: number }}
+ */
+async function seedMissingFromFile() {
+  try {
+    const translationsModule = await import(path.join(__dirname, '..', '..', 'src', 'i18n', 'translations.js'))
+    const seedData = translationsModule.baseTranslations
+
+    if (!seedData || !seedData.en) {
+      return { inserted: 0, skipped: 0 }
+    }
+
+    const db = getDatabase()
+    const insertStmt = db.prepare(
+      "INSERT OR IGNORE INTO translations (lang, key, value, updated_at) VALUES (?, ?, ?, datetime('now', 'localtime'))"
+    )
+    const tx = db.transaction(() => {
+      let inserted = 0
+      let skipped = 0
+      for (const lang of Object.keys(seedData)) {
+        for (const key of Object.keys(seedData[lang])) {
+          const result = insertStmt.run(lang, key, seedData[lang][key])
+          if (result.changes > 0) {
+            inserted++
+          } else {
+            skipped++
+          }
+        }
+      }
+      return { inserted, skipped }
+    })
+
+    const result = tx()
+    if (result.inserted > 0) {
+      console.log(`📥 增量播种完成：新增 ${result.inserted} 条，跳过 ${result.skipped} 条（已存在）`)
+    }
+    return result
+  } catch (error) {
+    console.error('增量播种翻译数据失败:', error)
+    return { inserted: 0, skipped: 0 }
+  }
+}
+
 module.exports = {
   getAllTranslations,
   getTranslationsByLang,
@@ -179,5 +226,6 @@ module.exports = {
   getAllKeys,
   getAllLangs,
   getTranslationCount,
-  hasTranslations
+  hasTranslations,
+  seedMissingFromFile
 }

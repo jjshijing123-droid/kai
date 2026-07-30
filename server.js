@@ -278,11 +278,9 @@ app.get('/api/i18n/translations', (req, res) => {
   try {
     initDatabase()
 
-    // 兜底保护：如果翻译表为空，自动播种种子数据
-    if (!translationsRepo.hasTranslations('en')) {
-      console.log('📥 翻译表为空，自动播种种子数据...')
-      seedTranslationsFromFile()
-    }
+    // 增量播种：每次请求时同步种子文件中新增的翻译键
+    // INSERT OR IGNORE 确保已有数据不被覆盖（保留用户手动修改）
+    translationsRepo.seedMissingFromFile()
 
     const translations = translationsRepo.getAllTranslations()
     res.json({ success: true, data: translations })
