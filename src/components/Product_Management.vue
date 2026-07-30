@@ -857,6 +857,63 @@ const confirmDeleteFolder = async () => {
   }
 }
 
+// 查看文件（在新标签页中打开）
+const viewFile = (file) => {
+  const subPath = currentPath.value.join('/').replace(/^Product\//, '')
+  const fileUrl = `/Product/${subPath}/${file.name}`
+  window.open(fileUrl, '_blank')
+}
+
+// 下载文件
+const downloadFile = async (file) => {
+  try {
+    const folderPath = currentPath.value.join('/').replace(/^Product\//, '')
+    const result = await apiService.getDownloadUrl(folderPath, file.name)
+    if (result.success && result.downloadUrl) {
+      const a = document.createElement('a')
+      a.href = result.downloadUrl
+      a.download = result.fileName || file.name
+      a.style.display = 'none'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } else {
+      showToast('error', t('productManagement_downloadFailed'))
+    }
+  } catch (error) {
+    console.error('下载失败:', error)
+    showToast('error', t('productManagement_downloadFailed'))
+  }
+}
+
+// 导出文件夹为 ZIP
+const exportFolder = async (folderName) => {
+  try {
+    exporting.value = true
+    hideContextMenu()
+    const folderPath = `${currentPath.value.join('/')}/${folderName}`
+    const result = await apiService.exportFolder(folderPath)
+
+    if (result.blob) {
+      const url = URL.createObjectURL(result.blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = result.fileName
+      a.style.display = 'none'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      showToast('success', t('productManagement_exportSuccess'))
+    }
+  } catch (error) {
+    console.error('导出文件夹失败:', error)
+    showToast('error', error.message || t('productManagement_exportFailed'))
+  } finally {
+    exporting.value = false
+  }
+}
+
 // 导航到指定路径
 const navigateToPath = (newPath) => {
   currentPath.value = newPath
