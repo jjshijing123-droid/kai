@@ -20,7 +20,7 @@
 
 <script setup>
 import { computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Header from './components/Header.vue'
 import AdminLoginModal from './components/AdminLoginModal.vue'
 import { useAdminAuth } from './composables/useAdminAuth.js'
@@ -28,23 +28,36 @@ import { createShortcutRegistry } from './composables/useKeyboardShortcuts.js'
 import { useThemeStore } from './stores/themeStore'
 
 const route = useRoute()
+const router = useRouter()
 const { showLoginModal, closeLoginModal } = useAdminAuth()
 const themeStore = useThemeStore()
 
-// 获取快捷键注册器实例并挂载事件监听器
-const { mount, unmount } = createShortcutRegistry()
+// sessionStorage 中保存的重定向路径键名（与路由守卫一致）
+const REDIRECT_AFTER_LOGIN_KEY = 'redirect_after_login'
 
 // 检测是否为3D查看器页面或图片展示页面（这些页面使用自己的header）
 const is3DViewerPage = computed(() => {
   return route.path.startsWith('/product-3d/') || route.path.startsWith('/product-images/')
 })
 
-// 登录成功处理
+// 登录成功处理 — 跳转到之前保存的目标路径
 const handleLoginSuccess = () => {
+  // 先关闭登录弹窗
   closeLoginModal()
+  // 检查是否有保存的重定向路径
+  const redirectPath = sessionStorage.getItem(REDIRECT_AFTER_LOGIN_KEY)
+  if (redirectPath) {
+    sessionStorage.removeItem(REDIRECT_AFTER_LOGIN_KEY)
+    // 延迟一帧执行，确保 isAdminLoggedIn 的响应式更新先完成，
+    // 这样路由守卫重新检查权限时能读到最新的登录状态
+    setTimeout(() => {
+      router.push(redirectPath)
+    }, 0)
+  }
 }
 
-// 挂载和卸载事件监听器
+// 获取快捷键注册器实例并挂载事件监听器
+const { mount, unmount } = createShortcutRegistry()
 onMounted(() => {
   mount()
   themeStore.initTheme()

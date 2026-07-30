@@ -1,89 +1,44 @@
 const path = require('path')
 const fs = require('fs')
-const { calculateFolderSize } = require('../utils/fsHelpers')
-const { buildProductObject } = require('../utils/buildProductObject')
 const { safeJoin } = require('../utils/safePath')
+const ProductRepository = require('../database/productRepository')
+const SyncService = require('../database/sync')
 
 /**
  * 产品管理服务类 - 负责所有产品相关的业务逻辑
+ *
+ * 数据层：SQLite（主要）+ 文件系统（图片文件）
+ * ProductService 通过 ProductRepository 访问 SQLite，
+ * 文件系统操作仅用于创建/删除文件夹和读取图片列表。
  */
 class ProductService {
-  constructor() {
+  constructor(productRepo = null) {
     this.serverPath = path.resolve(__dirname, '../../')
     this.productBasePath = safeJoin(this.serverPath, 'Product')
+    this.productRepo = productRepo || ProductRepository
+    this.syncService = SyncService
   }
 
   /**
-   * 获取产品列表
+   * 获取产品列表（从 SQLite 读取）
    */
   async getProducts() {
     try {
-      const productPath = this.productBasePath;
-      
-      if (!fs.existsSync(productPath)) {
-        return [];
-      }
-      
-      const products = [];
-      const items = fs.readdirSync(productPath, { withFileTypes: true });
-      
-      console.log('🔍 开始计算产品文件夹内容...');
-      
-      for (const item of items) {
-        if (item.isDirectory()) {
-          const folderPath = path.join(productPath, item.name);
-          const stats = fs.statSync(folderPath);
-          
-          console.log(`📁 计算文件夹: ${item.name}`);
-          
-          const folderInfo = calculateFolderSize(folderPath);
+      // 先从 SQLite 获取所有产品
+      let products = this.productRepo.getAllProducts()
 
-          console.log(`   文件夹: ${item.name}`);
-          console.log(`   总大小: ${folderInfo.totalSize} bytes`);
-          console.log(`   文件数: ${folderInfo.fileCount}`);
-
-          products.push(buildProductObject({
-            name: item.name,
-            folderName: item.name,
-            id: products.length + 1,
-            totalSize: folderInfo.totalSize,
-            fileCount: folderInfo.fileCount,
-            modified: stats.mtime,
-            isDirectory: true
-          }));
-          console.log(`✅ 文件夹数据:`, products[products.length - 1]);
-        } else if (item.isFile()) {
-          const filePath = path.join(productPath, item.name);
-          const stats = fs.statSync(filePath);
-          
-          console.log(`📄 处理文件: ${item.name}`);
-          console.log(`   文件: ${item.name}`);
-          console.log(`   大小: ${stats.size} bytes`);
-          
-          const fileData = buildProductObject({
-            name: item.name,
-            folderName: item.name,
-            id: products.length + 1,
-            category: 'file',
-            description: `Product file: ${item.name}`,
-            path: `Product/${item.name}`,
-            totalSize: stats.size,
-            fileCount: 1,
-            modified: stats.mtime,
-            isDirectory: false
-          })
-          
-          products.push(fileData);
-          console.log(`✅ 文件数据:`, fileData);
-        }
+      // 如果 SQLite 为空，启动时已通过 syncService 同步，
+      // 但作为兜底，仍检查文件系统
+      if (products.length === 0 && fs.existsSync(this.productBasePath)) {
+        console.log('⚠️ SQLite 无数据，从文件系统同步...')
+        this.syncService.syncAll()
+        products = this.productRepo.getAllProducts()
       }
-      
-      console.log(`📊 完成产品列表计算，共 ${products.length} 个项目（包含文件夹和文件）`);
-      
-      return products;
+
+      return products
     } catch (error) {
-      console.error('获取产品列表失败:', error);
-      throw new Error(`获取产品列表失败: ${error.message}`);
+      console.error('获取产品列表失败:', error)
+      throw new Error(`获取产品列表失败: ${error.message}`)
     }
   }
 
@@ -112,11 +67,16 @@ class ProductService {
     
     console.log(`产品文件夹创建成功: ${productFolderPath}`);
     
-    return {
+    const result = {
       productName,
       folderName,
       path: `Product/${folderName}`
     };
+
+    // 同步到 SQLite
+    this.syncService.syncProduct(folderName)
+
+    return result;
   }
 
   /**
@@ -141,7 +101,10 @@ class ProductService {
     }
     
     fs.renameSync(oldItemPath, newItemPath);
-    
+
+    // 同步到 SQLite
+    this.syncService.renameProduct(productName, newFolderName)
+
     console.log(`项目重命名成功: ${productName} -> ${newFolderName}`);
     
     return {
@@ -161,7 +124,7 @@ class ProductService {
     const productItemPath = safeJoin(this.productBasePath, productName);
     
     let physicalItemDeleted = false;
-    
+
     if (fs.existsSync(productItemPath)) {
       fs.rmSync(productItemPath, { recursive: true, force: true });
       console.log(`已删除物理项目: ${productItemPath}`);
@@ -169,7 +132,12 @@ class ProductService {
     } else {
       console.warn(`物理项目不存在: ${productItemPath}`);
     }
-    
+
+    // 从 SQLite 中删除记录
+    if (physicalItemDeleted) {
+      this.syncService.removeProduct(productName)
+    }
+
     return {
       physicalItemDeleted,
       deletedProduct: {
@@ -180,29 +148,22 @@ class ProductService {
   }
 
   /**
-   * 获取产品详情
+   * 获取产品详情（从 SQLite 读取）
    */
   async getProductById(productId) {
     try {
-      const productPath = safeJoin(this.productBasePath, productId);
-      
-      if (!fs.existsSync(productPath)) {
-        throw new Error('产品不存在');
-      }
-      
-      const folderInfo = calculateFolderSize(productPath);
-      const stats = fs.statSync(productPath)
+      const product = this.productRepo.getProductById(productId)
 
-      const productData = buildProductObject({
-        id: null,
-        name: productId,
-        folderName: productId,
-        totalSize: folderInfo.totalSize,
-        fileCount: folderInfo.fileCount,
-        modified: stats.mtime
-      })
-      
-      return productData;
+      if (!product) {
+        // 兜底：尝试按 ID 作为文件夹名查找
+        const byName = this.productRepo.getProductByFolderName(String(productId))
+        if (!byName) {
+          throw new Error('产品不存在')
+        }
+        return byName
+      }
+
+      return product
     } catch (error) {
       console.error('获取产品详情失败:', error);
       throw new Error(`获取产品详情失败: ${error.message}`);
@@ -210,27 +171,17 @@ class ProductService {
   }
 
   /**
-   * 根据产品名称获取产品详情
+   * 根据产品名称获取产品详情（从 SQLite 读取）
    */
   async getProductByName(productName) {
     try {
-      const productPath = safeJoin(this.productBasePath, productName);
-      
-      if (!fs.existsSync(productPath)) {
-        throw new Error('产品不存在');
-      }
-      
-      const folderInfo = calculateFolderSize(productPath);
+      const product = this.productRepo.getProductByFolderName(productName)
 
-      const productData = buildProductObject({
-        id: null,
-        name: productName,
-        folderName: productName,
-        totalSize: folderInfo.totalSize,
-        fileCount: folderInfo.fileCount
-      })
-      
-      return productData;
+      if (!product) {
+        throw new Error('产品不存在')
+      }
+
+      return product
     } catch (error) {
       console.error('根据名称获取产品详情失败:', error);
       throw new Error(`获取产品详情失败: ${error.message}`);

@@ -1,10 +1,11 @@
 const crypto = require('crypto');
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
+// JWT 签名密钥：优先从环境变量读取，否则自动生成随机密钥
+// 注意：每次重启自动生成的密钥会令所有已有 token 失效
+let JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET environment variable is not set');
-  process.exit(1);
+  JWT_SECRET = crypto.randomBytes(32).toString('hex')
+  console.warn('⚠️ JWT_SECRET 未设置，已自动生成临时密钥。生产环境请设置 JWT_SECRET 环境变量以确保持久化。')
 }
 
 /**

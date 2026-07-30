@@ -113,8 +113,44 @@ class FileService {
   }
 
   /**
-   * 检查文件夹中是否有文件
+   * 重命名文件
    */
+  async renameFile(filePath, newFileName) {
+    if (!filePath) {
+      throw new Error('文件路径不能为空')
+    }
+    if (!newFileName) {
+      throw new Error('新文件名不能为空')
+    }
+
+    console.log(`重命名文件: ${filePath} -> ${newFileName}`)
+
+    const cleanPath = filePath.startsWith('Product/')
+      ? filePath.replace('Product/', '')
+      : filePath
+    const fullPath = safeJoin(this.productBasePath, cleanPath)
+
+    if (!fs.existsSync(fullPath)) {
+      throw new Error('文件不存在')
+    }
+
+    const oldFileName = path.basename(fullPath)
+    if (oldFileName === newFileName) {
+      return { success: true, message: '文件名未变化' }
+    }
+
+    const dir = path.dirname(fullPath)
+    const newFullPath = path.join(dir, newFileName)
+
+    if (fs.existsSync(newFullPath)) {
+      throw new Error('同名文件已存在')
+    }
+
+    fs.renameSync(fullPath, newFullPath)
+    console.log(`文件重命名成功: ${oldFileName} -> ${newFileName}`)
+
+    return { success: true, oldName: oldFileName, newName: newFileName }
+  }
   async checkFolderHasFiles(folderPath) {
     try {
       const folderBase = folderPath.startsWith('Product/')

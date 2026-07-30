@@ -5,19 +5,8 @@ const fs = require('fs')
 require('dotenv').config()
 
 const ProductService = require('./server/services/productService')
-const { buildProductObject } = require('./server/utils/buildProductObject')
-
-// ===== 环境变量校验 =====
-const ADMIN_USER = process.env.ADMIN_USER;
-const ADMIN_PASS = process.env.ADMIN_PASS;
-
-if (!ADMIN_USER || !ADMIN_PASS) {
-  console.error('FATAL: ADMIN_USER and ADMIN_PASS environment variables must be set');
-  process.exit(1);
-}
 
 // 导入路由
-const { ProductCatalogGenerator } = require('./server/utils/generateProductCatalog')
 const productsRouter = require('./server/routes/products')
 const foldersRouter = require('./server/routes/folders')
 const filesRouter = require('./server/routes/files')
@@ -27,10 +16,16 @@ const uploadsRouter = require('./server/routes/uploads')
 const { ProductCatalogUtils, productCatalogUtils } = require('./server/utils/productCatalogUtils')
 const { generateToken, authMiddleware } = require('./server/middleware/auth')
 
+// 导入 SQLite 数据库
+const { initDatabase } = require('./server/database/index')
+const usersRepo = require('./server/database/usersRepository')
+const syncService = require('./server/database/sync')
+const translationsRepo = require('./server/database/translationsRepository')
+
 const app = express();
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProduction = NODE_ENV === 'production';
-const PORT = process.env.PORT || (isProduction ? 8000 : 3000);
+const PORT = process.env.PORT || (isProduction ? 8000 : 3010);
 
 // 初始化服务实例
 const productService = new ProductService()
@@ -83,7 +78,7 @@ const uploadLimiter = rateLimit({
 
 // ===== 认证路由 =====
 
-// 管理员登录
+// 管理员登录 — 从 SQLite 数据库验证凭据
 app.post('/api/auth/login', loginLimiter, (req, res) => {
   try {
     const { username, password } = req.body;
@@ -95,17 +90,22 @@ app.post('/api/auth/login', loginLimiter, (req, res) => {
       });
     }
 
-    // 验证管理员凭据
-    if (username === ADMIN_USER && password === ADMIN_PASS) {
+    // 确保数据库已初始化
+    initDatabase()
+
+    // 从数据库验证用户名和密码（bcrypt 哈希比对）
+    const user = usersRepo.verifyPassword(username, password)
+
+    if (user) {
       const token = generateToken({
-        username: ADMIN_USER,
-        role: 'admin'
+        username: user.username,
+        role: user.role
       });
 
       return res.json({
         success: true,
         message: '登录成功',
-        data: { token, username: ADMIN_USER }
+        data: { token, username: user.username, role: user.role }
       });
     }
 
@@ -188,9 +188,12 @@ app.post('/api/error-report', (req, res) => {
 // 产品管理路由（全局限流，写操作认证在路由文件内）
 app.use('/api/products', apiLimiter, productsRouter);
 
-// 数据库兼容性路由 - 从数据库/JSON获取产品目录
+// 数据库兼容性路由 - 从 SQLite 获取产品目录
 app.get('/api/db/products', (req, res) => {
   try {
+    // 确保数据库已初始化
+    initDatabase()
+
     const catalogData = productCatalogUtils.getProductCatalog();
     res.json({
       success: true,
@@ -241,47 +244,17 @@ app.use('/api', uploadsRouter);
 // 重新生成产品目录 - 需要管理员认证
 app.post('/api/products/refresh-catalog', authMiddleware, async (req, res) => {
   try {
-    console.log('🔄 开始重新生成产品目录...');
-    
-    // 使用已创建的productService实例获取所有产品
-    const products = await productService.getProducts();
-    
-    // 生成新的产品目录
-    const catalogData = {
-      products: [],
-      totalProducts: 0,
-      lastUpdated: new Date().toISOString(),
-      version: '2.0'
-    };
-    
-    products.forEach((product, index) => {
-      catalogData.products.push(buildProductObject({
-        id: product.id || index + 1,
-        name: product.name,
-        folderName: product.folderName,
-        category: product.category || 'general',
-        description: product.description || `Product model: ${product.name}`,
-        totalSize: product.totalSize || 0,
-        fileCount: product.fileCount || 0
-      }))
+    console.log('🔄 开始重新生成产品目录到 SQLite...');
+
+    // 初始化数据库并同步
+    initDatabase()
+    const result = syncService.syncAll()
+
+    res.json({
+      success: true,
+      message: '产品目录重新生成成功',
+      productCount: result.totalInDb
     });
-    
-    // 更新总数
-    catalogData.totalProducts = catalogData.products.length;
-    
-    // 保存产品目录
-    const saved = productCatalogUtils.saveProductCatalog(catalogData);
-    
-    if (saved) {
-      console.log(`✅ 产品目录重新生成成功，共 ${catalogData.products.length} 个产品`);
-      res.json({
-        success: true,
-        message: '产品目录重新生成成功',
-        productCount: catalogData.products.length
-      });
-    } else {
-      throw new Error('保存产品目录失败');
-    }
   } catch (error) {
     console.error('重新生成产品目录失败:', error);
     res.status(500).json({
@@ -292,246 +265,82 @@ app.post('/api/products/refresh-catalog', authMiddleware, async (req, res) => {
   }
 });
 
-// 翻译管理路由 - 新增（仅写操作需要认证）
+// 翻译管理路由 - 基于 SQLite（翻译数据存储在 data/products.db）
 app.use('/api/i18n', (req, res, next) => {
   if (req.method === 'GET') {
-    return next();
+    return next()
   }
-  authMiddleware(req, res, next);
-});
-app.use('/api/i18n', (req, res, next) => {
-  const translationsPath = path.join(__dirname, 'src', 'i18n', 'translations.js');
-  if (!fs.existsSync(translationsPath)) {
-    // 生产环境无翻译文件，返回空数据
-    return res.json({ success: true, data: { 'en': {}, 'zh-CN': {} } });
-  }
-  req.translationsPath = translationsPath;
-  next();
-});
-
-// 构建 translations.js 文件内容
-function buildTranslationsFileContent(translationsObj) {
-  return `// 基础翻译配置 - 按组件组织翻译键
-const baseTranslations = ${JSON.stringify(translationsObj, null, 2)};
-
-// 动态翻译对象 - 直接使用基础翻译，不再从localStorage加载
-export let translations = { ...baseTranslations }
-
-// 更新翻译对象（用于保存后更新）
-export function updateTranslations(newTranslations) {
-  // 深度合并新翻译到现有翻译中
-  Object.keys(newTranslations).forEach(lang => {
-    if (!translations[lang]) {
-      translations[lang] = {}
-    }
-    Object.assign(translations[lang], newTranslations[lang])
-  })
-  console.log('Translations updated:', translations)
-}
-
-// 重新加载翻译数据（用于保存后刷新）
-export function reloadTranslations() {
-  // 不重新加载基础翻译，保持现有翻译
-  console.log('Reloading translations skipped, keeping existing data')
-}
-
-// 获取翻译函数
-export function getTranslation(key, language = 'en') {
-  const langTranslations = translations[language] || translations['en']
-  return langTranslations[key] || key
-}
-
-// 获取所有翻译键
-export function getTranslationKeys() {
-  const keys = new Set()
-  Object.keys(translations).forEach(lang => {
-    Object.keys(translations[lang]).forEach(key => keys.add(key))
-  })
-  return Array.from(keys).sort()
-}
-
-// 语言配置
-export const languages = {
-  'en': { name: 'English', flag: '🇺🇸' },
-  'zh-CN': { name: '中文', flag: '🇨🇳' }
-}`;
-}
+  authMiddleware(req, res, next)
+})
 
 // 获取所有翻译
 app.get('/api/i18n/translations', (req, res) => {
   try {
-    const content = fs.readFileSync(req.translationsPath, 'utf8');
-    // 提取baseTranslations对象
-    const baseMatch = content.match(/const baseTranslations = (\{[\s\S]*?\});/);
-    if (!baseMatch) {
-      return res.status(500).json({ success: false, message: 'Failed to parse translations' });
-    }
-    const translations = JSON.parse(baseMatch[1]);
-    res.json({ success: true, data: translations });
+    initDatabase()
+    const translations = translationsRepo.getAllTranslations()
+    res.json({ success: true, data: translations })
   } catch (error) {
-    console.error('Failed to get translations:', error);
-    res.status(500).json({ success: false, message: 'Failed to get translations', error: error.message });
+    console.error('Failed to get translations:', error)
+    res.status(500).json({ success: false, message: 'Failed to get translations', error: error.message })
   }
-});
+})
 
-// 更新翻译
+// 更新全部翻译
 app.post('/api/i18n/translations', (req, res) => {
   try {
-    const translationsData = req.body;
-    
-    // 构建完整的translations.js文件内容
-    const fileContent = `// 基础翻译配置 - 按组件组织翻译键
-const baseTranslations = ${JSON.stringify(translationsData, null, 2)};
-
-// 动态翻译对象 - 直接使用基础翻译，不再从localStorage加载
-export let translations = { ...baseTranslations }
-
-// 更新翻译对象（用于保存后更新）
-export function updateTranslations(newTranslations) {
-  // 深度合并新翻译到现有翻译中
-  Object.keys(newTranslations).forEach(lang => {
-    if (!translations[lang]) {
-      translations[lang] = {}
-    }
-    Object.assign(translations[lang], newTranslations[lang])
-  })
-  console.log('Translations updated:', translations)
-}
-
-// 重新加载翻译数据（用于保存后刷新）
-export function reloadTranslations() {
-  // 不重新加载基础翻译，保持现有翻译
-  console.log('Reloading translations skipped, keeping existing data')
-}
-
-// 获取翻译函数
-export function getTranslation(key, language = 'en') {
-  const langTranslations = translations[language] || translations['en']
-  return langTranslations[key] || key
-}
-
-// 获取所有翻译键
-export function getTranslationKeys() {
-  const keys = new Set()
-  Object.keys(translations).forEach(lang => {
-    Object.keys(translations[lang]).forEach(key => keys.add(key))
-  })
-  return Array.from(keys).sort()
-}
-
-// 语言配置
-export const languages = {
-  'en': { name: 'English', flag: '🇺🇸' },
-  'zh-CN': { name: '中文', flag: '🇨🇳' }
-}`;
-    
-    // 写入文件
-    fs.writeFileSync(req.translationsPath, fileContent, 'utf8');
-    res.json({ success: true, message: 'Translations updated successfully' });
+    const translationsData = req.body
+    initDatabase()
+    translationsRepo.replaceAll(translationsData)
+    res.json({ success: true, message: 'Translations updated successfully' })
   } catch (error) {
-    console.error('Failed to update translations:', error);
-    res.status(500).json({ success: false, message: 'Failed to update translations', error: error.message });
+    console.error('Failed to update translations:', error)
+    res.status(500).json({ success: false, message: 'Failed to update translations', error: error.message })
   }
-});
+})
 
 // 添加单个翻译键
 app.post('/api/i18n/translations/keys', (req, res) => {
   try {
-    const { key, translations: newTranslations } = req.body;
-    
-    // 读取现有翻译
-    const content = fs.readFileSync(req.translationsPath, 'utf8');
-    const baseMatch = content.match(/const baseTranslations = (\{[\s\S]*?\});/);
-    if (!baseMatch) {
-      return res.status(500).json({ success: false, message: 'Failed to parse translations' });
+    const { key, translations: newTranslations } = req.body
+    initDatabase()
+    for (const lang of Object.keys(newTranslations)) {
+      translationsRepo.upsertTranslation(lang, key, newTranslations[lang])
     }
-    const translations = JSON.parse(baseMatch[1]);
-
-    // 添加新翻译键
-    Object.keys(newTranslations).forEach((lang) => {
-      if (!translations[lang]) {
-        translations[lang] = {};
-      }
-      translations[lang][key] = newTranslations[lang];
-    });
-
-    // 重新构建文件内容
-    const fileContent = buildTranslationsFileContent(translations);
-
-    // 写入文件
-    fs.writeFileSync(req.translationsPath, fileContent, 'utf8');
-    res.json({ success: true, message: 'Translation key added successfully' });
+    res.json({ success: true, message: 'Translation key added successfully' })
   } catch (error) {
-    console.error('Failed to add translation key:', error);
-    res.status(500).json({ success: false, message: 'Failed to add translation key', error: error.message });
+    console.error('Failed to add translation key:', error)
+    res.status(500).json({ success: false, message: 'Failed to add translation key', error: error.message })
   }
-});
+})
 
 // 更新单个翻译键
 app.post('/api/i18n/translations/keys/:key', (req, res) => {
   try {
-    const key = req.params.key;
-    const { translations: updatedTranslations } = req.body;
-
-    // 读取现有翻译
-    const content = fs.readFileSync(req.translationsPath, 'utf8');
-    const baseMatch = content.match(/const baseTranslations = (\{[\s\S]*?\});/);
-    if (!baseMatch) {
-      return res.status(500).json({ success: false, message: 'Failed to parse translations' });
+    const key = req.params.key
+    const { translations: updatedTranslations } = req.body
+    initDatabase()
+    for (const lang of Object.keys(updatedTranslations)) {
+      translationsRepo.upsertTranslation(lang, key, updatedTranslations[lang])
     }
-    const translations = JSON.parse(baseMatch[1]);
-
-    // 更新翻译键
-    Object.keys(updatedTranslations).forEach((lang) => {
-      if (!translations[lang]) {
-        translations[lang] = {};
-      }
-      translations[lang][key] = updatedTranslations[lang];
-    });
-
-    // 重新构建文件内容
-    const fileContent = buildTranslationsFileContent(translations);
-
-    // 写入文件
-    fs.writeFileSync(req.translationsPath, fileContent, 'utf8');
-    res.json({ success: true, message: 'Translation key updated successfully' });
+    res.json({ success: true, message: 'Translation key updated successfully' })
   } catch (error) {
-    console.error('Failed to update translation key:', error);
-    res.status(500).json({ success: false, message: 'Failed to update translation key', error: error.message });
+    console.error('Failed to update translation key:', error)
+    res.status(500).json({ success: false, message: 'Failed to update translation key', error: error.message })
   }
-});
+})
 
 // 删除单个翻译键
 app.delete('/api/i18n/translations/keys/:key', (req, res) => {
   try {
-    const key = req.params.key;
-
-    // 读取现有翻译
-    const content = fs.readFileSync(req.translationsPath, 'utf8');
-    const baseMatch = content.match(/const baseTranslations = (\{[\s\S]*?\});/);
-    if (!baseMatch) {
-      return res.status(500).json({ success: false, message: 'Failed to parse translations' });
-    }
-    const translations = JSON.parse(baseMatch[1]);
-
-    // 删除翻译键
-    Object.keys(translations).forEach((lang) => {
-      if (translations[lang] && translations[lang][key] !== undefined) {
-        delete translations[lang][key];
-      }
-    });
-
-    // 重新构建文件内容
-    const fileContent = buildTranslationsFileContent(translations);
-
-    // 写入文件
-    fs.writeFileSync(req.translationsPath, fileContent, 'utf8');
-    res.json({ success: true, message: 'Translation key deleted successfully' });
+    const key = req.params.key
+    initDatabase()
+    const deleted = translationsRepo.deleteKey(key)
+    res.json({ success: true, message: 'Translation key deleted successfully', deleted })
   } catch (error) {
-    console.error('Failed to delete translation key:', error);
-    res.status(500).json({ success: false, message: 'Failed to delete translation key', error: error.message });
+    console.error('Failed to delete translation key:', error)
+    res.status(500).json({ success: false, message: 'Failed to delete translation key', error: error.message })
   }
-});
+})
 
 // ========== 错误处理 ==========
 
@@ -593,10 +402,41 @@ const gracefulShutdown = (signal) => {
 process.on('SIGINT', () => gracefulShutdown('SIGINT'))
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
 
+// ========== 翻译数据种子导入 ==========
+
+/**
+ * 从 translations.js 静态文件中提取翻译数据并导入 SQLite
+ * 仅在翻译表为空时调用（启动时自动触发一次）
+ */
+function seedTranslationsFromFile() {
+  try {
+    const translationsPath = path.join(__dirname, 'src', 'i18n', 'translations.js')
+    if (!fs.existsSync(translationsPath)) {
+      console.warn('⚠️ translations.js 文件不存在，跳过初始数据导入')
+      return
+    }
+
+    const content = fs.readFileSync(translationsPath, 'utf8')
+    // 提取 baseTranslations 对象
+    const baseMatch = content.match(/const baseTranslations = (\{[\s\S]*?\});/)
+    if (!baseMatch) {
+      console.warn('⚠️ 无法解析 translations.js 中的 baseTranslations')
+      return
+    }
+
+    const translationsObj = JSON.parse(baseMatch[1])
+    translationsRepo.replaceAll(translationsObj)
+    const count = translationsRepo.getTranslationCount()
+    console.log(`✅ 翻译种子数据已导入 SQLite，共 ${count} 条记录`)
+  } catch (error) {
+    console.error('导入翻译种子数据失败:', error)
+  }
+}
+
 // ========== 服务启动 ==========
 
 /**
- * 启动服务器并生成产品目录
+ * 启动服务器并同步产品目录到 SQLite
  */
 async function startServer() {
   try {
@@ -604,9 +444,25 @@ async function startServer() {
     console.log(`启动产品管理服务器 - 环境: ${NODE_ENV}`);
     console.log('='.repeat(60));
 
-    // 启动前重新生成产品目录，确保 catalog 与文件系统一致
-    const generator = new ProductCatalogGenerator()
-    generator.generateCatalog()
+    // 初始化 SQLite 数据库
+    console.log('🔧 初始化 SQLite 数据库...');
+    initDatabase()
+
+    // 初始化默认管理员账户（首次启动时从 .env 凭据创建）
+    if (usersRepo.getUserCount() === 0) {
+      console.log('👤 检测到用户表为空，初始化默认管理员...')
+      usersRepo.seedDefaultAdmin()
+    }
+
+    // 首次启动时，将 translations.js 中的翻译种子数据导入 SQLite
+    if (!translationsRepo.hasTranslations('en')) {
+      console.log('📥 检测到翻译数据为空，尝试从 translations.js 导入初始数据...')
+      seedTranslationsFromFile()
+    }
+
+    // 启动前同步产品目录到 SQLite，确保与文件系统一致
+    console.log('🔄 同步产品目录到 SQLite...');
+    const syncResult = syncService.syncAll()
 
     // 验证产品目录数据
     const catalogData = productCatalogUtils.getProductCatalog();
@@ -615,7 +471,7 @@ async function startServer() {
     if (!validation.isValid) {
       console.warn('⚠️ 产品目录数据验证失败:', validation.errors);
     } else {
-      console.log(`✅ 产品目录验证成功，共 ${validation.productCount} 个产品`);
+      console.log(`✅ 产品目录验证成功，共 ${validation.productCount} 个产品（扫描 ${syncResult.scanned} 个文件夹）`);
     }
 
     // 启动Express服务器
@@ -657,3 +513,72 @@ let server;
 startServer();
 
 module.exports = app;
+
+// ===== CLI 命令 =====
+
+// 用法: node server.js init-admin
+// 交互式创建第一个管理员账户（仅在用户表为空时可用）
+if (process.argv[2] === 'init-admin') {
+  // 仅初始化数据库，不启动 Express 服务器
+  initDatabase()
+  const readline = require('readline')
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  })
+
+  const prompt = (question) => new Promise(resolve => rl.question(question, resolve))
+
+  ;(async () => {
+    // 检查是否已有用户
+    const count = usersRepo.getUserCount()
+    if (count > 0) {
+      console.log(`❌ 用户表已有 ${count} 条记录，init-admin 仅能在用户表为空时使用`)
+      console.log('   如需重置，请手动删除 data/products.db 后重试')
+      process.exit(1)
+    }
+
+    console.log('👤 创建第一个管理员账户\n')
+
+    let username, password, displayName
+
+    username = await prompt('用户名: ')
+    if (!username.trim()) {
+      console.log('❌ 用户名不能为空')
+      rl.close()
+      process.exit(1)
+    }
+
+    // 检查用户名是否已存在
+    if (usersRepo.userExists(username.trim())) {
+      console.log('❌ 用户名已存在')
+      rl.close()
+      process.exit(1)
+    }
+
+    password = await prompt('密码: ')
+    if (!password.trim()) {
+      console.log('❌ 密码不能为空')
+      rl.close()
+      process.exit(1)
+    }
+
+    if (password.length < 6) {
+      console.log('⚠️ 密码长度至少 6 位')
+    }
+
+    displayName = await prompt('显示名称（可选，直接回车跳过）: ')
+
+    const user = usersRepo.createUser(username.trim(), password, 'admin', displayName.trim() || username.trim())
+
+    console.log(`\n✅ 管理员创建成功！`)
+    console.log(`   用户名: ${user.username}`)
+    console.log(`   角色:   ${user.role}`)
+    console.log(`   ID:     ${user.id}`)
+    console.log('\n现在可以启动服务器进行登录了:')
+    console.log('   node server.js')
+
+    rl.close()
+  })()
+}

@@ -3,7 +3,6 @@ const fs = require('fs');
 const archiver = require('archiver');
 const unzipper = require('unzipper');
 const { calculateFolderSize } = require('../utils/fsHelpers');
-const { ProductCatalogUtils } = require('../utils/productCatalogUtils');
 const { safeJoin, sanitizeZipEntry } = require('../utils/safePath');
 const { buildProductObject } = require('../utils/buildProductObject');
 const ProductService = require('./productService');
@@ -28,184 +27,130 @@ function fixFileName(originalName) {
  * 上传管理服务类 - 负责文件上传和批量操作
  */
 class UploadService {
+  // 挂载 fixFileName 到类上，供 routes/uploads.js 解构导入
+  static fixFileName = fixFileName
+
   constructor() {
     this.serverPath = path.resolve(__dirname, '../../')
     this.productBasePath = safeJoin(this.serverPath, 'Product')
     this.productService = new ProductService();
     this.folderService = new FolderService();
+    this.productRepo = require('../database/productRepository');
   }
 
   /**
-   * 批量替换产品（危险操作）
+   * 批量替换产品（危险操作）— 清空 Product/ 后解压 ZIP
    */
   async batchReplaceProducts(uploadedFile) {
     try {
-      console.log('收到批量替换请求');
-      
       if (!uploadedFile) {
-        throw new Error('请上传ZIP文件');
+        throw new Error('请上传ZIP文件')
       }
-      
-      const tempZipPath = uploadedFile.path;
-      const targetProductPath = this.productBasePath;
-      
-      console.log('📦 开始处理ZIP文件:', fixFileName(uploadedFile.originalname));
-      
-      // 检查Product文件夹是否存在
-      if (!fs.existsSync(targetProductPath)) {
-        fs.mkdirSync(targetProductPath, { recursive: true });
+
+      const tempZipPath = uploadedFile.path
+      const targetProductPath = this.productBasePath
+      const serverPath = this.serverPath
+
+      console.log('📦 开始批量替换产品目录:', fixFileName(uploadedFile.originalname))
+
+      // 1. 解压 ZIP 到临时目录
+      const tempExtractPath = safeJoin(serverPath, `Product_temp_${Date.now()}`)
+      if (fs.existsSync(tempExtractPath)) {
+        fs.rmSync(tempExtractPath, { recursive: true, force: true })
       }
-      
-      // 1. 备份现有的Product文件夹（可选）
-      const backupPath = safeJoin(this.serverPath, 'Product_backup_' + Date.now());
-      if (fs.existsSync(targetProductPath)) {
-        console.log('📦 创建备份文件夹...');
-        fs.cpSync(targetProductPath, backupPath, { recursive: true });
-        console.log('✅ 备份完成:', backupPath);
-      }
-      
-      // 2. 删除现有的Product文件夹
-      console.log('🗑️ 删除现有的Product文件夹...');
-      if (fs.existsSync(targetProductPath)) {
-        fs.rmSync(targetProductPath, { recursive: true, force: true });
-      }
-      
-      // 3. 重新创建Product文件夹
-      fs.mkdirSync(targetProductPath, { recursive: true });
-      
-      // 4. 解压ZIP文件到Product文件夹
-      console.log('📦 开始解压ZIP文件...');
-      
-      let extractedCount = 0;
-      let folderCount = 0;
-      let skippedHiddenFiles = 0;
-      const replacedProducts = [];
-      
-      // 隐藏文件过滤函数
-      const isHiddenFile = (fileName) => {
-        const baseName = path.basename(fileName);
-        return baseName.startsWith('.');
-      };
-      
+      fs.mkdirSync(tempExtractPath, { recursive: true })
+
+      console.log('📦 解压到临时目录:', tempExtractPath)
+
+      let extractedCount = 0
+      let folderCount = 0
+
       await new Promise((resolve, reject) => {
         fs.createReadStream(tempZipPath)
           .pipe(unzipper.Parse())
-          .on('entry', async function (entry) {
-            try {
-              const fileName = entry.path;
-              const type = entry.type; // 'Directory' or 'File'
+          .on('entry', function (entry) {
+            const fileName = entry.path
 
-              // 过滤隐藏文件
-              if (isHiddenFile(fileName)) {
-                console.log('⏭️ 跳过隐藏文件:', fileName);
-                skippedHiddenFiles++;
-                entry.autodrain();
-                return;
-              }
-
-              // 拒绝符号链接条目（防止路径穿越攻击）
-              if (entry.type === 'SymbolicLink') {
-                console.warn('⛔ 拒绝符号链接条目:', fileName)
-                entry.autodrain()
-                return
-              }
-
-              console.log('📄 处理文件:', fileName);
-
-              if (type === 'Directory') {
-                // 清理目录名并使用 safeJoin 验证
-                const safeDirName = sanitizeZipEntry(fileName);
-                const dirPath = safeJoin(targetProductPath, safeDirName);
-                fs.mkdirSync(dirPath, { recursive: true });
-                folderCount++;
-
-                // 检查是否是产品文件夹（直接位于根目录下的文件夹）
-                if (!fileName.includes('/') && fileName.trim()) {
-                  replacedProducts.push({
-                    name: fileName,
-                    path: `Product/${fileName}`,
-                    type: 'directory'
-                  });
-                }
-
-                entry.autodrain();
-              } else {
-                // 使用 sanitizeZipEntry 清理文件名并用 safeJoin 验证路径
-                const sanitizedName = sanitizeZipEntry(fileName);
-                const filePath = safeJoin(targetProductPath, sanitizedName);
-                const dir = path.dirname(filePath);
-
-                // 确保目录存在
-                if (!fs.existsSync(dir)) {
-                  fs.mkdirSync(dir, { recursive: true });
-                }
-
-                entry.pipe(fs.createWriteStream(filePath));
-                extractedCount++;
-
-                // 如果文件在根目录下且是图片文件，检查是否是主图
-                if (!fileName.includes('/') && (fileName.endsWith('.webp') || fileName.endsWith('.png') || fileName.endsWith('.jpg'))) {
-                  const productName = fileName.replace(/\.(webp|png|jpg|jpeg)$/i, '');
-                  if (productName && !replacedProducts.find(p => p.name === productName && p.type === 'file')) {
-                    replacedProducts.push({
-                      name: productName,
-                      path: `Product/${fileName}`,
-                      type: 'file',
-                      fileName: fileName
-                    });
-                  }
-                }
-              }
-            } catch (err) {
-              console.error('处理文件时出错:', err);
-              entry.autodrain();
+            // 只处理文件，跳过所有目录条目（包括空文件夹）
+            // 文件写入时通过 mkdirSync(recursive) 自动创建父目录
+            if (entry.type === 'Directory') {
+              entry.autodrain()
+              return
             }
+
+            // 过滤隐藏文件
+            if (path.basename(fileName).startsWith('.')) {
+              entry.autodrain()
+              return
+            }
+
+            // 拒绝符号链接条目（防止路径穿越攻击）
+            if (entry.type === 'SymbolicLink') {
+              entry.autodrain()
+              return
+            }
+
+            const sanitizedName = sanitizeZipEntry(fileName)
+            const filePath = safeJoin(tempExtractPath, sanitizedName)
+            const dir = path.dirname(filePath)
+            if (!fs.existsSync(dir)) {
+              fs.mkdirSync(dir, { recursive: true })
+            }
+            entry.pipe(fs.createWriteStream(filePath))
+            extractedCount++
           })
           .on('close', () => {
-            console.log('✅ ZIP文件解压完成');
-            console.log(`📊 解压统计: 文件${extractedCount}个, 文件夹${folderCount}个, 跳过隐藏文件${skippedHiddenFiles}个`);
-            resolve();
+            console.log(`✅ 解压完成: ${extractedCount} 个文件, ${folderCount} 个文件夹`)
+            resolve()
           })
           .on('error', (err) => {
-            console.error('❌ ZIP文件解压失败:', err);
-            reject(err);
-          });
-      });
-      
-      // 5. 清理临时文件
-      fs.unlinkSync(tempZipPath);
-      console.log('🧹 清理临时文件完成');
-      
-      // 6. 更新产品目录文件
-      console.log('🔄 重新生成产品目录...');
-      await this.regenerateProductCatalog();
-      
-      // 7. 立即清理备份文件夹
-      console.log('🧹 立即清理备份文件夹...');
-      if (fs.existsSync(backupPath)) {
-        try {
-          fs.rmSync(backupPath, { recursive: true, force: true });
-          console.log('✅ 备份文件夹清理成功:', backupPath);
-        } catch (cleanupError) {
-          console.warn('清理备份文件夹失败:', cleanupError.message);
+            console.error('❌ 解压失败:', err)
+            reject(err)
+          })
+      })
+
+      // 2. 清理临时 ZIP 文件
+      fs.unlinkSync(tempZipPath)
+
+      // 3. 清空 Product 目录
+      console.log('🗑️ 清空 Product 目录...')
+      if (fs.existsSync(targetProductPath)) {
+        const items = fs.readdirSync(targetProductPath, { withFileTypes: true })
+        for (const item of items) {
+          const itemPath = path.join(targetProductPath, item.name)
+          try {
+            fs.rmSync(itemPath, { recursive: true, force: true })
+          } catch (e) {
+            console.warn(`⚠️ 删除 ${item.name} 失败，重试: ${e.message}`)
+            fs.rmSync(itemPath, { recursive: true, force: true })
+          }
         }
       }
-      
-      console.log('🎉 批量替换完成!');
-      
+
+      // 4. 将解压内容复制到 Product 目录（Windows 下 rename 跨目录可能 EPERM）
+      console.log('📋 复制文件到 Product 目录...')
+      fs.cpSync(tempExtractPath, targetProductPath, { recursive: true })
+
+      // 5. 清理临时目录
+      fs.rmSync(tempExtractPath, { recursive: true, force: true })
+      console.log('🧹 临时目录已清理')
+
+      // 6. 同步产品目录到 SQLite
+      console.log('🔄 同步产品数据到 SQLite...')
+      await this.regenerateProductCatalog()
+
+      console.log('🎉 批量替换完成!')
+
       return {
         success: true,
-        message: `批量替换完成，处理了 ${extractedCount} 个文件，创建了 ${folderCount} 个文件夹${skippedHiddenFiles > 0 ? `，跳过 ${skippedHiddenFiles} 个隐藏文件` : ''}，备份文件夹已立即清理`,
+        message: `批量替换完成，共处理 ${extractedCount} 个文件，${folderCount} 个文件夹`,
         fileCount: extractedCount,
-        folderCount: folderCount,
-        skippedHiddenFiles: skippedHiddenFiles,
-        replacedProducts: replacedProducts,
-        backupPath: backupPath
-      };
-      
+        folderCount: folderCount
+      }
+
     } catch (error) {
-      console.error('批量替换失败:', error);
-      throw new Error(`批量替换失败: ${error.message}`);
+      console.error('批量替换失败:', error)
+      throw new Error(`批量替换失败: ${error.message}`)
     }
   }
 
@@ -337,57 +282,48 @@ class UploadService {
   }
 
   /**
-   * 重新生成产品目录的辅助函数
+   * 重新生成产品目录 —— 写入 SQLite（替代旧的 JSON 文件写入）
    */
   async regenerateProductCatalog() {
     try {
-      console.log('🔄 开始重新生成产品目录...');
-      
+      console.log('🔄 开始重新生成产品目录到 SQLite...');
+
       const productPath = safeJoin(this.serverPath, 'Product');
-      const products = [];
-      
+
       if (!fs.existsSync(productPath)) {
-        console.log('Product文件夹不存在，创建空目录');
+        console.log('Product文件夹不存在，跳过');
         return;
       }
-      
+
       const items = fs.readdirSync(productPath, { withFileTypes: true });
-      
+      const products = [];
+
       for (const item of items) {
         if (item.isDirectory()) {
           const folderPath = path.join(productPath, item.name);
           const folderInfo = calculateFolderSize(folderPath);
-
-          const itemStat = fs.statSync(folderPath)
+          const itemStat = fs.statSync(folderPath);
 
           products.push(buildProductObject({
             name: item.name,
             folderName: item.name,
-            id: products.length + 1,
+            id: null,
             category: 'general',
             description: `Product model: ${item.name}`,
             totalSize: folderInfo.totalSize,
             fileCount: folderInfo.fileCount,
             modified: itemStat.mtime.toISOString(),
             isDirectory: true
-          }))
-          
+          }));
+
           console.log(`✅ 添加产品: ${item.name} (${folderInfo.fileCount} 个文件)`);
         }
       }
-      
-      // 更新product-catalog.json - 写入public和dist两个路径
-      const catalogUtils = new ProductCatalogUtils();
-      const catalogData = {
-        products: products,
-        totalProducts: products.length,
-        lastUpdated: new Date().toISOString(),
-        version: '2.0'
-      };
 
-      catalogUtils.saveCatalogToAllPaths(catalogData);
-      console.log(`✅ 产品目录更新完成，共 ${products.length} 个产品`);
-      
+      // 批量写入 SQLite
+      this.productRepo.batchUpsert(products);
+      console.log(`✅ 产品目录更新完成（SQLite），共 ${products.length} 个产品`);
+
     } catch (error) {
       console.error('重新生成产品目录失败:', error);
       throw error;
@@ -481,9 +417,9 @@ class UploadService {
         }
       });
       
-      // 如果上传的是产品文件夹下的文件，重新生成产品目录
+      // 如果上传的是产品文件夹下的文件，同步到 SQLite
       if (folderPath.startsWith('Product/')) {
-        console.log('🔄 重新生成产品目录...');
+        console.log('🔄 同步产品目录到 SQLite...');
         await this.regenerateProductCatalog();
       }
       

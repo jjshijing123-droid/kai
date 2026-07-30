@@ -2,7 +2,7 @@
 
 ## 项目概述
 
-ICE 图片查看器是一个基于文件系统驱动的现代化产品管理系统，采用前后端分离架构，提供直观的产品展示界面和强大的文件管理功能。系统基于 Vue 3 + Express 构建，无数据库依赖。
+ICE 图片查看器是一个基于文件系统 + SQLite 的现代化产品管理系统，采用前后端分离架构。图片文件存储在文件系统，产品元数据、翻译数据和用户凭据持久化到 SQLite 数据库。系统基于 Vue 3 + Express + better-sqlite3 构建，支持中英文国际化、管理员认证和限流保护。
 
 ## 技术栈
 
@@ -13,7 +13,7 @@ ICE 图片查看器是一个基于文件系统驱动的现代化产品管理系�
 | Vue 3 | 3.5.24 | 渐进式 JavaScript 框架 |
 | Vite | 4.5.14 | 前端构建工具 |
 | Vue Router | 4.6.3 | 路由管理 |
-| Pinia | 3.0.0 | 状态管理 |
+| Pinia | 3.0.4 | 状态管理 |
 | Tailwind CSS | 3.4.0 | 样式框架 |
 | lucide-vue-next | 0.555.0 | 图标库 |
 | class-variance-authority | 0.7.0 | 组件变体管理 |
@@ -29,9 +29,13 @@ ICE 图片查看器是一个基于文件系统驱动的现代化产品管理系�
 |------|------|------|
 | Express | 4.18.2 | Web 框架 |
 | Multer | 2.0.2 | 文件上传中间件 |
+| better-sqlite3 | 13.0.2 | 嵌入式 SQLite 数据库 |
+| bcrypt | 6.0.0 | 密码哈希（管理员认证） |
 | Archiver | 7.0.1 | 压缩文件处理 |
 | Unzipper | 0.12.3 | ZIP 文件解压 |
 | cors | 2.8.5 | 跨域资源共享 |
+| express-rate-limit | 8.5.2 | API 限流 |
+| dotenv | 17.4.2 | 环境变量加载 |
 
 ### 开发工具
 
@@ -39,7 +43,7 @@ ICE 图片查看器是一个基于文件系统驱动的现代化产品管理系�
 |------|------|
 | ESBuild | JavaScript 打包 |
 | PostCSS + Autoprefixer | CSS 处理 |
-| Concurrently | 并行运行 npm 脚本 |
+| npm-run-all | 并行运行 npm 脚本（start 命令） |
 
 ## 核心功能模块
 
@@ -75,7 +79,16 @@ ICE 图片查看器是一个基于文件系统驱动的现代化产品管理系�
 
 ### 5. 翻译管理模块 (I18nManagementPanel.vue)
 
-中英文翻译的完整 CRUD 管理界面。
+中英文翻译的完整 CRUD 管理界面，数据存储于 SQLite。
+
+### 6. 管理员认证模块
+
+JWT + bcrypt 认证系统。
+
+- 密码 bcrypt 哈希存储，数据库管理
+- JWT Token 24 小时有效期
+- 登录限流（5 次/分钟）
+- `node server.js init-admin` 初始化命令
 
 ## 后端服务架构
 
@@ -104,39 +117,67 @@ ICE 图片查看器是一个基于文件系统驱动的现代化产品管理系�
 | 工具 | 文件 | 职责 |
 |------|------|------|
 | buildProductObject | `server/utils/buildProductObject.js` | 构建产品数据结构 |
-| generateProductCatalog | `server/utils/generateProductCatalog.js` | 扫描文件系统生成产品目录 |
-| productCatalogUtils | `server/utils/productCatalogUtils.js` | 目录数据的读写和更新 |
+| generateProductCatalog | `server/utils/generateProductCatalog.js` | 扫描文件系统生成产品目录（输出到 SQLite） |
+| productCatalogUtils | `server/utils/productCatalogUtils.js` | 目录数据的读写和更新（内部操作 SQLite） |
 | fsHelpers | `server/utils/fsHelpers.js` | 文件系统辅助函数 |
+| safePath | `server/utils/safePath.js` | 路径安全校验，防止目录遍历 |
 
-## 数据存储方案
+### 认证中间件
 
-系统采用文件系统作为数据存储，无需数据库。
+| 中间件 | 文件 | 职责 |
+|--------|------|------|
+| authMiddleware | `server/middleware/auth.js` | JWT Token 验证（必须认证） |
+| optionalAuth | `server/middleware/auth.js` | 可选认证（有 Token 则验证） |
 
-### 产品目录结构
+## 数据层
+
+### SQLite 数据库
+
+`data/products.db` 是应用数据的主要持久化存储，包含 4 张表：
+
+| 表 | 用途 | 关键字段 |
+|----|------|----------|
+| `products` | 产品元数据 | folder_name(UNIQUE), name, total_size, file_count, views(JSON), additional_images(JSON) |
+| `translations` | 翻译键值对 | PRIMARY KEY(lang, key) |
+| `users` | 管理员账户 | username(UNIQUE), password_hash(bcrypt), role, is_active |
+
+**同步机制**: 启动时自动扫描 `Product/` 目录，将产品元数据 upsert 到 SQLite。创建/删除/重命名产品后自动同步。
+
+**优势**:
+- 产品列表查询从文件系统遍历（O(n) 磁盘 IO）降为 SQLite 索引查询（O(1) 内存查找）
+- 数据一致性由数据库 ACID 保证
+- 管理员凭据 bcrypt 哈希存储，不再明文比对
+- 为未来搜索、标签等功能提供基础
+
+### 文件系统存储
 
 ```
 Product/
 └── {产品文件夹}/
     ├── images_6Views/     # 6 视图图片
     ├── images_other/      # 其他图片
-    ├── view1/             # 视角1（32帧）
+    ├── view1/             # 视角1（32帧 image_00 ~ image_31）
     ├── view2/             # 视角2（32帧）
     ├── view3/             # 视角3（32帧）
     └── view4/             # 视角4（32帧）
 ```
 
-### 产品目录文件
+### 数据目录
 
-`data/product-catalog.json` 由后端自动生成，包含所有产品的元数据、视图路径、图片路径等。开发与生产环境共用此单一文件。
+| 目录/文件 | 说明 | gitignore |
+|-----------|------|-----------|
+| `data/products.db` | SQLite 数据库（产品元数据 + 翻译 + 用户） | 是 |
+| `Product/` | 产品图片文件存储 | 是 |
+| `uploads/` | 临时上传文件 | 是 |
 
 ## 国际化系统
 
 自定义 I18nService 类（非 vue-i18n），支持中英文实时切换。
 
-- **翻译存储**: `src/i18n/translations.js`（前端）+ 后端文件读写
+- **翻译存储**: 前端 `src/i18n/translations.js`（初始种子数据） + 后端 SQLite `data/products.db`（运行时数据）
+- **数据流向**: 启动时 translations.js → 导入 SQLite；运行时前端 ↔ `/api/i18n/` ↔ SQLite
 - **支持语言**: `zh-CN`、`en`
 - **管理界面**: `I18nManagementPanel.vue` 提供完整 CRUD
-- **持久化**: 前端 localStorage + 后端文件系统
 
 ## 性能优化
 
@@ -150,15 +191,17 @@ Product/
 ### 后端
 
 - express.static 静态文件服务
+- SQLite WAL 模式，提升并发读性能
 - 并发上传支持
 - 临时文件自动清理
 
 ## 安全特性
 
-- 路径验证，防止目录遍历
+- 路径验证（safePath），防止目录遍历
 - 文件类型和大小检查
-- 管理员认证（JWT + Bearer Token，24小时有效期）
+- 管理员认证（JWT + bcrypt，24小时有效期）
 - 登录限流（5次/分钟）、API限流（100次/分钟）、上传限流（10次/分钟）
-- CORS 域名白名单（通过 `CORS_ORIGIN` 环境变量配置，支持逗号分隔多域名）
+- CORS 域名白名单（通过 `CORS_ORIGIN` 环境变量配置）
 - ZIP 符号链接检测
 - 原子写入防竞态
+- 密码 bcrypt 哈希存储，数据库管理

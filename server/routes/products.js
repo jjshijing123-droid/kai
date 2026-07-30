@@ -1,6 +1,5 @@
 const express = require('express')
 const ProductService = require('../services/productService')
-const { buildProductObject } = require('../utils/buildProductObject')
 const { authMiddleware } = require('../middleware/auth')
 const { productCatalogUtils } = require('../utils/productCatalogUtils')
 const router = express.Router()
@@ -60,44 +59,9 @@ router.post('/', authMiddleware, async (req, res) => {
     console.log(`创建新产品: ${productName}`);
     
     const result = await productService.createProduct(productName, folderName);
-    
-    // 同步更新 product-catalog.json 文件
-    console.log('🔄 同步更新产品目录文件...');
-    const { updateProductCatalog } = require('../utils/productCatalogUtils');
-    
-    // 先读取产品目录，获取新创建的产品的详细信息
-    const products = await productService.getProducts();
-    const newProduct = products.find(p => p.folderName === folderName);
-    
-    if (newProduct) {
-      // 添加新产品到目录文件
-      const { productCatalogUtils } = require('../utils/productCatalogUtils');
-      const catalogData = productCatalogUtils.getProductCatalog();
-      
-      catalogData.products.push(buildProductObject({
-        id: newProduct.id || catalogData.products.length + 1,
-        name: newProduct.name,
-        folderName: newProduct.folderName,
-        category: newProduct.category || 'general',
-        description: newProduct.description || `Product model: ${newProduct.name}`,
-        totalSize: newProduct.totalSize || 0,
-        fileCount: newProduct.fileCount || 0
-      }))
-      
-      // 更新总数和时间戳
-      catalogData.totalProducts = catalogData.products.length;
-      catalogData.lastUpdated = new Date().toISOString();
-      
-      // 保存更新的目录文件
-      const saved = productCatalogUtils.saveProductCatalog(catalogData);
-      
-      if (saved) {
-        console.log(`✅ 已同步更新产品目录文件，新增产品: ${productName}`);
-      } else {
-        console.warn('⚠️ 同步更新产品目录文件失败');
-      }
-    }
-    
+
+    // ProductService 已自动同步到 SQLite，无需额外操作
+
     res.json({
       success: true,
       message: `产品文件夹 "${productName}" 创建成功`,
@@ -130,12 +94,9 @@ router.put('/:productName', authMiddleware, async (req, res) => {
     console.log(`重命名产品: ${productName} -> ${newFolderName}`);
     
     const result = await productService.renameProduct(productName, newProductName, newFolderName);
-    
-    // 同步更新 product-catalog.json 文件
-    console.log('🔄 同步更新产品目录文件...');
-    const { updateProductCatalog } = require('../utils/productCatalogUtils');
-    updateProductCatalog(productName, 'rename', newFolderName);
-    
+
+    // ProductService 已自动同步到 SQLite，无需额外操作
+
     res.json({
       success: true,
       message: `产品重命名成功`,
@@ -159,12 +120,9 @@ router.delete('/:productName', authMiddleware, async (req, res) => {
     console.log(`删除产品: ${productName}`);
     
     const result = await productService.deleteProduct(productName);
-    
-    // 同步更新 product-catalog.json 文件
-    console.log('🔄 同步更新产品目录文件...');
-    const { updateProductCatalog } = require('../utils/productCatalogUtils');
-    updateProductCatalog(productName, 'delete');
-    
+
+    // ProductService 已自动从 SQLite 删除记录，无需额外操作
+
     res.json({
       success: true,
       message: `产品 "${productName}" 删除成功`,

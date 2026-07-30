@@ -1,7 +1,16 @@
 node_modules
 Product
+data
+uploads
+*.zip
+*_test_*
+*_temp_*
+batch_result.json
+upload_result.json
+server-*.log
 .figma
 .vscode
 .trae
 .DS_Store
+.env
 dist

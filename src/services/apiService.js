@@ -37,10 +37,11 @@ class ApiService {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), timeout)
 
+    const { headers: optionHeaders, signal: optionSignal, ...restOptions } = options
     const config = {
-      headers: { ...this.defaultHeaders, ...this.getAuthHeaders(), ...options.headers },
-      signal: controller.signal,
-      ...options
+      headers: { ...this.defaultHeaders, ...this.getAuthHeaders(), ...optionHeaders },
+      signal: optionSignal || controller.signal,
+      ...restOptions
     }
 
     try {
@@ -274,6 +275,36 @@ class ApiService {
     return this.get(`/folder/${encodeURIComponent(folderPath)}/search`, params)
   }
 
+  // ==================== 文件夹操作相关API ====================
+
+  /**
+   * 导出文件夹为 ZIP（返回二进制流）
+   */
+  async exportFolder(folderPath) {
+    const cleanPath = folderPath.startsWith('Product/')
+      ? folderPath.replace('Product/', '')
+      : folderPath
+    const url = `${this.baseURL}/folder/export/${encodeURIComponent(cleanPath)}`
+
+    const token = this.authToken || localStorage.getItem('admin_token')
+    const headers = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(url, { headers })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    // 返回 blob 供前端下载
+    const disposition = response.headers.get('content-disposition') || ''
+    const fileName = disposition.match(/filename="?([^"]+)"?/)?.[1] || `${cleanPath.split('/').pop()}.zip`
+    return { blob: await response.blob(), fileName }
+  }
+
   // ==================== 文件操作相关API ====================
 
   /**
@@ -302,6 +333,13 @@ class ApiService {
    */
   async getDownloadUrl(filePath, fileName) {
     return this.get(`/download/${encodeURIComponent(filePath)}/${encodeURIComponent(fileName)}`)
+  }
+
+  /**
+   * 重命名文件
+   */
+  async renameFile(filePath, newFileName) {
+    return this.post('/rename-file', { filePath, newFileName })
   }
 
   // ==================== 上传相关API ====================

@@ -15,6 +15,8 @@ const showLoginModal = ref(false)
 // 本地存储键名
 const ADMIN_TOKEN_KEY = 'admin_token'
 const ADMIN_SESSION_KEY = 'admin_session'
+// 登录成功后重定向的 sessionStorage 键名
+export const REDIRECT_AFTER_LOGIN_KEY = 'redirect_after_login'
 
 // 初始化时检查登录状态
 const checkStoredSession = async () => {

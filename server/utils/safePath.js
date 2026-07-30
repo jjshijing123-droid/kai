@@ -35,15 +35,41 @@ function safeJoin(baseDir, ...segments) {
       // 路径不存在，检查父目录
       const parentDir = path.dirname(resolvedPath);
       if (parentDir !== resolvedBase) {
-        const realParent = fs.realpathSync(parentDir);
-        if (!realParent.startsWith(resolvedBase + path.sep)) {
-          throw new Error(`符号链接检测: 父目录真实路径 "${realParent}" 超出允许范围`);
+        try {
+          const realParent = fs.realpathSync(parentDir);
+          if (!realParent.startsWith(resolvedBase + path.sep)) {
+            throw new Error(`符号链接检测: 父目录真实路径 "${realParent}" 超出允许范围`);
+          }
+        } catch (parentErr) {
+          if (parentErr.code === 'ENOENT') {
+            // 父目录也不存在，向上递归检查直到找到存在的祖先
+            let ancestor = path.dirname(parentDir)
+            while (ancestor !== resolvedBase && ancestor !== path.dirname(ancestor)) {
+              try {
+                const realAncestor = fs.realpathSync(ancestor)
+                if (!realAncestor.startsWith(resolvedBase + path.sep)) {
+                  throw new Error(`符号链接检测: 祖先路径 "${realAncestor}" 超出允许范围`)
+                }
+                break
+              } catch (ancestorErr) {
+                if (ancestorErr.code === 'ENOENT') {
+                  ancestor = path.dirname(ancestor)
+                  continue
+                }
+                throw ancestorErr
+              }
+            }
+          } else if (!parentErr.message.includes('符号链接检测')) {
+            // 忽略其他 realpath 错误（如 ELOOP）
+          } else {
+            throw parentErr
+          }
         }
       }
     } else if (err.message.includes('符号链接检测')) {
       throw err;
     }
-    // 其他 realpathSync 错误（如 ELOOP）忽略，后续操作会自然失败
+    // 其他 realpathSync 错误忽略，后续操作会自然失败
   }
 
   return resolvedPath;
@@ -66,17 +92,29 @@ function isSafePath(filePath, baseDir) {
 
 /**
  * 清理 ZIP 解压路径中的路径穿越字符
- * 只保留文件名，去掉任何目录遍历前缀
+ * 保留相对目录结构，但拒绝任何路径穿越尝试
  * @param {string} entryPath - ZIP 中的条目路径
- * @returns {string} 清理后的文件名
+ * @returns {string} 清理后的相对路径
  */
 function sanitizeZipEntry(entryPath) {
-  const normalized = entryPath.replace(/\\/g, '/');
-  const basename = path.basename(normalized);
-  if (basename.includes('..') || basename.includes('\x00')) {
-    throw new Error(`非法 ZIP 条目路径: ${entryPath}`);
+  // 统一分隔符为 /
+  let normalized = entryPath.replace(/\\/g, '/')
+
+  // 去掉前导 / 或 ./
+  normalized = normalized.replace(/^\.\//, '').replace(/^\//, '')
+
+  // 拒绝包含路径穿越段（如 ../）的条目
+  const segments = normalized.split('/')
+  if (segments.some(seg => seg === '..' || seg === '')) {
+    throw new Error(`非法 ZIP 条目路径: ${entryPath}`)
   }
-  return basename;
+
+  // 拒绝包含 NUL 字节的条目
+  if (normalized.includes('\x00')) {
+    throw new Error(`非法 ZIP 条目路径: ${entryPath}`)
+  }
+
+  return normalized
 }
 
 module.exports = { safeJoin, isSafePath, sanitizeZipEntry };

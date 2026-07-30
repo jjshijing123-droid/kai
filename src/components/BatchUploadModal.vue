@@ -304,12 +304,11 @@ const startBatchZipUpload = async () => {
 
     // 调用批量替换API
     const authHeaders = useAdminAuth().getAuthHeader()
+    // FormData 请求不设 Content-Type，让浏览器自动带上 multipart boundary
+    const headers = { ...authHeaders }
     const response = await fetch('/api/batch-replace-products', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders
-      },
+      headers,
       body: formData
     })
 

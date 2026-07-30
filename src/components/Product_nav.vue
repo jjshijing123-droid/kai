@@ -109,52 +109,28 @@ const navigateToImages = (type) => {
 // 根据ID或产品名称获取产品详情
 const getProductDetails = async (productIdOrName) => {
   try {
-    let productData = null
-    
-    // 尝试作为ID处理
+    // 优先使用 API 获取（SQLite 存储）
     if (/^\d+$/.test(productIdOrName)) {
-      console.log(`🔍 以ID方式获取产品: ${productIdOrName}`)
       const response = await fetch(`/api/products/${productIdOrName}`)
-      
       if (response.ok) {
         const result = await response.json()
         if (result.success && result.product) {
-          productData = result.product
-          console.log('✅ 从API获取产品详情成功:', productData)
+          return result.product
         }
       }
     }
-    
-    // 如果ID方式失败，尝试从JSON文件获取
-    if (!productData) {
-      console.log(`🔍 从JSON文件获取产品: ${productIdOrName}`)
-      const response = await fetch('/data/product-catalog.json')
-      
-      if (response.ok) {
-        const data = await response.json()
-        const products = data.products || []
-        
-        // 首先尝试通过ID匹配
-        if (/^\d+$/.test(productIdOrName)) {
-          productData = products.find(p => p.id === parseInt(productIdOrName))
-        }
-        
-        // 如果没有找到，尝试通过名称匹配
-        if (!productData) {
-          productData = products.find(p => p.folderName === productIdOrName)
-        }
-        
-        if (productData) {
-          console.log('✅ 从JSON文件获取产品详情成功:', productData)
-        }
+    // 按名称获取
+    const response = await fetch(`/api/products/name/${encodeURIComponent(productIdOrName)}`)
+    if (response.ok) {
+      const result = await response.json()
+      if (result.success && result.product) {
+        return result.product
       }
     }
-    
-    return productData
   } catch (error) {
     console.error('获取产品详情失败:', error)
-    return null
   }
+  return null
 }
 
 // 根据产品名称获取文件夹名称

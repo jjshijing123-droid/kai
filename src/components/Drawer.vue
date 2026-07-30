@@ -167,6 +167,8 @@ const goToI18nManager = () => {
   if (!sessionReady.value) return
   if (!isAdminLoggedIn.value) {
     showToast('warning', t('common_adminPermissionI18n'))
+    // 保存目标路径，登录成功后自动跳转
+    sessionStorage.setItem('redirect_after_login', '/i18n-manager')
     closeDrawer() // 先关闭抽屉
     openLoginModal()
     return
@@ -179,6 +181,8 @@ const goToProductManager = () => {
   if (!sessionReady.value) return
   if (!isAdminLoggedIn.value) {
     showToast('warning', t('common_adminPermissionProduct'))
+    // 保存目标路径，登录成功后自动跳转
+    sessionStorage.setItem('redirect_after_login', '/product-management')
     closeDrawer() // 先关闭抽屉
     openLoginModal()
     return

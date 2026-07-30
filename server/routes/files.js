@@ -45,6 +45,48 @@ router.post('/delete-file', authMiddleware, async (req, res) => {
   }
 });
 
+// 重命名文件
+router.post('/rename-file', authMiddleware, async (req, res) => {
+  try {
+    const { filePath, newFileName } = req.body;
+
+    if (!filePath) {
+      return res.status(400).json({
+        success: false,
+        message: '文件路径不能为空'
+      });
+    }
+
+    if (!newFileName) {
+      return res.status(400).json({
+        success: false,
+        message: '新文件名不能为空'
+      });
+    }
+
+    const result = await fileService.renameFile(filePath, newFileName);
+
+    // 如果重命名的是 Product 目录下的文件，重新生成产品目录
+    if (filePath.startsWith('Product/')) {
+      await uploadService.regenerateProductCatalog();
+    }
+
+    res.json({
+      success: true,
+      message: '文件重命名成功',
+      ...result
+    });
+
+  } catch (error) {
+    console.error('重命名文件失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '重命名文件失败',
+      error: error.message
+    });
+  }
+});
+
 // 检查文件夹中是否有文件（公开只读，不需要认证）
 router.get('/check-folder/:folderPath', async (req, res) => {
   try {

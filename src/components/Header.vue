@@ -74,6 +74,8 @@ const goToI18nManager = () => {
   if (!sessionReady.value) return
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionI18n'))
+    // 保存目标路径，登录成功后自动跳转
+    sessionStorage.setItem('redirect_after_login', '/i18n-manager')
     openLoginModal()
     return
   }
@@ -85,6 +87,8 @@ const goToProductManager = () => {
   if (!sessionReady.value) return
   if (!isAdminLoggedIn.value) {
     showMessage('warning', t('common_adminPermissionProduct'))
+    // 保存目标路径，登录成功后自动跳转
+    sessionStorage.setItem('redirect_after_login', '/product-management')
     openLoginModal()
     return
   }

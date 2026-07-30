@@ -97,14 +97,7 @@ const loadingText = ref('')
 const loadingProgress = ref(0)
 const showRetry = ref(false)
 const thumbnailContainer = ref(null)
-const productCatalog = ref(null)
 const drawerVisible = ref(false)
-
-// 配置
-const CONFIG = {
-  preloadCount: 3,
-  catalogUrl: '/data/product-catalog.json'
-}
 
 // 计算属性
 const currentImageUrl = computed(() => {
@@ -168,51 +161,12 @@ onUnmounted(() => {
   document.removeEventListener('toggle-3d-drawer', handleDrawerToggle)
 })
 
-// 加载产品目录数据
-async function loadProductCatalog() {
-  try {
-    const response = await fetch(CONFIG.catalogUrl)
-    if (!response.ok) {
-      throw new Error(`Failed to load catalog: ${response.status}`)
-    }
-    const data = await response.json()
-    console.log('Product catalog loaded:', data)
-    return data
-  } catch (error) {
-    console.error('Failed to load product catalog:', error)
-    return null
-  }
-}
-
-// 从catalog中获取产品信息
-function getProductFromCatalog() {
-  if (!productCatalog.value) return null
-  
-  const product = productCatalog.value.products.find(p => 
-    p.name === productName.value || p.folderName === productName.value
-  )
-  
-  if (product) {
-    console.log('Found product in catalog:', product)
-  } else {
-    console.warn('Product not found in catalog:', productName.value)
-  }
-  
-  return product
-}
-
 // 初始化图片展示
 async function initGallery() {
   try {
-    loadingText.value = t('productViewimages_loadingCatalog')
     loadingProgress.value = 0
-    
-    // 1. 加载产品目录数据
-    productCatalog.value = await loadProductCatalog()
-    
-    loadingText.value = t('productViewimages_detectingImages')
-    
-    // 2. 检查文件夹并检测可用图片
+
+    // 1. 检查文件夹并检测可用图片
     const validImages = await detectAvailableImages()
     
     console.log('检测到的图片:', validImages)
@@ -473,7 +427,7 @@ function scrollToCurrentThumbnail(index) {
 function preloadAdjacentImages() {
   const preloadIndices = []
   
-  for (let i = 1; i <= CONFIG.preloadCount; i++) {
+  for (let i = 1; i <= 3; i++) {
     const prevIndex = currentIndex.value - i
     if (prevIndex >= 0 && !images.value[prevIndex].loaded) {
       preloadIndices.push(prevIndex)

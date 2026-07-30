@@ -98,6 +98,7 @@
 <script setup>
 import { ref, computed, onUnmounted } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
+import { useAdminAuth } from '../composables/useAdminAuth.js'
 import { showToast } from '../lib/toast.js'
 import Button from './ui/button.vue'
 import Input from './ui/input.vue'
@@ -107,6 +108,7 @@ import LucideIcon from './ui/LucideIcon.vue'
 import Functionaldescription from './Functionaldescription.vue'
 
 const { t } = useI18n()
+const { getAuthHeader } = useAdminAuth()
 
 const props = defineProps({
   // 是否禁用
@@ -302,6 +304,13 @@ const startUpload = async () => {
     
     // 发送请求
     xhr.open('POST', '/api/upload-product-folder')
+
+    // 带上认证 token
+    const authHeader = getAuthHeader()
+    if (authHeader.Authorization) {
+      xhr.setRequestHeader('Authorization', authHeader.Authorization)
+    }
+
     xhr.send(formData)
     
   } catch (error) {

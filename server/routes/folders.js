@@ -1,7 +1,10 @@
 const express = require('express');
 const FolderService = require('../services/folderService');
-const { ProductCatalogUtils, productCatalogUtils } = require('../utils/productCatalogUtils');
 const { authMiddleware } = require('../middleware/auth');
+const syncService = require('../database/sync')
+const fs = require('fs');
+const path = require('path');
+const archiver = require('archiver');
 const router = express.Router();
 const folderService = new FolderService();
 
@@ -10,22 +13,11 @@ const folderService = new FolderService();
  */
 
 /**
- * 检查是否为产品文件夹（位于Product目录下）
+ * 检查是否为产品文件夹（位于Product目录下的第一层）
  */
 function isProductFolder(parentPath) {
-  return parentPath.includes('Product/');
-}
-
-/**
- * 获取完整的产品文件夹名称
- */
-function getFullProductFolderName(parentPath, folderName) {
-  // 从Product/路径中提取产品名称
-  const productMatch = parentPath.match(/Product\/(.+)/);
-  if (productMatch) {
-    return productMatch[1]; // 返回产品名称
-  }
-  return null;
+  // 只有直接在 Product/ 下的操作才影响产品目录
+  return parentPath === 'Product' || parentPath === 'Product/';
 }
 
 // 获取文件夹详情
@@ -51,7 +43,7 @@ router.get('/:folderPath(.*)/details', authMiddleware, async (req, res) => {
 });
 
 // 创建子文件夹
-router.post('/:parentPath/create-subfolder', authMiddleware, async (req, res) => {
+router.post('/:parentPath(.*)/create-subfolder', authMiddleware, async (req, res) => {
   try {
     const { parentPath } = req.params;
     const { folderName } = req.body;
@@ -82,21 +74,18 @@ router.post('/:parentPath/create-subfolder', authMiddleware, async (req, res) =>
 });
 
 // 删除子文件夹
-router.delete('/:parentPath/subfolder/:folderName', authMiddleware, async (req, res) => {
+router.delete('/:parentPath(.*)/subfolder/:folderName', authMiddleware, async (req, res) => {
   try {
     const { parentPath, folderName } = req.params;
-    
+
     const result = await folderService.deleteSubfolder(parentPath, folderName);
-    
-    // 检查是否需要同步产品目录
+
+    // 检查是否需要同步产品目录：只在 Product/ 根目录下删除产品时同步
     if (isProductFolder(parentPath)) {
-      const productFolderName = getFullProductFolderName(parentPath, folderName);
-      if (productFolderName) {
-        console.log(`🔄 检测到删除产品文件夹，同步更新产品目录: ${productFolderName}`);
-        productCatalogUtils.updateProductCatalog(productFolderName, 'delete');
-      }
+      console.log(`🔄 检测到删除产品目录下的文件夹，同步 SQLite: ${folderName}`);
+      syncService.removeProduct(folderName);
     }
-    
+
     res.json({
       success: true,
       message: '子文件夹删除成功',
@@ -114,29 +103,19 @@ router.delete('/:parentPath/subfolder/:folderName', authMiddleware, async (req, 
 });
 
 // 重命名子文件夹
-router.put('/:parentPath/subfolder/:folderName', authMiddleware, async (req, res) => {
+router.put('/:parentPath(.*)/subfolder/:folderName', authMiddleware, async (req, res) => {
   try {
     const { parentPath, folderName } = req.params;
     const { newFolderName } = req.body;
-    
-    if (!newFolderName) {
-      return res.status(400).json({
-        success: false,
-        message: '新文件夹名称不能为空'
-      });
-    }
-    
+
     const result = await folderService.renameSubfolder(parentPath, folderName, newFolderName);
-    
-    // 检查是否需要同步产品目录
+
+    // 检查是否需要同步产品目录：只在 Product/ 根目录下重命名产品时同步
     if (isProductFolder(parentPath)) {
-      const productFolderName = getFullProductFolderName(parentPath, folderName);
-      if (productFolderName) {
-        console.log(`🔄 检测到重命名产品文件夹，同步更新产品目录: ${productFolderName} -> ${newFolderName}`);
-        productCatalogUtils.updateProductCatalog(productFolderName, 'rename', newFolderName);
-      }
+      console.log(`🔄 检测到重命名产品目录下的文件夹，同步 SQLite: ${folderName} -> ${newFolderName}`);
+      syncService.renameProduct(folderName, newFolderName);
     }
-    
+
     res.json({
       success: true,
       message: '子文件夹重命名成功',
@@ -154,7 +133,7 @@ router.put('/:parentPath/subfolder/:folderName', authMiddleware, async (req, res
 });
 
 // 获取文件夹树结构
-router.get('/:folderPath/tree', authMiddleware, async (req, res) => {
+router.get('/:folderPath(.*)/tree', authMiddleware, async (req, res) => {
   try {
     const { folderPath } = req.params;
     const maxDepth = parseInt(req.query.maxDepth) || 3;
@@ -177,7 +156,7 @@ router.get('/:folderPath/tree', authMiddleware, async (req, res) => {
 });
 
 // 搜索文件
-router.get('/:folderPath/search', authMiddleware, async (req, res) => {
+router.get('/:folderPath(.*)/search', authMiddleware, async (req, res) => {
   try {
     const { folderPath } = req.params;
     const { searchTerm, fileTypes } = req.query;
@@ -210,6 +189,78 @@ router.get('/:folderPath/search', authMiddleware, async (req, res) => {
       message: '搜索文件失败',
       error: error.message
     });
+  }
+});
+
+// 导出文件夹为 ZIP
+router.get('/export/:folderPath(.*)', authMiddleware, async (req, res) => {
+  try {
+    const { folderPath } = req.params;
+    const serverPath = path.resolve(__dirname, '../../');
+    const productBasePath = path.join(serverPath, 'Product');
+
+    // 安全拼接路径
+    const cleanPath = folderPath.startsWith('Product/')
+      ? folderPath.replace('Product/', '')
+      : folderPath.replace(/^Product\//, '');
+    const fullPath = path.join(productBasePath, cleanPath);
+
+    if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isDirectory()) {
+      return res.status(404).json({
+        success: false,
+        message: '文件夹不存在'
+      });
+    }
+
+    const folderName = path.basename(fullPath);
+    const zipFileName = `${folderName}.zip`;
+
+    // 设置响应头为文件下载
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(zipFileName)}"`);
+
+    // 创建 archiver 输出流，直接写入 response
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.on('error', (err) => {
+      console.error('ZIP 压缩错误:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, message: '压缩失败', error: err.message });
+      }
+    });
+
+    archive.pipe(res);
+
+    // 递归添加目录内容
+    const addDirectoryToArchive = (dirPath, relativePath = '') => {
+      const items = fs.readdirSync(dirPath, { withFileTypes: true });
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item.name);
+        const archivePath = path.join(relativePath, item.name);
+
+        if (item.isDirectory()) {
+          addDirectoryToArchive(itemPath, archivePath);
+        } else {
+          archive.file(itemPath, { name: archivePath });
+        }
+      }
+    };
+
+    addDirectoryToArchive(fullPath);
+
+    // 完成后缀
+    archive.finalize();
+
+    console.log(`📦 导出文件夹: ${folderPath} -> ${zipFileName}`);
+
+  } catch (error) {
+    console.error('导出文件夹失败:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: '导出文件夹失败',
+        error: error.message
+      });
+    }
   }
 });
 
