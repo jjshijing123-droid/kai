@@ -174,8 +174,9 @@ Product/
 
 自定义 I18nService 类（非 vue-i18n），支持中英文实时切换。
 
-- **翻译存储**: 前端 `src/i18n/translations.js`（初始种子数据） + 后端 SQLite `data/products.db`（运行时数据）
-- **数据流向**: 启动时 translations.js → 导入 SQLite；运行时前端 ↔ `/api/i18n/` ↔ SQLite
+- **完全由 SQLite 驱动**: 翻译数据仅存储于 `data/products.db` 的 `translations` 表，前端不维护本地翻译数据
+- **数据流向**: 启动时后端从 `src/i18n/translations.js` 自动导入种子数据到 SQLite（首次启动时）；运行时前端通过 `/api/i18n/` 读写 SQLite
+- **响应式更新**: 前端使用 Vue `reactive()` 对象持有翻译状态，API 数据加载后 Vue Proxy 自动触发重渲染
 - **支持语言**: `zh-CN`、`en`
 - **管理界面**: `I18nManagementPanel.vue` 提供完整 CRUD
 

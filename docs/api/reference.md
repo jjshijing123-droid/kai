@@ -513,7 +513,7 @@ GET /api/upload-progress/{uploadId}
 
 所有国际化路由挂载在 `/api/i18n` 下。GET 请求公开，写操作需要 Bearer Token 认证。
 
-> **数据源说明**: 翻译数据存储于 SQLite 数据库 (`data/products.db`) 的 `translations` 表。`src/i18n/translations.js` 作为启动时的初始种子数据，首次启动时自动导入 SQLite。运行时所有写操作直接读写 SQLite。
+> **数据源说明**: 翻译数据存储于 SQLite 数据库 (`data/products.db`) 的 `translations` 表。`src/i18n/translations.js` 作为种子数据源，首次启动时后端自动导入 SQLite。若数据库为空，GET `/api/i18n/translations` 会在返回数据前自动触发播种。运行时所有写操作直接读写 SQLite。
 
 ### 5.1 获取所有翻译
 

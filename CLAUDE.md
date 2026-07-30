@@ -35,7 +35,7 @@ npm run prod
 ### 前端（Vue 3 + Vite）
 
 - **路由**：`src/router/index.js` — 6 个路由，`Product_list`（首页）、`Product_nav`（产品详情）、`Product3DViewer`（3D展示）、`Product_Viewimages`（图片查看）、`I18nManagementPanel`（翻译管理）、`Product_Management`（产品管理）
-- **国际化**：`src/i18n/` — 自定义 I18nService 类，中英文切换，翻译种子数据在 `src/i18n/translations.js`，运行时数据从后端 `/api/i18n/translations` 加载（存储在 SQLite）
+- **国际化**：`src/i18n/` — 自定义 I18nService 类，中英文切换。翻译完全由 SQLite 驱动，`src/i18n/translations.js` 仅作为种子数据源，后端首次启动时自动导入 SQLite。运行时所有翻译从 `/api/i18n/translations` 加载
 - **Composables**：`src/composables/` — 8 个可组合函数（useAdminAuth、useDataFetch、useErrorMonitoring、useI18n、useKeyboardShortcuts、useNotifications、useTheme、useTooltip）
 - **组件分层**：`src/components/ui/` 是基础 UI 组件（24 个组件），`src/components/` 是业务组件
 - **状态管理**：`src/stores/` — Pinia（themeStore、notificationStore）
