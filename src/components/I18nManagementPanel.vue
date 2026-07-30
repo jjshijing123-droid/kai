@@ -197,6 +197,7 @@
 
 <script setup>
 import { ref, computed, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { state as i18nState } from '../i18n/index.js'
 import i18n from '../i18n/index.js'
 import { useI18n } from '../composables/useI18n.js'
 import { useAdminAuth } from '../composables/useAdminAuth.js'
@@ -246,7 +247,7 @@ const startEditing = (rowKey, columnKey) => {
 
 // 获取翻译值的辅助函数
 const getTranslationValue = (lang, key) => {
-  return i18n.remoteTranslations?.[lang]?.[key] || ''
+  return i18nState.remoteTranslations?.[lang]?.[key] || ''
 }
 
 // 获取占位符文本
@@ -356,7 +357,7 @@ const filteredKeys = computed(() => {
     }
     return availableLanguages.value.some(lang => {
       if (!lang || !lang.code) return false
-      const translation = i18n.remoteTranslations?.[lang.code]?.[key] || ''
+      const translation = i18nState.remoteTranslations?.[lang.code]?.[key] || ''
       return translation.toLowerCase().includes(searchLower)
     })
   })

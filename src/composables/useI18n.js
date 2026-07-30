@@ -1,41 +1,33 @@
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import i18n from '../i18n/index.js'
+import { ref, computed, onUnmounted, unref } from 'vue'
+import i18n, { state as i18nState } from '../i18n/index.js'
 
-// 现代化的多语言 composable - 统一使用 I18nManager
+// 现代化的多语言 composable - 统一使用 I18nService
 export function useI18n() {
-  const currentLanguage = ref(i18n.getCurrentLanguage())
-  // 用于触发翻译完整性重新计算的响应式触发器
-  const completenessTrigger = ref(0)
+  // currentLanguage 使用 computed 保持响应式 — Vue 模板中自动解包为字符串
+  const currentLanguage = computed(() => i18nState.currentLanguage)
 
   // 监听语言变化 - 确保响应式更新
   const unsubscribe = i18n.addListener((lang) => {
-    console.log('Language changed to:', lang)
     currentLanguage.value = lang
-    // 语言变化时，触发翻译完整性重新计算
-    completenessTrigger.value++
   })
+
+  // 翻译函数 — 普通函数（非 computed）
+  // i18n.t() 内部读取 reactive state，Vue 自动追踪依赖
+  // API 数据加载后 state.remoteTranslations 变化 → Vue 重渲染
+  function t(key, params = {}, lang) {
+    return i18n.t(key, params, lang)
+  }
 
   // 计算属性：支持的语言列表
   const availableLanguages = computed(() => i18n.getLanguages())
 
   // 计算属性：翻译完整性检查
-  const translationCompleteness = computed(() => {
-    // 依赖于 completenessTrigger，确保每次 completenessTrigger 更新时都会重新计算
-    completenessTrigger.value
-    return i18n.checkTranslationCompleteness()
-  })
-
-  // 创建响应式翻译函数
-  const t = (key, params = {}, lang) => {
-    const currentLang = lang || currentLanguage.value
-    return i18n.t(key, params, currentLang)
-  }
+  const translationCompleteness = computed(() => i18n.checkTranslationCompleteness())
 
   // 设置语言
   const setLanguage = (lang) => {
     const result = i18n.setLanguage(lang)
     if (result) {
-      // 立即更新当前语言状态
       currentLanguage.value = lang
     }
     return result
@@ -43,12 +35,7 @@ export function useI18n() {
 
   // 切换语言
   const toggleLanguage = () => {
-    const result = i18n.toggleLanguage()
-    if (result) {
-      // 立即更新当前语言状态
-      currentLanguage.value = i18n.getCurrentLanguage()
-    }
-    return result
+    return i18n.toggleLanguage()
   }
 
   // 批量添加翻译
@@ -67,23 +54,16 @@ export function useI18n() {
   const addListener = (callback) => i18n.addListener(callback)
 
   // 在组件卸载时清理监听器
-  if (typeof onUnmounted === 'function') {
-    onUnmounted(() => {
-      if (unsubscribe) unsubscribe()
-    })
-  }
-
-  // 触发翻译完整性重新计算的方法
-  const refreshCompleteness = () => {
-    completenessTrigger.value++
-  }
+  onUnmounted(() => {
+    if (unsubscribe) unsubscribe()
+  })
 
   return {
     // 响应式状态
     currentLanguage,
     availableLanguages,
     translationCompleteness,
-    
+
     // 方法
     t,
     setLanguage,
@@ -93,14 +73,13 @@ export function useI18n() {
     deleteTranslation,
     getTranslationKeys,
     addListener,
-    refreshCompleteness,
-    
-    // 快捷方法
-    isLanguage: (lang) => currentLanguage.value === lang,
-    formatNumber: (number) => new Intl.NumberFormat(currentLanguage.value).format(number),
-    formatDate: (date, options = {}) => new Intl.DateTimeFormat(currentLanguage.value, options).format(date),
+
+    // 快捷方法 — 使用 unref 兼容模板和 JS 调用
+    isLanguage: (lang) => unref(currentLanguage) === lang,
+    formatNumber: (number) => new Intl.NumberFormat(unref(currentLanguage)).format(number),
+    formatDate: (date, options = {}) => new Intl.DateTimeFormat(unref(currentLanguage), options).format(date),
     formatCurrency: (amount, currency = 'USD') =>
-      new Intl.NumberFormat(currentLanguage.value, {
+      new Intl.NumberFormat(unref(currentLanguage), {
         style: 'currency',
         currency: currency
       }).format(amount)
@@ -116,7 +95,7 @@ export function useT() {
 // 语言切换专用 composable
 export function useLanguageSwitcher() {
   const { currentLanguage, availableLanguages, setLanguage, toggleLanguage } = useI18n()
-  
+
   return {
     currentLanguage,
     availableLanguages,
