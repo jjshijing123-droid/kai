@@ -417,8 +417,8 @@ async function seedTranslationsFromFile() {
   try {
     // 从 JSON 种子文件读取翻译数据（兼容开发和生产环境）
     const seedPaths = [
-      path.join(__dirname, '..', 'src', 'i18n', 'translations-seed.json'),
-      path.join(__dirname, '..', 'dist', 'assets', 'translations-seed.json'),
+      path.join(__dirname, 'src', 'i18n', 'translations-seed.json'),
+      path.join(__dirname, 'dist', 'assets', 'translations-seed.json'),
     ]
 
     let seedData = null
@@ -455,6 +455,15 @@ async function startServer() {
     console.log('='.repeat(60));
     console.log(`启动产品管理服务器 - 环境: ${NODE_ENV}`);
     console.log('='.repeat(60));
+
+    // 确保运行期目录存在（全新环境首次启动时 data/ Product/ uploads/ 可能不存在）
+    ;['data', 'Product', 'uploads'].forEach((dir) => {
+      const dirPath = path.join(__dirname, dir)
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true })
+        console.log(`📁 已创建目录: ${dir}/`)
+      }
+    })
 
     // 初始化 SQLite 数据库
     console.log('🔧 初始化 SQLite 数据库...');

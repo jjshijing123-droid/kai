@@ -21,7 +21,7 @@
 # 安装依赖
 npm install
 
-# 初始化第一个管理员账户（仅首次）
+# 初始化第一个管理员账户（仅首次，可选）
 node server.js init-admin
 
 # 同时启动前后端
@@ -30,6 +30,9 @@ npm run start
 
 - 前端: http://localhost:5173
 - 后端: http://localhost:3010
+
+> **说明**: `data/`、`Product/`、`uploads/` 目录以及 `data/products.db` 表结构均由后端在首次启动时自动创建，无需手动 `mkdir`。
+> 若跳过 `init-admin`，后端首次启动会自动使用 `.env` 中的 `ADMIN_USER`/`ADMIN_PASS` 创建默认管理员（默认 `admin` / `admin123`）。
 
 ## 生产环境部署
 
@@ -106,12 +109,15 @@ server {
 | `Product/` | 产品图片文件存储 | 是 |
 | `uploads/` | 临时上传文件 | 是 |
 
+> 以上目录均由后端启动时自动创建（`data/` 在打开 SQLite 连接时创建，`Product/`、`uploads/` 在 `startServer()` 中创建），全新环境无需手动准备。
+
 ### 数据持久化
 
 - **SQLite 数据库** (`data/products.db`) 应纳入备份计划，包含产品元数据、翻译数据和管理员账户
 - **产品图片** (`Product/`) 是核心数据，定期备份
 - **翻译数据** 可通过管理界面导出，也可直接从 SQLite 数据库备份
-- 首次启动时，`src/i18n/translations-seed.json` 中的种子数据自动导入 SQLite，后续无需该文件参与运行
+- 首次启动时，`src/i18n/translations-seed.json` 中的种子数据自动导入 SQLite（生产环境读取 `dist/assets/translations-seed.json`），后续无需该文件参与运行
+- `server/database/productRepository.js` 在模块加载阶段（早于路由挂载）就会预编译 SQL 语句，因此建表逻辑由 `getDatabase()`/`initDatabase()` 保证在任何 `prepare()` 之前执行，全新数据库可直接启动
 
 ## 日常维护
 

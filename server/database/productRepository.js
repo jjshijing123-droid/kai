@@ -1,4 +1,4 @@
-const { getDatabase } = require('./index')
+const { getDatabase, initDatabase } = require('./index')
 
 /**
  * 产品数据仓库 —— 封装所有 SQLite 操作
@@ -302,4 +302,6 @@ class ProductRepository {
 }
 
 // 导出单例
+// 注意：ProductRepository 构造函数会预编译 SQL 语句，必须确保表结构已建好
+initDatabase()
 module.exports = new ProductRepository()
